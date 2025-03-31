@@ -63,13 +63,13 @@
         *   *Verification:* Open `.eslintignore` and verify it contains patterns for files/folders to exclude from linting.
 
 *   **Step 0.7: Configure Prettier**
-    *   [ ] **Sub-step 0.7.1:** Create a Prettier configuration file named `.prettierrc.json` in the project root.
+    *   [x] **Sub-step 0.7.1:** Create a Prettier configuration file named `.prettierrc.json` in the project root.
         *   *Verification:* `.prettierrc.json` file exists.
-    *   [ ] **Sub-step 0.7.2:** Populate `.prettierrc.json` with desired formatting rules.
+    *   [x] **Sub-step 0.7.2:** Populate `.prettierrc.json` with desired formatting rules.
         *   *Verification:* Open `.prettierrc.json` and verify it contains valid JSON configuration with formatting options.
-    *   [ ] **Sub-step 0.7.3:** Create a `.prettierignore` file in the project root.
+    *   [x] **Sub-step 0.7.3:** Create a `.prettierignore` file in the project root.
         *   *Verification:* `.prettierignore` file exists.
-    *   [ ] **Sub-step 0.7.4:** Add patterns to ignore to `.prettierignore` (e.g., `node_modules/`, `package*.json`, `manifest.json`, specific assets).
+    *   [x] **Sub-step 0.7.4:** Add patterns to ignore to `.prettierignore` (e.g., `node_modules/`, `package*.json`, `manifest.json`, specific assets).
         *   *Verification:* Open `.prettierignore` and verify it contains patterns for files/folders to exclude from formatting.
 
 *   **Step 0.8: Add Scripts to `package.json`**
