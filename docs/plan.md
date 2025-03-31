@@ -115,26 +115,26 @@
         *   *Verification:* Script tag exists with correct path.
 
 *   **Step 1.2: Create Options Page JavaScript (`js/options.js`)**
-    *   [ ] **Sub-step 1.2.1:** Create the file `js/options.js`.
+    *   [x] **Sub-step 1.2.1:** Create the file `js/options.js`.
         *   *Verification:* `js/options.js` file exists.
-    *   [ ] **Sub-step 1.2.2:** Add `DOMContentLoaded` event listener structure.
+    *   [x] **Sub-step 1.2.2:** Add `DOMContentLoaded` event listener structure.
         *   *Verification:* Code structure includes `document.addEventListener('DOMContentLoaded', function() { ... });`.
-    *   [ ] **Sub-step 1.2.3:** Get DOM references (`#apiKey`, `#saveButton`, `#statusMessage`, `#settingsForm`).
+    *   [x] **Sub-step 1.2.3:** Get DOM references (`#apiKey`, `#saveButton`, `#statusMessage`, `#settingsForm`).
         *   *Verification:* Variables correctly reference DOM elements.
-    *   [ ] **Sub-step 1.2.4:** Add `submit` event listener to the form.
+    *   [x] **Sub-step 1.2.4:** Add `submit` event listener to the form.
         *   *Verification:* Event listener is attached.
-    *   [ ] **Sub-step 1.2.5:** Call `event.preventDefault()` inside the listener.
+    *   [x] **Sub-step 1.2.5:** Call `event.preventDefault()` inside the listener.
         *   *Verification:* Default form submission is prevented.
-    *   [ ] **Sub-step 1.2.6:** Get value from `#apiKey`. Validate if not empty (allow saving empty string to clear key).
+    *   [x] **Sub-step 1.2.6:** Get value from `#apiKey`. Validate if not empty (allow saving empty string to clear key).
         *   *Verification:* Key value retrieved. Logic exists.
-    *   [ ] **Sub-step 1.2.7:** If value is present or empty (user wants to save/clear), call `chrome.storage.sync.set({ apiKey: '...' }, callback)`.
+    *   [x] **Sub-step 1.2.7:** If value is present or empty (user wants to save/clear), call `chrome.storage.sync.set({ apiKey: '...' }, callback)`.
         *   *Verification:* `chrome.storage.sync.set` is called correctly.
-    *   [ ] **Sub-step 1.2.8:** Implement the `set` callback: display success message in `#statusMessage`, clear after delay using `setTimeout`, handle `chrome.runtime.lastError`.
+    *   [x] **Sub-step 1.2.8:** Implement the `set` callback: display success message in `#statusMessage`, clear after delay using `setTimeout`, handle `chrome.runtime.lastError`.
         *   *Verification:* Success message appears/disappears. Error handling code exists.
-    *   [ ] **Sub-step 1.2.9:** (Covered by 1.2.6/1.2.8 - logic handles empty/non-empty save).
-    *   [ ] **Sub-step 1.2.10:** Implement "Load Key": Inside `DOMContentLoaded`, call `chrome.storage.sync.get(['apiKey'], callback)`.
+    *   [x] **Sub-step 1.2.9:** (Covered by 1.2.6/1.2.8 - logic handles empty/non-empty save).
+    *   [x] **Sub-step 1.2.10:** Implement "Load Key": Inside `DOMContentLoaded`, call `chrome.storage.sync.get(['apiKey'], callback)`.
         *   *Verification:* `chrome.storage.sync.get` is called correctly.
-    *   [ ] **Sub-step 1.2.11:** Implement the `get` callback: check `result.apiKey`, if present set `#apiKey.value`. Handle `chrome.runtime.lastError`.
+    *   [x] **Sub-step 1.2.11:** Implement the `get` callback: check `result.apiKey`, if present set `#apiKey.value`. Handle `chrome.runtime.lastError`.
         *   *Verification:* Saved key populates input field on page load.
 
 *   **Step 1.3: Style Options Page (`css/options.css`)**
