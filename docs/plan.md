@@ -53,13 +53,13 @@
         *   *Verification:* `node_modules` directory and `package-lock.json` file are created. `package.json` lists these packages under `devDependencies`.
 
 *   **Step 0.6: Configure ESLint**
-    *   [ ] **Sub-step 0.6.1:** Create an ESLint configuration file named `.eslintrc.json` in the project root.
+    *   [x] **Sub-step 0.6.1:** Create an ESLint configuration file named `.eslintrc.json` in the project root.
         *   *Verification:* `.eslintrc.json` file exists.
-    *   [ ] **Sub-step 0.6.2:** Populate `.eslintrc.json` with a basic configuration (including `env.webextensions`, extends `eslint:recommended`, `plugin:chrome-extension/recommended`, `prettier`).
+    *   [x] **Sub-step 0.6.2:** Populate `.eslintrc.json` with a basic configuration (including `env.webextensions`, extends `eslint:recommended`, `plugin:chrome-extension/recommended`, `prettier`).
         *   *Verification:* Open `.eslintrc.json` and verify it contains valid JSON configuration similar to the example in planning docs.
-    *   [ ] **Sub-step 0.6.3:** Create an `.eslintignore` file in the project root.
+    *   [x] **Sub-step 0.6.3:** Create an `.eslintignore` file in the project root.
         *   *Verification:* `.eslintignore` file exists.
-    *   [ ] **Sub-step 0.6.4:** Add patterns to ignore to `.eslintignore` (e.g., `node_modules/`, `assets/bootstrap.*.js`).
+    *   [x] **Sub-step 0.6.4:** Add patterns to ignore to `.eslintignore` (e.g., `node_modules/`, `assets/bootstrap.*.js`).
         *   *Verification:* Open `.eslintignore` and verify it contains patterns for files/folders to exclude from linting.
 
 *   **Step 0.7: Configure Prettier**
