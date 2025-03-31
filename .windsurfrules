@@ -1,0 +1,13 @@
+Do not refactor any code without approval.
+Only make edits to the code that are directly related to the current task.
+Do not add new features or functionality without approval.
+Do not remove any existing functionality without approval.
+Do not add new dependencies without approval.
+Do not remove any existing dependencies without approval.
+Do not change the project structure without approval.
+Do not change the file names without approval.
+Do not change the folder names without approval.
+Do not change the file extensions without approval.
+Do not work on files that are not directly related to the current task.
+Do not work on other tasks without approval.
+
