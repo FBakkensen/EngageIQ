@@ -143,18 +143,18 @@
         *   *Verification:* Options page looks reasonably styled. Success/error messages can be styled differently (apply classes in `options.js`).
 
 *   **Step 1.4: Verify Options Page Functionality**
-    *   [ ] **Sub-step 1.4.1:** Reload extension in `chrome://extensions`.
-    *   [ ] **Sub-step 1.4.2:** Open the extension's Options page.
+    *   [x] **Sub-step 1.4.1:** Reload extension in `chrome://extensions`.
+    *   [x] **Sub-step 1.4.2:** Open the extension's Options page.
         *   *Verification:* Page opens successfully.
-    *   [ ] **Sub-step 1.4.3:** Verify initial state (empty field or previously saved key).
-    *   [ ] **Sub-step 1.4.4:** Enter test key, click Save.
+    *   [x] **Sub-step 1.4.3:** Verify initial state (empty field or previously saved key).
+    *   [x] **Sub-step 1.4.4:** Enter test key, click Save.
         *   *Verification:* Success message appears. Key persists in field.
-    *   [ ] **Sub-step 1.4.5:** Close options tab.
-    *   [ ] **Sub-step 1.4.6:** Re-open options page.
+    *   [x] **Sub-step 1.4.5:** Close options tab.
+    *   [x] **Sub-step 1.4.6:** Re-open options page.
         *   *Verification:* Saved key is populated.
-    *   [ ] **Sub-step 1.4.7:** Clear input field, click Save.
+    *   [x] **Sub-step 1.4.7:** Clear input field, click Save.
         *   *Verification:* Success message appears (as saving empty is allowed).
-    *   [ ] **Sub-step 1.4.8:** Re-open options page.
+    *   [x] **Sub-step 1.4.8:** Re-open options page.
         *   *Verification:* Field is empty.
 
 ---
