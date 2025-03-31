@@ -46,10 +46,10 @@
         *   *Verification:* Manifest paths match file locations in `assets/`. Update manifest if needed.
 
 *   **Step 0.5: Initialize npm and Install Linters/Formatters**
-    *   [ ] **Sub-step 0.5.1:** Open a terminal/command prompt in the project root directory (`engageiq-extension`).
-    *   [ ] **Sub-step 0.5.2:** Run `npm init -y` to create a `package.json` file.
+    *   [x] **Sub-step 0.5.1:** Open a terminal/command prompt in the project root directory (`engageiq-extension`).
+    *   [x] **Sub-step 0.5.2:** Run `npm init -y` to create a `package.json` file.
         *   *Verification:* `package.json` file exists in the project root.
-    *   [ ] **Sub-step 0.5.3:** Run `npm install --save-dev eslint prettier eslint-config-prettier eslint-plugin-chrome-extension`.
+    *   [x] **Sub-step 0.5.3:** Run `npm install --save-dev eslint prettier eslint-config-prettier eslint-plugin-chrome-extension`.
         *   *Verification:* `node_modules` directory and `package-lock.json` file are created. `package.json` lists these packages under `devDependencies`.
 
 *   **Step 0.6: Configure ESLint**
