@@ -24,25 +24,25 @@
         *   *Verification:* `icons` directory contains the files.
 
 *   **Step 0.3: Create Initial Manifest File (`manifest.json`)**
-    *   [ ] **Sub-step 0.3.1:** Create `manifest.json` in the project root.
+    *   [x] **Sub-step 0.3.1:** Create `manifest.json` in the project root.
         *   *Verification:* File exists.
-    *   [ ] **Sub-step 0.3.2:** Populate basic fields: `manifest_version` (3), `name` ("EngageIQ"), `version` ("0.1.0"), `description`.
+    *   [x] **Sub-step 0.3.2:** Populate basic fields: `manifest_version` (3), `name` ("EngageIQ"), `version` ("0.1.0"), `description`.
         *   *Verification:* File contains fields with correct values.
-    *   [ ] **Sub-step 0.3.3:** Add `icons` declaration pointing to files in `icons/`.
+    *   [x] **Sub-step 0.3.3:** Add `icons` declaration pointing to files in `icons/`.
         *   *Verification:* `icons` block exists with correct paths.
-    *   [ ] **Sub-step 0.3.4:** Add initial `permissions`: `["storage", "scripting"]`. (Updated based on Phase 2 needs).
+    *   [x] **Sub-step 0.3.4:** Add initial `permissions`: `["storage", "scripting"]`. (Updated based on Phase 2 needs).
         *   *Verification:* `permissions` array includes "storage" and "scripting".
-    *   [ ] **Sub-step 0.3.5:** Add `host_permissions`: `["*://*.linkedin.com/*", "https://generativelanguage.googleapis.com/*"]`. (Added API host).
+    *   [x] **Sub-step 0.3.5:** Add `host_permissions`: `["*://*.linkedin.com/*", "https://generativelanguage.googleapis.com/*"]`. (Added API host).
         *   *Verification:* `host_permissions` array includes LinkedIn and Google API patterns.
-    *   [ ] **Sub-step 0.3.6:** Add placeholder declarations for `content_scripts`, `background`, `options_page`, `web_accessible_resources`, pointing to planned file locations.
+    *   [x] **Sub-step 0.3.6:** Add placeholder declarations for `content_scripts`, `background`, `options_page`, `web_accessible_resources`, pointing to planned file locations.
         *   *Verification:* Placeholder declarations exist with plausible paths.
 
 *   **Step 0.4: Integrate Bootstrap 5**
-    *   [ ] **Sub-step 0.4.1:** Download Bootstrap 5 CSS (`bootstrap.min.css`) and JS (`bootstrap.bundle.min.js`).
+    *   [x] **Sub-step 0.4.1:** Download Bootstrap 5 CSS (`bootstrap.min.css`) and JS (`bootstrap.bundle.min.js`).
         *   *Verification:* Files downloaded.
-    *   [ ] **Sub-step 0.4.2:** Place Bootstrap files into the `assets` directory.
+    *   [x] **Sub-step 0.4.2:** Place Bootstrap files into the `assets` directory.
         *   *Verification:* Files are in the `assets` folder.
-    *   [ ] **Sub-step 0.4.3:** Ensure paths in `web_accessible_resources` (manifest) correctly point to these files.
+    *   [x] **Sub-step 0.4.3:** Ensure paths in `web_accessible_resources` (manifest) correctly point to these files.
         *   *Verification:* Manifest paths match file locations in `assets/`. Update manifest if needed.
 
 *   **Step 0.5: Initialize npm and Install Linters/Formatters**
