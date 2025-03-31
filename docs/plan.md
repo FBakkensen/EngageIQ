@@ -95,23 +95,23 @@
 *   **Prerequisites:** Phase 0 completed, Bootstrap 5 integrated, `options_page` declared in `manifest.json`.
 
 *   **Step 1.1: Create Options Page HTML (`html/options.html`)**
-    *   [ ] **Sub-step 1.1.1:** Create the file `options.html` inside the `html` directory.
+    *   [x] **Sub-step 1.1.1:** Create the file `options.html` inside the `html` directory.
         *   *Verification:* `html/options.html` file exists.
-    *   [ ] **Sub-step 1.1.2:** Add basic HTML structure (DOCTYPE, html, head, body).
+    *   [x] **Sub-step 1.1.2:** Add basic HTML structure (DOCTYPE, html, head, body).
         *   *Verification:* File contains valid basic HTML boilerplate.
-    *   [ ] **Sub-step 1.1.3:** Add title "EngageIQ Settings" in `<head>`.
+    *   [x] **Sub-step 1.1.3:** Add title "EngageIQ Settings" in `<head>`.
         *   *Verification:* `<title>` exists.
-    *   [ ] **Sub-step 1.1.4:** Link to Bootstrap CSS (`../assets/bootstrap.min.css`) and custom CSS (`../css/options.css`) in `<head>`. Create empty `css/options.css`.
+    *   [x] **Sub-step 1.1.4:** Link to Bootstrap CSS (`../assets/bootstrap.min.css`) and custom CSS (`../css/options.css`) in `<head>`. Create empty `css/options.css`.
         *   *Verification:* `<link>` tags exist with correct paths. `css/options.css` exists.
-    *   [ ] **Sub-step 1.1.5:** Add Bootstrap container and `<h1>EngageIQ Settings</h1>` in `<body>`.
+    *   [x] **Sub-step 1.1.5:** Add Bootstrap container and `<h1>EngageIQ Settings</h1>` in `<body>`.
         *   *Verification:* Body contains container and heading.
-    *   [ ] **Sub-step 1.1.6:** Add a form group (label "Gemini API Key", `<input type="password" id="apiKey">`).
+    *   [x] **Sub-step 1.1.6:** Add a form group (label "Gemini API Key", `<input type="password" id="apiKey">`).
         *   *Verification:* Form group renders. Input has `id="apiKey"`.
-    *   [ ] **Sub-step 1.1.7:** Add a save button (`<button type="submit" id="saveButton">Save Key</button>`) inside a `<form id="settingsForm">`.
+    *   [x] **Sub-step 1.1.7:** Add a save button (`<button type="submit" id="saveButton">Save Key</button>`) inside a `<form id="settingsForm">`.
         *   *Verification:* Button with `id="saveButton"` is visible. Form exists.
-    *   [ ] **Sub-step 1.1.8:** Add a status message element (`<div id="statusMessage"></div>`).
+    *   [x] **Sub-step 1.1.8:** Add a status message element (`<div id="statusMessage"></div>`).
         *   *Verification:* Status message div exists.
-    *   [ ] **Sub-step 1.1.9:** Link to options JavaScript (`<script src="../js/options.js"></script>`) at the end of `<body>`.
+    *   [x] **Sub-step 1.1.9:** Link to options JavaScript (`<script src="../js/options.js"></script>`) at the end of `<body>`.
         *   *Verification:* Script tag exists with correct path.
 
 *   **Step 1.2: Create Options Page JavaScript (`js/options.js`)**
