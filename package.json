@@ -1,20 +1,22 @@
 {
-  "name": "engageiq",
-  "version": "1.0.0",
+  "name": "engageiq-chrome-extension",
+  "version": "0.1.0",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "AI-powered comment suggestions for LinkedIn",
   "devDependencies": {
-    "eslint": "^9.23.0",
+    "eslint": "^8.0.0",
     "eslint-config-prettier": "^10.1.1",
-    "prettier": "^3.5.3"
+    "prettier": "^3.0.0"
   }
 }

@@ -4,18 +4,12 @@
     "es2021": true,
     "webextensions": true
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:chrome-extension/recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "prettier"],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": [
-    "chrome-extension"
-  ],
+  "plugins": [],
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "warn"

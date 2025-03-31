@@ -73,12 +73,12 @@
         *   *Verification:* Open `.prettierignore` and verify it contains patterns for files/folders to exclude from formatting.
 
 *   **Step 0.8: Add Scripts to `package.json`**
-    *   [ ] **Sub-step 0.8.1:** Open `package.json`.
-    *   [ ] **Sub-step 0.8.2:** Add `lint` and `format` scripts to the `"scripts"` section.
+    *   [x] **Sub-step 0.8.1:** Open `package.json`.
+    *   [x] **Sub-step 0.8.2:** Add `lint` and `format` scripts to the `"scripts"` section.
         *   *Verification:* Open `package.json`; the `scripts` object contains `lint` and `format` commands.
-    *   [ ] **Sub-step 0.8.3:** Run `npm run lint` in the terminal.
+    *   [x] **Sub-step 0.8.3:** Run `npm run lint` in the terminal.
         *   *Verification:* ESLint runs without crashing. Correct any configuration errors.
-    *   [ ] **Sub-step 0.8.4:** Run `npm run format` in the terminal.
+    *   [x] **Sub-step 0.8.4:** Run `npm run format` in the terminal.
         *   *Verification:* Prettier runs without crashing.
 
 *   **Step 0.9: Load Extension in Chrome for Verification**
