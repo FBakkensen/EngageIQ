@@ -138,8 +138,8 @@
         *   *Verification:* Saved key populates input field on page load.
 
 *   **Step 1.3: Style Options Page (`css/options.css`)**
-    *   [ ] **Sub-step 1.3.1:** Open `css/options.css`.
-    *   [ ] **Sub-step 1.3.2:** Add basic styling (e.g., `body { min-width: 400px; }`, `.container { max-width: 600px; }`). Add styles for `.success` and `.error` classes for status messages.
+    *   [x] **Sub-step 1.3.1:** Open `css/options.css`.
+    *   [x] **Sub-step 1.3.2:** Add basic styling (e.g., `body { min-width: 400px; }`, `.container { max-width: 600px; }`). Add styles for `.success` and `.error` classes for status messages.
         *   *Verification:* Options page looks reasonably styled. Success/error messages can be styled differently (apply classes in `options.js`).
 
 *   **Step 1.4: Verify Options Page Functionality**
