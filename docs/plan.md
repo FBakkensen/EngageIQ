@@ -82,9 +82,9 @@
         *   *Verification:* Prettier runs without crashing.
 
 *   **Step 0.9: Load Extension in Chrome for Verification**
-    *   [ ] **Sub-step 0.9.1:** Go to `chrome://extensions`.
-    *   [ ] **Sub-step 0.9.2:** Ensure "Developer mode" is enabled.
-    *   [ ] **Sub-step 0.9.3:** Use "Load unpacked" and select the project root directory.
+    *   [x] **Sub-step 0.9.1:** Go to `chrome://extensions`.
+    *   [x] **Sub-step 0.9.2:** Ensure "Developer mode" is enabled.
+    *   [x] **Sub-step 0.9.3:** Use "Load unpacked" and select the project root directory.
         *   *Verification:* The EngageIQ extension loads without errors shown on its card in `chrome://extensions`. Name, version, icon are correct. Check "Errors" button.
 
 ---
