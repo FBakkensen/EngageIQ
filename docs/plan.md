@@ -205,18 +205,18 @@
         *   *Verification:* Initial call exists.
 
 *   **Step 2.5: Initial Verification on LinkedIn Page**
-    *   [ ] **Sub-step 2.5.1:** Reload extension. Check for errors.
-    *   [ ] **Sub-step 2.5.2:** Go to LinkedIn feed/post page.
-    *   [ ] **Sub-step 2.5.3:** Check console for "Loaded" message and observer messages. Check for script errors.
+    *   [x] **Sub-step 2.5.1:** Reload extension. Check for errors.
+    *   [x] **Sub-step 2.5.2:** Go to LinkedIn feed/post page.
+    *   [x] **Sub-step 2.5.3:** Check console for "Loaded" message and observer messages. Check for script errors.
     *   [ ] **Sub-step 2.5.4:** Locate comment input fields.
         *   *Verification:* EngageIQ icon button appears nearby.
-    *   [ ] **Sub-step 2.5.5:** Hover over the icon button.
+    *   [x] **Sub-step 2.5.5:** Hover over the icon button.
         *   *Verification:* Tooltip appears.
-    *   [ ] **Sub-step 2.5.6:** Scroll down feed to load more posts.
+    *   [x] **Sub-step 2.5.6:** Scroll down feed to load more posts.
         *   *Verification:* Button appears on new posts, no duplicates on old ones.
-    *   [ ] **Sub-step 2.5.7:** Navigate to a single post page.
+    *   [x] **Sub-step 2.5.7:** Navigate to a single post page.
         *   *Verification:* Button appears (if selectors match).
-    *   [ ] **Sub-step 2.5.8:** Inspect the DOM.
+    *   [x] **Sub-step 2.5.8:** Inspect the DOM.
         *   *Verification:* Injected button HTML is correct. Marker attribute is present on processed comment boxes.
 
 ---

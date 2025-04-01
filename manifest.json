@@ -34,7 +34,10 @@
         "js/popup.js",
         "css/popup.css",
         "assets/css/bootstrap.min.css",
-        "assets/js/bootstrap.bundle.min.js"
+        "assets/js/bootstrap.bundle.min.js",
+        "icons/icon16.png",
+        "icons/icon48.png",
+        "icons/icon128.png"
       ],
       "matches": ["*://*.linkedin.com/*"]
     }

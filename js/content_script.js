@@ -47,10 +47,12 @@ function processCommentBoxes() {
         
         // Create and add icon image
         const iconImg = document.createElement('img');
-        iconImg.src = chrome.runtime.getURL('icons/icon16.png');
+        const iconUrl = chrome.runtime.getURL('icons/icon48.png');
+        iconImg.src = iconUrl;
         iconImg.alt = 'EngageIQ';
         iconImg.width = 16;
         iconImg.height = 16;
+        console.log("EngageIQ: Using icon URL:", iconUrl);
         engageButton.appendChild(iconImg);
         
         // Add tooltip
