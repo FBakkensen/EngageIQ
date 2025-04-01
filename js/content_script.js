@@ -38,9 +38,12 @@ function processCommentBoxes() {
             return; // Skip this box if the marker attribute is present and true
         }
 
-        // TODO (Step 2.4): Inject button if needed
-        // TODO (Step 2.4.2): Set data-engageiq-button-injected attribute after injection
-        // console.log("EngageIQ: Processing box:", box);
+        console.log("EngageIQ: Injecting button into box:", box); // Add log for clarity
+        const engageButton = document.createElement('button');
+
+        // TODO (Step 2.4.3 - 2.4.5): Style, add title, and append button
+
+        // TODO (Step 2.4.6): Set data-engageiq-button-injected attribute after injection
     });
 }
 
