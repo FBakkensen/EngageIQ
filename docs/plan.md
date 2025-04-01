@@ -199,7 +199,7 @@
         *   *Verification:* `button.title` is set.
     *   [x] **Sub-step 2.4.5:** Determine insertion point and append button to DOM relative to comment box.
         *   *Verification:* Button insertion code exists.
-    *   [ ] **Sub-step 2.4.6:** Mark comment box element as processed (e.g., set `data-engageiq-button-injected="true"`).
+    *   [x] **Sub-step 2.4.6:** Mark comment box element as processed (e.g., set `data-engageiq-button-injected="true"`).
         *   *Verification:* Marker is applied after injection.
     *   [ ] **Sub-step 2.4.7:** Call `processCommentBoxes()` once initially after script loads.
         *   *Verification:* Initial call exists.
