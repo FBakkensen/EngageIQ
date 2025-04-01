@@ -31,9 +31,15 @@ function processCommentBoxes() {
     const commentBoxes = findCommentBoxes();
     console.log(`EngageIQ: Found ${commentBoxes.length} potential comment boxes.`);
 
-    commentBoxes.forEach(_box => {
-        // TODO (Step 2.4): Check if button already injected
+    commentBoxes.forEach(box => {
+        // Check if the button has already been injected for this box
+        if (box.dataset.engageiqButtonInjected === 'true') {
+            // console.log("EngageIQ: Button already injected, skipping box:", box); // Optional logging
+            return; // Skip this box if the marker attribute is present and true
+        }
+
         // TODO (Step 2.4): Inject button if needed
+        // TODO (Step 2.4.2): Set data-engageiq-button-injected attribute after injection
         // console.log("EngageIQ: Processing box:", box);
     });
 }

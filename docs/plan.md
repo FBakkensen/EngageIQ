@@ -189,7 +189,7 @@
         *   *Verification:* Function exists.
 
 *   **Step 2.4: Implement Button Injection Logic**
-    *   [ ] **Sub-step 2.4.1:** Inside loop in `processCommentBoxes()`, check if button already injected using a marker (e.g., `data-engageiq-button-injected="true"`).
+    *   [x] **Sub-step 2.4.1:** Inside loop in `processCommentBoxes()`, check if button already injected using a marker (e.g., `data-engageiq-button-injected="true"`).
         *   *Verification:* Check logic exists.
     *   [ ] **Sub-step 2.4.2:** If not injected, create button element (`document.createElement('button')`).
         *   *Verification:* Button creation code exists.
