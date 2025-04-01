@@ -128,6 +128,8 @@ processCommentBoxes();
 
 // --- Global variables ---
 let engageIQIframe = null; // Renamed from _engageIQIframe for Step 3.5.1
+let pendingIframeMessages = []; // Store messages that need to be sent to the iframe
+let popupReady = false; // Track if the popup has reported it's ready to receive messages
 
 // --- Iframe Management (Step 3.5) ---
 
@@ -148,6 +150,13 @@ function getOrCreateIframe() {
             engageIQIframe.style.display = 'none'; // Start hidden
             document.body.appendChild(engageIQIframe);
             console.log("EngageIQ: Iframe appended to body.");
+            
+            // Reset popup ready state when creating a new iframe
+            popupReady = false;
+            
+            // Setup message listener for communication from iframe
+            setupIframeMessageListener();
+            
         } catch (error) {
             console.error("EngageIQ: Error setting iframe src or appending to body:", error);
             // Handle error appropriately, maybe return null or throw
@@ -157,6 +166,66 @@ function getOrCreateIframe() {
         console.log("EngageIQ: Reusing existing popup iframe.");
     }
     return engageIQIframe;
+}
+
+/**
+ * Sets up a listener for messages from the popup iframe
+ */
+function setupIframeMessageListener() {
+    window.addEventListener('message', handleIframeMessage);
+}
+
+/**
+ * Handles messages received from the popup iframe
+ * @param {MessageEvent} event - The message event object
+ */
+function handleIframeMessage(event) {
+    // Check if the message is from our iframe
+    if (!engageIQIframe || !event.data || !event.data.type) {
+        return; // Not for us or not properly formatted
+    }
+    
+    console.log("EngageIQ: Received message from iframe:", event.data.type);
+    
+    switch (event.data.type) {
+        case 'POPUP_READY':
+            console.log("EngageIQ: Popup reported ready to receive messages");
+            popupReady = true;
+            
+            // Send any pending messages
+            if (pendingIframeMessages.length > 0) {
+                console.log(`EngageIQ: Sending ${pendingIframeMessages.length} pending messages to popup`);
+                pendingIframeMessages.forEach(message => {
+                    sendMessageToIframe(message);
+                });
+                pendingIframeMessages = [];
+            }
+            break;
+            
+        // Handle other message types from popup in future phases
+    }
+}
+
+/**
+ * Sends a message to the popup iframe, queuing it if the popup isn't ready yet
+ * @param {Object} message - The message to send to the iframe
+ */
+function sendMessageToIframe(message) {
+    if (!engageIQIframe) {
+        console.warn("EngageIQ: Cannot send message - iframe does not exist");
+        return;
+    }
+    
+    // If popup isn't ready, queue the message for later
+    if (!popupReady) {
+        console.log("EngageIQ: Popup not ready, queuing message:", message.type);
+        pendingIframeMessages.push(message);
+        return;
+    }
+    
+    // Send the message
+    console.log("EngageIQ: Sending message to iframe:", message.type);
+    engageIQIframe.contentWindow.postMessage(message, '*');
 }
 
 /**
@@ -186,12 +255,10 @@ function handleEngageIQButtonClick(event) {
             console.log("EngageIQ: Extracted post content (dummy):", dummyPostContent);
             
             // Send SHOW_LOADING message to iframe
-            // Make sure to specify the correct target origin for security
-            const iframeOrigin = new URL(iframe.src).origin;
-            iframe.contentWindow.postMessage({ 
+            sendMessageToIframe({ 
                 type: 'SHOW_LOADING',
                 message: 'Generating comment suggestions...'
-            }, iframeOrigin);
+            });
             console.log("EngageIQ: Sent SHOW_LOADING message to iframe");
             
             // Send GENERATE_COMMENTS message to background script
@@ -204,11 +271,11 @@ function handleEngageIQButtonClick(event) {
                     console.error("EngageIQ: Error sending message to background script:", chrome.runtime.lastError);
                     
                     // Send error message to iframe
-                    iframe.contentWindow.postMessage({
+                    sendMessageToIframe({
                         type: 'SHOW_ERROR',
                         error: 'Failed to communicate with background script',
                         details: chrome.runtime.lastError.message
-                    }, iframeOrigin);
+                    });
                     return;
                 }
                 
@@ -217,18 +284,18 @@ function handleEngageIQButtonClick(event) {
                 
                 if (response && response.success) {
                     // Send suggestions to iframe
-                    iframe.contentWindow.postMessage({
+                    sendMessageToIframe({
                         type: 'SHOW_SUGGESTIONS',
                         suggestions: response.suggestions
-                    }, iframeOrigin);
+                    });
                     console.log("EngageIQ: Sent SHOW_SUGGESTIONS to iframe");
                 } else {
                     // Send error to iframe
-                    iframe.contentWindow.postMessage({
+                    sendMessageToIframe({
                         type: 'SHOW_ERROR',
                         error: response?.error || 'Failed to generate suggestions',
                         details: response?.details || 'Unknown error'
-                    }, iframeOrigin);
+                    });
                     console.log("EngageIQ: Sent SHOW_ERROR to iframe");
                 }
             });

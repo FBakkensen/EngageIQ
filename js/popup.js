@@ -17,11 +17,20 @@ let errorState;
 let errorMessage;
 let suggestionAccordion;
 
+// Queue to store messages received before DOM is loaded
+const messageQueue = [];
+
 /**
  * Shows a specific state element and hides the others
  * @param {string} stateToShow - 'loading', 'error', or 'suggestions'
  */
 function showState(stateToShow) {
+    // Safety check if DOM references aren't initialized yet
+    if (!loadingState || !errorState) {
+        console.warn(`EngageIQ: Cannot change UI state to ${stateToShow} - DOM references not initialized`);
+        return;
+    }
+    
     console.log(`EngageIQ: Changing UI state to: ${stateToShow}`);
     
     // Hide all states first
@@ -51,11 +60,20 @@ function showState(stateToShow) {
  * @param {string} [details] - Optional error details 
  */
 function displayError(message, details) {
-    errorMessage.textContent = message;
+    // Safety check if DOM references aren't initialized yet
+    if (!errorMessage) {
+        console.warn('EngageIQ: Cannot display error - DOM references not initialized');
+        return;
+    }
+    
+    console.log(`EngageIQ: Displaying error: ${message}`);
+    errorMessage.textContent = message || 'Unknown error';
+    
     // Could add more UI elements for details if needed
     if (details) {
         console.log(`EngageIQ: Error details: ${details}`);
     }
+    
     showState('error');
 }
 
@@ -64,6 +82,12 @@ function displayError(message, details) {
  * @param {Array} suggestions - Array of suggestion objects
  */
 function displaySuggestions(suggestions) {
+    // Safety check if DOM references aren't initialized yet
+    if (!suggestionAccordion) {
+        console.warn('EngageIQ: Cannot display suggestions - DOM references not initialized');
+        return;
+    }
+    
     console.log(`EngageIQ: Displaying ${suggestions.length} suggestions`);
     
     // Clear existing content
@@ -80,25 +104,14 @@ function displaySuggestions(suggestions) {
 }
 
 /**
- * Listen for messages from the parent window (content script).
+ * Process a message from the content script
+ * @param {Object} data - Message data object
  */
-window.addEventListener('message', (event) => {
-    // IMPORTANT: Always verify the origin of the message for security.
-    // In this basic setup, we might expect messages from the same origin (LinkedIn),
-    // but a more robust check might be needed depending on the final architecture.
-    // For now, we'll log the origin and data for debugging.
-    console.log('EngageIQ: Message received in popup:', event.origin, event.data);
-
-    // Basic origin check - adjust if necessary
-    // Example: if (!event.origin.startsWith('https://www.linkedin.com')) {
-    //     console.warn('EngageIQ: Discarding message from unexpected origin:', event.origin);
-    //     return;
-    // }
-
-    const { type, error, details, suggestions } = event.data;
+function processMessage(data) {
+    const { type, error, details, suggestions } = data;
 
     if (!type) {
-        console.warn('EngageIQ: Received message without a type:', event.data);
+        console.warn('EngageIQ: Received message without a type:', data);
         return;
     }
 
@@ -124,6 +137,25 @@ window.addEventListener('message', (event) => {
         default:
             console.log('EngageIQ: Received unhandled message type:', type);
     }
+}
+
+/**
+ * Listen for messages from the parent window (content script).
+ */
+window.addEventListener('message', (event) => {
+    // Log all received messages for debugging
+    console.log('EngageIQ: Message received in popup from origin:', event.origin);
+    console.log('EngageIQ: Message data:', event.data);
+    
+    // If DOM is not yet loaded, queue the message for later processing
+    if (!loadingState) {
+        console.log('EngageIQ: DOM not ready, queuing message for later processing');
+        messageQueue.push(event.data);
+        return;
+    }
+    
+    // Process the message
+    processMessage(event.data);
 });
 
 /**
@@ -132,11 +164,16 @@ window.addEventListener('message', (event) => {
  * @param {Object} message - The message to send
  */
 function sendMessageToContentScript(message) {
-    // IMPORTANT: Specify the target origin for security.
-    // '*' is insecure and should be replaced with the actual origin of the parent window (LinkedIn).
+    // Use '*' for postMessage when sending from extension iframe to content script
+    // This is needed for Chrome extension architecture with content scripts
     console.log('EngageIQ: Sending message to content script:', message);
-    // Example: window.parent.postMessage(message, 'https://www.linkedin.com');
-    window.parent.postMessage(message, '*'); // Replace '*' with target origin
+    window.parent.postMessage(message, '*');
+}
+
+// Tell the content script that the popup is ready
+function notifyPopupReady() {
+    console.log('EngageIQ: Notifying content script that popup is ready');
+    sendMessageToContentScript({ type: 'POPUP_READY' });
 }
 
 // Initialize DOM element references when DOM is ready
@@ -154,5 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verify elements were found
     if (!loadingState || !errorState || !errorMessage || !suggestionAccordion) {
         console.error('EngageIQ: One or more UI elements not found in DOM');
+    } else {
+        // Process any queued messages now that the DOM is ready
+        console.log(`EngageIQ: Processing ${messageQueue.length} queued messages`);
+        while (messageQueue.length > 0) {
+            processMessage(messageQueue.shift());
+        }
+        
+        // Set initial state to loading as fallback if no messages were received
+        if (messageQueue.length === 0) {
+            showState('loading');
+        }
+        
+        // Notify the content script that the popup is ready
+        notifyPopupReady();
     }
 });

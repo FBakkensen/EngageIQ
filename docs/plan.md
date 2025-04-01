@@ -302,14 +302,14 @@
         *   *Verification:* Listener manages visibility of states. `SHOW_ERROR` displays message. `SHOW_SUGGESTIONS` displays stringified dummy data.
 
 *   **Step 4.4: Verify End-to-End Communication Flow**
-    *   [ ] **Sub-step 4.4.1:** Ensure NO API key saved.
-    *   [ ] **Sub-step 4.4.2:** Reload extension.
-    *   [ ] **Sub-step 4.4.3:** Go to LinkedIn, click button.
+    *   [x] **Sub-step 4.4.1:** Ensure NO API key saved.
+    *   [x] **Sub-step 4.4.2:** Reload extension.
+    *   [x] **Sub-step 4.4.3:** Go to LinkedIn, click button.
         *   *Verification:* Popup shows loading, then "API Key not set" error.
-    *   [ ] **Sub-step 4.4.4:** Save API key via Options page.
-    *   [ ] **Sub-step 4.4.5:** Go back to LinkedIn (refresh if needed), click button.
+    *   [x] **Sub-step 4.4.4:** Save API key via Options page.
+    *   [x] **Sub-step 4.4.5:** Go back to LinkedIn (refresh if needed), click button.
         *   *Verification:* Popup shows loading, then `pre`-formatted JSON of dummy suggestions.
-    *   [ ] **Sub-step 4.4.6:** Close and reopen popup.
+    *   [x] **Sub-step 4.4.6:** Close and reopen popup.
         *   *Verification:* Flow repeats correctly.
 
 ---
