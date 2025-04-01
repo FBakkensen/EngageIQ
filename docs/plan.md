@@ -338,10 +338,10 @@
         *   *Verification:* `fetch` call structure is correct.
 
 *   **Step 5.4: Handle `fetch` Response and Errors**
-    *   [ ] **Sub-step 5.4.1:** Implement `.then(response => ...)` block.
-    *   [ ] **Sub-step 5.4.2:** Check `response.ok`. If not OK, handle status codes (400, 401/403, 429, 5xx) sending specific `GENERATION_ERROR` messages via `sendResponse`. Log details.
+    *   [x] **Sub-step 5.4.1:** Implement `.then(response => ...)` block.
+    *   [x] **Sub-step 5.4.2:** Check `response.ok`. If not OK, handle status codes (400, 401/403, 429, 5xx) sending specific `GENERATION_ERROR` messages via `sendResponse`. Log details.
         *   *Verification:* `response.ok` check exists. Specific errors handled via `sendResponse`.
-    *   [ ] **Sub-step 5.4.3:** Implement `.catch(error => ...)` block. Log network error, send `GENERATION_ERROR` (Network) via `sendResponse`.
+    *   [x] **Sub-step 5.4.3:** Implement `.catch(error => ...)` block. Log network error, send `GENERATION_ERROR` (Network) via `sendResponse`.
         *   *Verification:* `.catch` block exists and sends network error message.
 
 *   **Step 5.5: Parse Successful Gemini Response**

@@ -177,15 +177,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           },
           body: JSON.stringify(requestBody)
         })
+        // Sub-step 5.4.1: Implement .then(response => ...) block
         .then(response => {
-          // Check if the response is OK (status in the range 200-299)
+          // Sub-step 5.4.2: Check response.ok and handle specific status codes
           if (!response.ok) {
             console.error(`EngageIQ: API call failed with status ${response.status}`);
+            
+            // Handle specific error status codes
+            let errorMessage;
+            switch (response.status) {
+              case 400:
+                errorMessage = 'Bad Request: The API request was malformed or invalid';
+                break;
+              case 401:
+              case 403:
+                errorMessage = 'Authentication Error: Invalid or expired API key';
+                break;
+              case 429:
+                errorMessage = 'Rate Limit Exceeded: Too many requests to the Gemini API';
+                break;
+              case 500:
+              case 501:
+              case 502:
+              case 503:
+              case 504:
+                errorMessage = 'Gemini API Server Error: The service is currently unavailable';
+                break;
+              default:
+                errorMessage = `Unexpected Error: HTTP status ${response.status}`;
+            }
+            
+            // Get more details from response text if available
             return response.text().then(errorText => {
-              throw new Error(`API call failed: ${response.status} ${errorText}`);
+              console.error(`EngageIQ: API error details: ${errorText}`);
+              throw new Error(errorMessage);
             });
           }
-          // Parse JSON response
+          
+          // Parse JSON response if status is OK
           return response.json();
         })
         .then(data => {
@@ -223,12 +252,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             suggestions: dummySuggestions
           });
         })
+        // Sub-step 5.4.3: Implement .catch(error => ...) block
         .catch(error => {
+          // Log network or processing error
           console.error("EngageIQ: Error during API call:", error);
+          
+          // Determine if it's a network error or a handled HTTP error
+          const errorMessage = error.message || 'Unknown network or processing error';
+          
+          // Send error response back to content script
           sendResponse({
             success: false,
-            error: 'API Error',
-            details: error.message || 'Failed to get response from Gemini API'
+            error: 'GENERATION_ERROR',
+            details: errorMessage
           });
         });
       });
