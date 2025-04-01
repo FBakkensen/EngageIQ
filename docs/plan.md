@@ -288,10 +288,10 @@
         *   *Verification:* Code exists for dummy extraction, `postMessage` to iframe, `sendMessage` to background, and callback handling response/errors.
 
 *   **Step 4.2: Implement Basic Background Script Logic (`js/background.js`)**
-    *   [ ] **Sub-step 4.2.1:** Create/Open `js/background.js`.
-    *   [ ] **Sub-step 4.2.2:** Add `chrome.runtime.onMessage` listener structure. Handle `GENERATE_COMMENTS` type. `return true` for async response. Log script loaded message.
+    *   [x] **Sub-step 4.2.1:** Create/Open `js/background.js`.
+    *   [x] **Sub-step 4.2.2:** Add `chrome.runtime.onMessage` listener structure. Handle `GENERATE_COMMENTS` type. `return true` for async response. Log script loaded message.
         *   *Verification:* Listener structure exists. Log appears in SW console.
-    *   [ ] **Sub-step 4.2.3:** Inside `GENERATE_COMMENTS` handler: Use `chrome.storage.sync.get` to retrieve API key. If key missing, `sendResponse` with `GENERATION_ERROR`. If key exists, log key presence (NOT value), create dummy suggestions object, `sendResponse` with `GENERATION_SUCCESS` and dummy payload.
+    *   [x] **Sub-step 4.2.3:** Inside `GENERATE_COMMENTS` handler: Use `chrome.storage.sync.get` to retrieve API key. If key missing, `sendResponse` with `GENERATION_ERROR`. If key exists, log key presence (NOT value), create dummy suggestions object, `sendResponse` with `GENERATION_SUCCESS` and dummy payload.
         *   *Verification:* Logic retrieves key, handles missing key error, creates dummy data, sends success/error response correctly.
 
 *   **Step 4.3: Enhance Popup Script (`js/popup.js`) to Display Data**
