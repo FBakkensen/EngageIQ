@@ -266,13 +266,13 @@
         *   *Verification:* Handler calls creator function, toggles `display` style.
 
 *   **Step 3.6: Verify Basic Iframe Display Toggle**
-    *   [ ] **Sub-step 3.6.1:** Reload extension. Check errors.
-    *   [ ] **Sub-step 3.6.2:** Go to LinkedIn. Verify buttons appear.
-    *   [ ] **Sub-step 3.6.3:** Click an EngageIQ icon button.
+    *   [x] **Sub-step 3.6.1:** Reload extension. Check errors.
+    *   [x] **Sub-step 3.6.2:** Go to LinkedIn. Verify buttons appear.
+    *   [x] **Sub-step 3.6.3:** Click an EngageIQ icon button.
         *   *Verification:* Iframe appears, styled correctly, shows placeholder content. Console logs confirm showing. Iframe console logs confirm script loaded.
-    *   [ ] **Sub-step 3.6.4:** Click same button again.
+    *   [x] **Sub-step 3.6.4:** Click same button again.
         *   *Verification:* Iframe disappears. Console logs confirm hiding.
-    *   [ ] **Sub-step 3.6.5:** Show iframe. Click a *different* icon button.
+    *   [x] **Sub-step 3.6.5:** Show iframe. Click a *different* icon button.
         *   *Verification:* The same single iframe instance remains visible/toggles.
 
 ---
