@@ -161,7 +161,7 @@ function getOrCreateIframe() {
 
 /**
  * Handles the click event on the EngageIQ icon button.
- * Toggles the visibility of the popup iframe.
+ * Toggles the visibility of the popup iframe and handles communication.
  * @param {Event} event - The click event object.
  */
 function handleEngageIQButtonClick(event) {
@@ -175,8 +175,65 @@ function handleEngageIQButtonClick(event) {
         if (iframe.style.display === 'none' || iframe.style.display === '') {
             iframe.style.display = 'block';
             console.log("EngageIQ: Showing iframe.");
-            // TODO: Potentially send an initial message to the iframe
-            // iframe.contentWindow.postMessage({ type: 'POPUP_OPENED' }, '*'); // Specify target origin!
+            
+            // Step 4.1.2: Add dummy postContent extraction log
+            // In a future implementation, this will extract actual post content
+            const dummyPostContent = {
+                text: "This is a dummy LinkedIn post content for testing purposes. It simulates what would be extracted from a real LinkedIn post.",
+                author: "LinkedIn User",
+                timestamp: new Date().toISOString()
+            };
+            console.log("EngageIQ: Extracted post content (dummy):", dummyPostContent);
+            
+            // Send SHOW_LOADING message to iframe
+            // Make sure to specify the correct target origin for security
+            const iframeOrigin = new URL(iframe.src).origin;
+            iframe.contentWindow.postMessage({ 
+                type: 'SHOW_LOADING',
+                message: 'Generating comment suggestions...'
+            }, iframeOrigin);
+            console.log("EngageIQ: Sent SHOW_LOADING message to iframe");
+            
+            // Send GENERATE_COMMENTS message to background script
+            chrome.runtime.sendMessage({
+                type: 'GENERATE_COMMENTS',
+                postContent: dummyPostContent
+            }, response => {
+                // Handle chrome.runtime.lastError first
+                if (chrome.runtime.lastError) {
+                    console.error("EngageIQ: Error sending message to background script:", chrome.runtime.lastError);
+                    
+                    // Send error message to iframe
+                    iframe.contentWindow.postMessage({
+                        type: 'SHOW_ERROR',
+                        error: 'Failed to communicate with background script',
+                        details: chrome.runtime.lastError.message
+                    }, iframeOrigin);
+                    return;
+                }
+                
+                // Handle successful response
+                console.log("EngageIQ: Received response from background script:", response);
+                
+                if (response && response.success) {
+                    // Send suggestions to iframe
+                    iframe.contentWindow.postMessage({
+                        type: 'SHOW_SUGGESTIONS',
+                        suggestions: response.suggestions
+                    }, iframeOrigin);
+                    console.log("EngageIQ: Sent SHOW_SUGGESTIONS to iframe");
+                } else {
+                    // Send error to iframe
+                    iframe.contentWindow.postMessage({
+                        type: 'SHOW_ERROR',
+                        error: response?.error || 'Failed to generate suggestions',
+                        details: response?.details || 'Unknown error'
+                    }, iframeOrigin);
+                    console.log("EngageIQ: Sent SHOW_ERROR to iframe");
+                }
+            });
+            console.log("EngageIQ: Sent GENERATE_COMMENTS message to background script");
+            
         } else {
             iframe.style.display = 'none';
             console.log("EngageIQ: Hiding iframe.");
