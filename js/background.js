@@ -218,38 +218,92 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return response.json();
         })
         .then(data => {
-          // This will be handled in Step 5.5
-          console.log("EngageIQ: Received API response:", data);
+          console.log("EngageIQ: Received API response");
           
-          // Temporary: Until Step 5.5 is implemented, still return dummy suggestions
-          console.log("EngageIQ: Step 5.3 completed, but still using dummy data until Step 5.5 is implemented");
-          const dummySuggestions = [
-            {
-              id: 'suggestion-1',
-              text: 'Great insights shared in this post! I particularly appreciate the point about ' + 
-                    postContent.text.substring(0, 30) + '... Have you considered how this applies in different industries?',
-              tone: 'professional',
-              length: 'medium'
-            },
-            {
-              id: 'suggestion-2',
-              text: 'Thanks for sharing these thoughts! This resonates with some work we\'ve been doing at my company.',
-              tone: 'friendly',
-              length: 'short'
-            },
-            {
-              id: 'suggestion-3',
-              text: 'This is a fascinating perspective. I\'ve been researching this topic recently and found that ' + 
-                    'many professionals are shifting towards the approach you\'ve outlined. Would love to discuss this ' + 
-                    'further and perhaps collaborate on some ideas.',
-              tone: 'enthusiastic',
-              length: 'long'
+          // Sub-step 5.5.2: Navigate response structure
+          if (!data || !data.candidates || data.candidates.length === 0) {
+            console.error("EngageIQ: Invalid response format - no candidates found");
+            throw new Error("Invalid response format: No candidates found");
+          }
+          
+          const candidate = data.candidates[0];
+          
+          // Sub-step 5.5.3: Check finishReason (SAFETY blocks, etc)
+          if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+            console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
+            throw new Error(`Generation stopped: ${candidate.finishReason}`);
+          }
+          
+          // Check promptFeedback for safety issues
+          if (data.promptFeedback && 
+              data.promptFeedback.blockReason && 
+              data.promptFeedback.blockReason !== 'NONE') {
+            console.error(`EngageIQ: Prompt blocked due to ${data.promptFeedback.blockReason}`);
+            throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
+          }
+          
+          // Extract functionCall and args
+          if (!candidate.content || 
+              !candidate.content.parts || 
+              candidate.content.parts.length === 0 || 
+              !candidate.content.parts[0].functionCall) {
+            console.error("EngageIQ: Invalid response format - functionCall not found");
+            throw new Error("Invalid response format: Function call data not found");
+          }
+          
+          const functionCall = candidate.content.parts[0].functionCall;
+          
+          if (functionCall.name !== "generateLinkedInComments") {
+            console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
+            throw new Error(`Unexpected function name: ${functionCall.name}`);
+          }
+          
+          // Extract and validate args
+          let args = functionCall.args;
+          
+          // Check if args is a string and parse it if needed
+          if (typeof args === 'string') {
+            try {
+              args = JSON.parse(args);
+            } catch (error) {
+              console.error("EngageIQ: Failed to parse args string:", error);
+              throw new Error("Failed to parse response data");
             }
+          }
+          
+          // Validate structure (.comments object exists)
+          if (!args || !args.comments) {
+            console.error("EngageIQ: Missing comments object in response");
+            throw new Error("Invalid response format: Missing comments object");
+          }
+          
+          const comments = args.comments;
+          
+          // Validate all required reaction types exist
+          const requiredTypes = ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'];
+          const missingTypes = requiredTypes.filter(type => !comments[type]);
+          
+          if (missingTypes.length > 0) {
+            console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
+            throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
+          }
+          
+          // Format the response expected by the content script
+          const formattedSuggestions = [
+            { id: 'like', text: comments.like, tone: 'positive', length: 'medium' },
+            { id: 'celebrate', text: comments.celebrate, tone: 'celebratory', length: 'medium' },
+            { id: 'support', text: comments.support, tone: 'supportive', length: 'medium' },
+            { id: 'love', text: comments.love, tone: 'appreciative', length: 'medium' },
+            { id: 'insightful', text: comments.insightful, tone: 'thoughtful', length: 'medium' },
+            { id: 'funny', text: comments.funny, tone: 'humorous', length: 'medium' }
           ];
           
+          console.log("EngageIQ: Successfully parsed API response");
+          
+          // Send success response with real suggestions
           sendResponse({
             success: true,
-            suggestions: dummySuggestions
+            suggestions: formattedSuggestions
           });
         })
         // Sub-step 5.4.3: Implement .catch(error => ...) block

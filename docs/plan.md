@@ -345,9 +345,9 @@
         *   *Verification:* `.catch` block exists and sends network error message.
 
 *   **Step 5.5: Parse Successful Gemini Response**
-    *   [ ] **Sub-step 5.5.1:** Implement `.then(data => ...)` block after `response.json()`.
-    *   [ ] **Sub-step 5.5.2:** Navigate response structure (`data.candidates[0].content.parts[0].functionCall.args`). **Verify path.**
-    *   [ ] **Sub-step 5.5.3:** Check `candidate.finishReason` (handle SAFETY etc. blocks by sending `GENERATION_ERROR`). Check `promptFeedback`. Extract `functionCall.args`. Assume it's an object (or parse if string - **test this**). Validate structure (`.comments` object exists). If valid, `sendResponse` with `GENERATION_SUCCESS` containing `args.comments`. Handle extraction/validation errors by sending `GENERATION_ERROR`.
+    *   [x] **Sub-step 5.5.1:** Implement `.then(data => ...)` block after `response.json()`.
+    *   [x] **Sub-step 5.5.2:** Navigate response structure (`data.candidates[0].content.parts[0].functionCall.args`). **Verify path.**
+    *   [x] **Sub-step 5.5.3:** Check `candidate.finishReason` (handle SAFETY etc. blocks by sending `GENERATION_ERROR`). Check `promptFeedback`. Extract `functionCall.args`. Assume it's an object (or parse if string - **test this**). Validate structure (`.comments` object exists). If valid, `sendResponse` with `GENERATION_SUCCESS` containing `args.comments`. Handle extraction/validation errors by sending `GENERATION_ERROR`.
         *   *Verification:* Code navigates response, checks finish reason, extracts/validates args, sends success (`args.comments`) or specific errors via `sendResponse`.
 
 *   **Step 5.6: Verify End-to-End Flow with Real API**
