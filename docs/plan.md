@@ -326,10 +326,10 @@
         *   *Verification:* Schema constant exists and matches PRD.
 
 *   **Step 5.2: Construct the Gemini API Request**
-    *   [ ] **Sub-step 5.2.1:** Modify `GENERATE_COMMENTS` handler in `background.js` (after getting key).
-    *   [ ] **Sub-step 5.2.2:** Create prompt string including instructions (6 reaction types, match language, medium length, professional tone) and the real `message.payload.postContent`.
+    *   [x] **Sub-step 5.2.1:** Modify `GENERATE_COMMENTS` handler in `background.js` (after getting key).
+    *   [x] **Sub-step 5.2.2:** Create prompt string including instructions (6 reaction types, match language, medium length, professional tone) and the real `message.payload.postContent`.
         *   *Verification:* Prompt construction exists, uses real content, includes instructions.
-    *   [ ] **Sub-step 5.2.3:** Create `requestBody` object for `fetch`. Include `contents` (with prompt), `tool_config` (mode ANY/FUNCTION, allowed function name), and `tools` (function declaration with name, description, parameters: `GENERATION_SCHEMA`). **Ensure structure matches Gemini API requirements for JSON mode.**
+    *   [x] **Sub-step 5.2.3:** Create `requestBody` object for `fetch`. Include `contents` (with prompt), `tool_config` (mode ANY/FUNCTION, allowed function name), and `tools` (function declaration with name, description, parameters: `GENERATION_SCHEMA`). **Ensure structure matches Gemini API requirements for JSON mode.**
         *   *Verification:* `requestBody` created correctly for JSON output using schema.
 
 *   **Step 5.3: Execute the API Call using `fetch`**

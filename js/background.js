@@ -86,8 +86,86 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Log key presence (not the actual key for security)
         console.log("EngageIQ: API key found in storage");
         
-        // Create dummy suggestions response
-        // This will be replaced with actual API calls in later phases
+        // Step 5.2.2: Create prompt string with instructions
+        console.log("EngageIQ: Creating prompt for Gemini API");
+        const prompt = `
+          You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
+          
+          Here is the LinkedIn post content to analyze:
+          "${postContent.text}"
+          
+          Please generate 6 different comment suggestions, each corresponding to one of LinkedIn's standard reaction types:
+          1. Like - A general positive comment about the post content
+          2. Celebrate - A comment celebrating an achievement or milestone mentioned
+          3. Support - A supportive comment showing empathy or encouragement
+          4. Love - A comment expressing appreciation or admiration
+          5. Insightful - A comment that adds depth or perspective to the topic
+          6. Funny - A light-hearted or humorous comment relevant to the post
+          
+          Important instructions:
+          - Match the language of the post in your responses
+          - Make all comments medium length (around 2-3 sentences)
+          - Maintain a professional tone appropriate for LinkedIn
+          - Ensure comments are unique from each other
+          - Never include generic phrases like "Thanks for sharing"
+          - Ground comments in the specific content of the post
+        `;
+        
+        // Step 5.2.3: Create requestBody object for fetch
+        console.log("EngageIQ: Creating request body for Gemini API");
+        const requestBody = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+          tools: [
+            {
+              function_declarations: [
+                {
+                  name: "generateLinkedInComments",
+                  description: "Generate 6 comment suggestions for LinkedIn post, each matching a different reaction type",
+                  parameters: GENERATION_SCHEMA
+                }
+              ]
+            }
+          ],
+          tool_config: {
+            function_calling_config: {
+              mode: "ANY",
+              allowed_function_names: ["generateLinkedInComments"]
+            }
+          },
+          safety_settings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        };
+        
+        console.log("EngageIQ: Gemini API request constructed and ready for fetch call");
+        
+        // Log that we're still using dummy data for now until Step 5.3 is implemented
+        console.log("EngageIQ: Step 5.2 completed, but still returning dummy suggestions until Step 5.3 is implemented");
+        
+        // This dummy data will be replaced with the actual API call in Step 5.3
         const dummySuggestions = [
           {
             id: 'suggestion-1',
