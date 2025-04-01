@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EngageIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="../assets/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Popup CSS -->
+    <link href="../css/popup.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container pt-2 pb-2">
+        <h5 class="mb-3">EngageIQ</h5>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center" style="display: none;">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">Generating suggestions...</span>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="alert alert-danger" role="alert" style="display: none;">
+            Error: <span id="errorMessage"></span>
+        </div>
+
+        <!-- Suggestions Accordion -->
+        <div class="accordion" id="suggestionAccordion">
+            <!-- Accordion items will be injected here by popup.js -->
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="../assets/bootstrap.bundle.min.js"></script>
+    <!-- Custom Popup JS -->
+    <script src="../js/popup.js"></script>
+</body>
+</html>

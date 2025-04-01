@@ -227,14 +227,14 @@
 *   **Prerequisites:** Phase 2 completed, `web_accessible_resources` declared.
 
 *   **Step 3.1: Create Popup HTML Structure (`html/popup.html`)**
-    *   [ ] **Sub-step 3.1.1:** Create/Open `html/popup.html`.
-    *   [ ] **Sub-step 3.1.2:** Add basic HTML structure.
+    *   [x] **Sub-step 3.1.1:** Create/Open `html/popup.html`.
+    *   [x] **Sub-step 3.1.2:** Add basic HTML structure.
         *   *Verification:* Valid HTML boilerplate.
-    *   [ ] **Sub-step 3.1.3:** Link to Bootstrap CSS (`../assets/bootstrap.min.css`) and custom CSS (`../css/popup.css`) in `<head>`. Create empty `css/popup.css`.
+    *   [x] **Sub-step 3.1.3:** Link to Bootstrap CSS (`../assets/bootstrap.min.css`) and custom CSS (`../css/popup.css`) in `<head>`. Create empty `css/popup.css`.
         *   *Verification:* `<link>` tags exist. `css/popup.css` exists.
-    *   [ ] **Sub-step 3.1.4:** Add basic body structure (`container-fluid`), placeholder title, divs for loading (`#loadingState`), error (`#errorState`), and content (`#suggestionAccordionPlaceholder`, initially visible with placeholder text). Include Bootstrap JS and `popup.js` script tags.
+    *   [x] **Sub-step 3.1.4:** Add basic body structure (`container-fluid`), placeholder title, divs for loading (`#loadingState`), error (`#errorState`), and content (`#suggestionAccordionPlaceholder`, initially visible with placeholder text). Include Bootstrap JS and `popup.js` script tags.
         *   *Verification:* `popup.html` has structure, placeholders, includes JS.
-    *   [ ] **Sub-step 3.1.5:** Ensure `js/popup.js` exists (can be empty).
+    *   [x] **Sub-step 3.1.5:** Ensure `js/popup.js` exists (can be empty).
         *   *Verification:* `js/popup.js` exists.
 
 *   **Step 3.2: Create Basic Popup CSS (`css/popup.css`)**
