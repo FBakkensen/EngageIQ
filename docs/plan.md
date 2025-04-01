@@ -365,18 +365,18 @@
 *   **Goal:** Update Popup Iframe to render suggestions into Bootstrap Accordion.
 *   **Prerequisites:** Phase 5 completed. Bootstrap JS/CSS loaded in iframe.
 
-*   **Step 6.1: Update Popup HTML (`html/popup.html`) with Accordion Structure**
-    *   [ ] **Sub-step 6.1.1:** Open `html/popup.html`.
-    *   [ ] **Sub-step 6.1.2:** Replace `#suggestionAccordionPlaceholder` with `<div class="accordion" id="suggestionsAccordion"></div>`.
-    *   [ ] **Sub-step 6.1.3:** Keep `#loadingState` and `#errorState` separate.
+*   **Step 6.1: Update Popup HTML (`html/popup.html`) with Accordion Structure it must use accordion from Bootstrap**
+    *   [x] **Sub-step 6.1.1:** Open `html/popup.html`.
+    *   [x] **Sub-step 6.1.2:** Replace `#suggestionAccordionPlaceholder` with `<div class="accordion" id="suggestionsAccordion"></div>`.
+    *   [x] **Sub-step 6.1.3:** Keep `#loadingState` and `#errorState` separate.
         *   *Verification:* `popup.html` contains the accordion container div. Placeholder removed. Loading/error divs remain.
 
 *   **Step 6.2: Update Popup JavaScript (`js/popup.js`) - Message Handling**
-    *   [ ] **Sub-step 6.2.1:** Open `js/popup.js`.
-    *   [ ] **Sub-step 6.2.2:** Locate `SHOW_SUGGESTIONS` case in message listener.
-    *   [ ] **Sub-step 6.2.3:** Modify case: Get reference to `#suggestionsAccordion`. Call `displaySuggestions(payload.suggestions)`. Ensure accordion container visible, loading/error hidden.
+    *   [x] **Sub-step 6.2.1:** Open `js/popup.js`.
+    *   [x] **Sub-step 6.2.2:** Locate `SHOW_SUGGESTIONS` case in message listener.
+    *   [x] **Sub-step 6.2.3:** Modify case: Get reference to `#suggestionsAccordion`. Call `displaySuggestions(payload.suggestions)`. Ensure accordion container visible, loading/error hidden.
         *   *Verification:* Case calls `displaySuggestions`, manages UI states.
-    *   [ ] **Sub-step 6.2.4:** Modify `SHOW_LOADING` / `SHOW_ERROR` cases to also hide `#suggestionsAccordion`.
+    *   [x] **Sub-step 6.2.4:** Modify `SHOW_LOADING` / `SHOW_ERROR` cases to also hide `#suggestionsAccordion`.
         *   *Verification:* Loading/error states hide accordion.
 
 *   **Step 6.3: Implement Suggestion Rendering Function (`js/popup.js`)**

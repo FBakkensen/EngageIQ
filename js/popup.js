@@ -15,7 +15,7 @@ console.log('EngageIQ: Popup Script Loaded');
 let loadingState;
 let errorState;
 let errorMessage;
-let suggestionAccordion;
+let suggestionsAccordion;
 
 // Queue to store messages received before DOM is loaded
 const messageQueue = [];
@@ -26,7 +26,7 @@ const messageQueue = [];
  */
 function showState(stateToShow) {
     // Safety check if DOM references aren't initialized yet
-    if (!loadingState || !errorState) {
+    if (!loadingState || !errorState || !suggestionsAccordion) {
         console.warn(`EngageIQ: Cannot change UI state to ${stateToShow} - DOM references not initialized`);
         return;
     }
@@ -36,6 +36,7 @@ function showState(stateToShow) {
     // Hide all states first
     loadingState.style.display = 'none';
     errorState.style.display = 'none';
+    suggestionsAccordion.style.display = 'none';
     
     // Show the requested state
     switch (stateToShow) {
@@ -46,8 +47,7 @@ function showState(stateToShow) {
             errorState.style.display = 'block';
             break;
         case 'suggestions':
-            // The accordion container itself doesn't need to be hidden/shown
-            // as it's the individual items that matter
+            suggestionsAccordion.style.display = 'block';
             break;
         default:
             console.warn(`EngageIQ: Unknown state requested: ${stateToShow}`);
@@ -83,7 +83,7 @@ function displayError(message, details) {
  */
 function displaySuggestions(suggestions) {
     // Safety check if DOM references aren't initialized yet
-    if (!suggestionAccordion) {
+    if (!suggestionsAccordion) {
         console.warn('EngageIQ: Cannot display suggestions - DOM references not initialized');
         return;
     }
@@ -91,14 +91,50 @@ function displaySuggestions(suggestions) {
     console.log(`EngageIQ: Displaying ${suggestions.length} suggestions`);
     
     // Clear existing content
-    suggestionAccordion.innerHTML = '';
+    suggestionsAccordion.innerHTML = '';
     
-    // For the MVP, we'll just stringify and display the suggestions
-    // This will be replaced with proper accordion items in later steps
-    const pre = document.createElement('pre');
-    pre.className = 'suggestion-json';
-    pre.textContent = JSON.stringify(suggestions, null, 2);
-    suggestionAccordion.appendChild(pre);
+    // Create proper Bootstrap accordion items for each suggestion
+    suggestions.forEach((suggestion, index) => {
+        const itemId = `suggestion-${index}`;
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'accordion-item';
+        
+        // Create header
+        const accordionHeader = document.createElement('h2');
+        accordionHeader.className = 'accordion-header';
+        accordionHeader.id = `heading-${itemId}`;
+        
+        const button = document.createElement('button');
+        button.className = 'accordion-button collapsed';
+        button.type = 'button';
+        button.setAttribute('data-bs-toggle', 'collapse');
+        button.setAttribute('data-bs-target', `#collapse-${itemId}`);
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', `collapse-${itemId}`);
+        button.textContent = suggestion.type || `Suggestion ${index + 1}`;
+        
+        accordionHeader.appendChild(button);
+        
+        // Create body
+        const collapseDiv = document.createElement('div');
+        collapseDiv.id = `collapse-${itemId}`;
+        collapseDiv.className = 'accordion-collapse collapse';
+        collapseDiv.setAttribute('aria-labelledby', `heading-${itemId}`);
+        collapseDiv.setAttribute('data-bs-parent', '#suggestionsAccordion');
+        
+        const accordionBody = document.createElement('div');
+        accordionBody.className = 'accordion-body';
+        accordionBody.textContent = suggestion.text || 'No suggestion text available';
+        
+        collapseDiv.appendChild(accordionBody);
+        
+        // Add header and body to the accordion item
+        accordionItem.appendChild(accordionHeader);
+        accordionItem.appendChild(collapseDiv);
+        
+        // Add the complete item to the accordion
+        suggestionsAccordion.appendChild(accordionItem);
+    });
     
     showState('suggestions');
 }
@@ -131,7 +167,12 @@ function processMessage(data) {
             
         case 'SHOW_SUGGESTIONS':
             console.log('EngageIQ: Showing suggestions');
-            displaySuggestions(suggestions);
+            if (Array.isArray(suggestions) && suggestions.length > 0) {
+                displaySuggestions(suggestions);
+            } else {
+                console.warn('EngageIQ: Received SHOW_SUGGESTIONS but suggestions array is empty or invalid:', suggestions);
+                displayError('No suggestions available', 'The API returned an empty or invalid response');
+            }
             break;
             
         default:
@@ -184,12 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingState = document.getElementById('loadingState');
     errorState = document.getElementById('errorState');
     errorMessage = document.getElementById('errorMessage');
-    suggestionAccordion = document.getElementById('suggestionAccordion');
+    suggestionsAccordion = document.getElementById('suggestionsAccordion');
     
     console.log('EngageIQ: UI element references initialized');
     
     // Verify elements were found
-    if (!loadingState || !errorState || !errorMessage || !suggestionAccordion) {
+    if (!loadingState || !errorState || !errorMessage || !suggestionsAccordion) {
         console.error('EngageIQ: One or more UI elements not found in DOM');
     } else {
         // Process any queued messages now that the DOM is ready
