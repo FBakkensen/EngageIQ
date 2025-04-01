@@ -238,8 +238,8 @@
         *   *Verification:* `js/popup.js` exists.
 
 *   **Step 3.2: Create Basic Popup CSS (`css/popup.css`)**
-    *   [ ] **Sub-step 3.2.1:** Create/Open `css/popup.css`.
-    *   [ ] **Sub-step 3.2.2:** Add minimal styling for iframe content (e.g., reset body margin, base font size).
+    *   [x] **Sub-step 3.2.1:** Create/Open `css/popup.css`.
+    *   [x] **Sub-step 3.2.2:** Add minimal styling for iframe content (e.g., reset body margin, base font size).
         *   *Verification:* `popup.css` exists. `popup.html` renders basic content.
 
 *   **Step 3.3: Create Basic Popup JavaScript (`js/popup.js`)**
