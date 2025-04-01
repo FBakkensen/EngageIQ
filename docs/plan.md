@@ -165,12 +165,12 @@
 *   **Prerequisites:** Phase 0 completed, EngageIQ icon available.
 
 *   **Step 2.1: Finalize Manifest Declarations for Content Script**
-    *   [ ] **Sub-step 2.1.1:** Open `manifest.json`.
-    *   [ ] **Sub-step 2.1.2:** Confirm `permissions`: `["storage", "scripting"]`.
+    *   [x] **Sub-step 2.1.1:** Open `manifest.json`.
+    *   [x] **Sub-step 2.1.2:** Confirm `permissions`: `["storage", "scripting"]`.
         *   *Verification:* Permissions array is correct.
-    *   [ ] **Sub-step 2.1.3:** Confirm `host_permissions`: `["*://*.linkedin.com/*", ... ]`.
+    *   [x] **Sub-step 2.1.3:** Confirm `host_permissions`: `["*://*.linkedin.com/*", ... ]`.
         *   *Verification:* Includes LinkedIn pattern.
-    *   [ ] **Sub-step 2.1.4:** Finalize `content_scripts` declaration for `js/content_script.js` and `css/content_style.css`. Create empty `css/content_style.css` if missing.
+    *   [x] **Sub-step 2.1.4:** Finalize `content_scripts` declaration for `js/content_script.js` and `css/content_style.css`. Create empty `css/content_style.css` if missing.
         *   *Verification:* `content_scripts` declaration is correct. `css/content_style.css` exists.
 
 *   **Step 2.2: Implement Basic Content Script (`js/content_script.js`)**

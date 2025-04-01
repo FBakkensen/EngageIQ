@@ -17,20 +17,22 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
-    "service_worker": "background/background.js"
+    "service_worker": "js/background.js"
   },
   "content_scripts": [
     {
       "matches": ["*://*.linkedin.com/*"],
-      "js": ["content_scripts/content.js"],
-      "css": ["content_scripts/content.css"]
+      "js": ["js/content_script.js"],
+      "css": ["css/content_style.css"]
     }
   ],
-  "options_page": "options/options.html",
+  "options_page": "html/options.html",
   "web_accessible_resources": [
     {
       "resources": [
-        "content_scripts/content.css",
+        "html/popup.html",
+        "js/popup.js",
+        "css/popup.css",
         "assets/css/bootstrap.min.css",
         "assets/js/bootstrap.bundle.min.js"
       ],
