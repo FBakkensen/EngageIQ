@@ -1,0 +1,927 @@
+<div class="feed-shared-update-v2__control-menu-container display-flex flex-column flex-grow-1">
+                
+                <h2 class="visually-hidden">
+                    Antal indlæg i feed 1
+                </h2>
+                <div class="fie-impression-container">
+<!---->                  <div class="relative">
+                      
+    <div class="hPAvLbULhBBoAEwPPLLqjIYNQaTgfXKqsGoWT
+        display-flex align-items-flex-start
+        update-components-actor--with-control-menu-and-hide-post
+        
+        ">
+<!---->
+      <div class="update-components-actor__container
+          pr4
+          display-flex flex-grow-1">
+          <a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM  update-components-actor__image relative
+              " aria-label="Rasmus Torpe, grafisk." target="_self" href="https://www.linkedin.com/in/rasmustorpe?miniProfileUrn=urn%3Ali%3Afsd_profile%3AACoAAADP0zQBAJVl3KWrFKE0oy3wqT8eNjW5dl8" data-test-app-aware-link="">
+            <span class="js-update-components-actor__avatar">
+              
+    <div class="ivm-image-view-model    update-components-actor__avatar">
+        
+    <div class="ivm-view-attr__img-wrapper
+        
+        ">
+<!---->
+<!---->          <img width="48" src="https://media.licdn.com/dms/image/v2/C4D03AQH0WSICGUG21w/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1538729827995?e=1749081600&amp;v=beta&amp;t=GTeyBxBwVx54EmeuBY0Uf8EdxWuW_crNErbiMGllUt8" loading="lazy" height="48" alt="" id="ember51" class="ivm-view-attr__img--centered EntityPhoto-circle-3  update-components-actor__avatar-image evi-image lazy-image ember-view">
+    </div>
+  
+          </div>
+  
+            </span>
+          </a>
+        <div class="update-components-actor__meta
+            ">
+          <a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM  update-components-actor__meta-link" aria-label="Se: Rasmus Torpe  • 1. Solution Architect - Business Central" target="_self" href="https://www.linkedin.com/in/rasmustorpe?miniProfileUrn=urn%3Ali%3Afsd_profile%3AACoAAADP0zQBAJVl3KWrFKE0oy3wqT8eNjW5dl8" data-test-app-aware-link="">
+            <span class="update-components-actor__title">
+              <span class="tUQlrpDucTeuYAspgxUSCxcFSmbIsODwNaw
+                  hoverable-link-text t-14 t-bold text-body-medium-bold white-space-nowrap
+                  t-black
+                  
+                  ">
+                <span dir="ltr"><span aria-hidden="true"><!---->Rasmus Torpe<!----></span><span class="visually-hidden"><!---->Rasmus Torpe<!----></span></span>
+              </span>
+                <span class="update-components-actor__supplementary-actor-info update-components-actor__supplementary-actor-info--align-icon update-components-actor__single-line-truncate text-body-xsmall
+                    t-black--light
+                    ">
+                  <span aria-hidden="true"><span class="white-space-pre"> </span>• 1.<!----></span><span class="visually-hidden"><span class="white-space-pre"> </span>• 1.<!----></span>
+                </span>
+            </span>
+
+              <span class="update-components-actor__description text-body-xsmall
+                  t-black--light">
+                <span aria-hidden="true"><!---->Solution Architect - Business Central<!----></span><span class="visually-hidden"><!---->Solution Architect - Business Central<!----></span>
+              </span>
+
+          </a>
+<!---->            <span class="update-components-actor__sub-description text-body-xsmall
+                t-black--light
+                
+                ">
+              <span aria-hidden="true"><!---->57m •<span class="white-space-pre"> </span><span><li-icon aria-hidden="true" type="globe-americas" class="v-align-bottom" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 1a7 7 0 107 7 7 7 0 00-7-7zM3 8a5 5 0 011-3l.55.55A1.5 1.5 0 015 6.62v1.07a.75.75 0 00.22.53l.56.56a.75.75 0 00.53.22H7v.69a.75.75 0 00.22.53l.56.56a.75.75 0 01.22.53V13a5 5 0 01-5-5zm6.24 4.83l2-2.46a.75.75 0 00.09-.8l-.58-1.16A.76.76 0 0010 8H7v-.19a.51.51 0 01.28-.45l.38-.19a.74.74 0 01.68 0L9 7.5l.38-.7a1 1 0 00.12-.48v-.85a.78.78 0 01.21-.53l1.07-1.09a5 5 0 01-1.54 9z"></path>
+    </svg></li-icon></span><span class="white-space-pre"> </span><!----><!----></span><span class="visually-hidden"><!---->57 minutter siden<!----></span>
+            </span>
+        </div>
+      </div>
+
+<!---->
+<!---->    </div>
+  
+                        
+    <div class="feed-shared-control-menu display-flex
+        feed-shared-update-v2__control-menu absolute text-align-right
+        feed-shared-update-v2--with-hide-post
+        ">
+<!---->
+        <div id="ember53" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view">
+          <button aria-expanded="false" aria-label="Åbn kontrolmenu for indlæg af Rasmus Torpe" tabindex="0" id="ember54" class="feed-shared-control-menu__trigger artdeco-button artdeco-button--tertiary artdeco-button--muted artdeco-button--1 artdeco-button--circle artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view" type="button">
+              
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.25 8C3.25 8.69 2.69 9.25 2 9.25C1.31 9.25 0.75 8.69 0.75 8C0.75 7.31 1.31 6.75 2 6.75C2.69 6.75 3.25 7.31 3.25 8ZM14 6.75C13.31 6.75 12.75 7.31 12.75 8C12.75 8.69 13.31 9.25 14 9.25C14.69 9.25 15.25 8.69 15.25 8C15.25 7.31 14.69 6.75 14 6.75ZM8 6.75C7.31 6.75 6.75 7.31 6.75 8C6.75 8.69 7.31 9.25 8 9.25C8.69 9.25 9.25 8.69 9.25 8C9.25 7.31 8.69 6.75 8 6.75Z" fill="currentColor"></path>
+  </svg>
+
+                      
+<!----></button>
+          <div tabindex="-1" aria-hidden="true" id="ember55" class="feed-shared-control-menu__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view" aria-label="Indstillinger for kontrolmenu"><!----></div>
+        </div>
+
+<!---->
+<!---->
+<!---->
+<!---->
+<!---->
+<!---->        <button class="feed-shared-control-menu__hide-post-button artdeco-button artdeco-button--circle artdeco-button--tertiary artdeco-button--1 artdeco-button--muted" aria-label="Afvis indlæg af Rasmus Torpe" type="button">
+          
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.78 12.72C14.07 13.01 14.07 13.49 13.78 13.78C13.63 13.93 13.44 14 13.25 14C13.06 14 12.87 13.93 12.72 13.78L8 9.06L3.28 13.78C3.13 13.93 2.94 14 2.75 14C2.56 14 2.37 13.93 2.22 13.78C1.93 13.49 1.93 13.01 2.22 12.72L6.94 8L2.22 3.28C1.93 2.99 1.93 2.51 2.22 2.22C2.51 1.93 2.99 1.93 3.28 2.22L8 6.94L12.72 2.22C13.01 1.93 13.49 1.93 13.78 2.22C14.07 2.51 14.07 2.99 13.78 3.28L9.06 8L13.78 12.72Z" fill="currentColor"></path>
+    </svg>
+
+        </button>
+          </div>
+  
+                                      </div>
+<!---->
+                  <!---->
+
+<!---->                          
+    <div class="lWcOorZdsBUnyCPoSYDMFPiRbASVlQcyD" style="" tabindex="0">
+          
+    <div class="feed-shared-inline-show-more-text
+        feed-shared-update-v2__description feed-shared-inline-show-more-text--minimal-padding
+        
+        feed-shared-inline-show-more-text--3-lines
+        feed-shared-inline-show-more-text--expanded
+        
+        
+        " tabindex="-1" style="max-height: none; display: block;">
+      
+            
+    <div class="update-components-text relative update-components-update-v2__commentary " dir="ltr">
+<!---->
+      <span class="break-words
+          tvm-parent-container">
+<!---->        <span dir="ltr"><!---->Super inspirerende dag i godt selskab til Continia Elevate - stærke nyheder på vej og interessante oplæg fra<span class="white-space-pre"> </span><a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM " target="_self" tabindex="0" href="https://www.linkedin.com/in/ACoAAAAThP8BXMdpv0U48uvj6c7_gacko9wghpE" data-test-app-aware-link=""><span><a href="/in/mette-louise-kaagaard-367518/" id="ember56" class="ember-view"><!---->Mette Louise Kaagaard<!----></a></span></a><span class="white-space-pre"> </span>om AI og<span class="white-space-pre"> </span><a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM " target="_self" tabindex="0" href="https://www.linkedin.com/in/ACoAAAAZVzABqKIx5b4jYpweYtEyqtvBIDFWlPA" data-test-app-aware-link=""><span><a href="/in/jensmyrup/" id="ember57" class="ember-view"><!---->Jens Myrup Pedersen<!----></a></span></a><span class="white-space-pre"> </span>om cybersikkerhed.<span class="white-space-pre"> </span><span><br></span><span><br></span><!---->Tak for invitation<span class="white-space-pre"> </span><a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM " target="_self" tabindex="0" href="https://www.linkedin.com/company/continia-software-a-s/" data-test-app-aware-link=""><span><span><!---->Continia Software<!----></span></span></a><!---->!<!----></span>
+      </span>
+    </div>
+  
+          <!----><!---->    </div>
+  
+        
+<!---->    </div>
+  
+                          
+    <div class="update-components-image
+        update-components-image--single-image
+        feed-shared-update-v2__content">
+      <div class="update-components-image__container-wrapper relative">
+        <div class="update-components-image__container
+            " style="
+          padding-top: 34.91%;">
+<!---->
+                <button class="update-components-image__image-link" type="button">
+                    <span class="visually-hidden">
+                      Aktivér for at se et større billede.
+                    </span>
+                  
+    <div class="ivm-image-view-model   ">
+        
+    <div class="ivm-view-attr__img-wrapper
+        
+        ">
+<!---->
+<!---->          <img width="600" src="https://media.licdn.com/dms/image/v2/D4D22AQGerRLYU1J6Bg/feedshare-shrink_800/B4DZXwZSj1G8Aw-/0/1743494916890?e=1746662400&amp;v=beta&amp;t=668vvo9Ikqc2nZHYp4PXTWyHf02bCyy-s_MOIQmogwk" loading="lazy" height="209" alt="Forhåndsvisning af billede" id="ember59" class="ivm-view-attr__img--centered ivm-view-attr__img--aspect-fill update-components-image__image evi-image lazy-image ember-view">
+    </div>
+  
+          </div>
+  
+                </button>
+<!---->              <!---->        </div>
+        <span class="visually-hidden" id="update-components-image-ember58" aria-hidden="true">
+              Aktivér for at se et større billede.
+        </span>
+
+<!---->
+<!---->      </div>
+
+<!---->
+<!---->    </div>
+  
+<!---->
+<!---->
+                      <!---->
+                      <!---->
+
+                  <!---->
+
+<!---->
+                    
+    
+    <div id="ember60" class="update-v2-social-activity
+        
+        
+        ">
+      
+          
+    <div class="social-details-social-counts social-details-social-counts--no-vertical-padding
+        social-details-social-counts__reactions--animated
+        
+        
+        
+        ">
+      <div class="display-flex flex-grow-1 full-width">
+        <div class="relative full-width">
+          <ul class="display-flex flex-wrap">
+              <li class="social-details-social-counts__item social-details-social-counts__reactions social-details-social-counts__item--height-two-x
+                  social-details-social-counts__reactions--left-aligned
+                  ">
+                <button data-reaction-details="" aria-label="Tommy Olesen og 2 til" class="t-black--light display-flex align-items-center social-details-social-counts__count-value social-details-social-counts__count-value-hover
+                    text-body-small
+                    hoverable-link-text
+                    " type="button">
+    <img class="reactions-icon social-detail-social-counts__count-icon social-detail-social-counts__count-icon--0 reactions-icon__consumption--small data-test-reactions-icon-type-LIKE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/emei2gdl9ikg7penkh9ij9llx" alt="like" data-test-reactions-icon-type="LIKE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="small">
+  
+    <img class="reactions-icon social-detail-social-counts__count-icon social-detail-social-counts__count-icon--1 reactions-icon__consumption--small reactions-icon--stacked data-test-reactions-icon-type-PRAISE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/9wt27hvi2lgll1v30u00n0p5p" alt="celebrate" data-test-reactions-icon-type="PRAISE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="small">
+                      <span class="social-details-social-counts__social-proof-container">
+                      <span aria-hidden="true" data-social-proof-fallback="" class="social-details-social-counts__social-proof-fallback-number">3</span>
+                      <span class="social-details-social-counts__social-proof-text">
+                            Tommy Olesen og 2 til
+                      </span>
+                    </span>
+                </button>
+              </li>
+
+              <li data-non-reaction-details="" class="display-flex flex-grow-1 max-full-width">
+                <ul class="display-flex flex-grow-1 max-full-width">
+                    <li class="social-details-social-counts__item social-details-social-counts__comments social-details-social-counts__item--height-two-x
+                        social-details-social-counts__item--right-aligned
+                        ">
+                        <button aria-label="1 kommentar til {:actorName}{:actorName} indlæg" class="t-black--light social-details-social-counts__count-value social-details-social-counts__count-value-hover
+                            text-body-small
+                            hoverable-link-text
+                            social-details-social-counts__btn
+                            " type="button">
+                          <span aria-hidden="true">
+                              1 kommentar
+                          </span>
+                        </button>
+                    </li>
+
+<!---->
+<!---->                </ul>
+              </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  
+
+<!---->
+<!---->
+          
+    <div class="feed-shared-social-action-bar
+        
+        feed-shared-social-action-bar--full-width
+        feed-shared-social-action-bar--has-identity-toggle
+        feed-shared-social-action-bar--has-social-counts
+        ">
+      
+              
+    <div class="feed-shared-social-action-bar__action-button">
+      <button aria-label="Åbn menu for at skifte identitet, når du interagerer med dette indlæg" id="ember62" class="artdeco-button artdeco-button--muted artdeco-button--4 artdeco-button--tertiary ember-view align-items-center social-actions-button content-admin-identity-toggle-button"><!---->
+<span class="artdeco-button__text">
+    
+        <div class="content-admin-identity-toggle-button__image-and-caret-wrapper">
+            <img src="https://media.licdn.com/dms/image/v2/D4E03AQHtvdmqGSAE1w/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1691321719040?e=1749081600&amp;v=beta&amp;t=muB8CPmK0UvZmzdzOo8bI_ITz5gGnP-BNHjO7hYKHas" loading="lazy" alt="Foto af Flemming Bakkensen" id="ember63" class="EntityPhoto-circle-0 evi-image lazy-image ember-view">
+          <svg role="none" aria-hidden="true" class="ml1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+        </div>
+      
+</span></button>
+
+<!---->    </div>
+  
+              
+    <span class="reactions-react-button feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+      
+    <span class="reactions-menu reactions-menu--active reactions-menu--humor-enabled reactions-menu--v2
+        
+        
+        
+        " style="">
+        
+    <button aria-label="Reager med Synes godt om" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Synes godt om</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-LIKE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/aw9hgzu26674bp8ges58l68hz" alt="like" data-test-reactions-icon-type="LIKE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Hyld" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Hyld</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-PRAISE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/3ucoryxergmvijtgd5iop81ci" alt="celebrate" data-test-reactions-icon-type="PRAISE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Støt" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Støt</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-APPRECIATION data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/2bo3ynpenae7uhstqkrsj5ytl" alt="support" data-test-reactions-icon-type="APPRECIATION" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Vild med" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Vild med</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-EMPATHY data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/cfi6xloqadgsnlv6tqk1p343w" alt="love" data-test-reactions-icon-type="EMPATHY" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Indsigtsfuldt" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Indsigtsfuldt</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-INTEREST data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/8s2sxa4k2h741ngjfi5dqzbvu" alt="insightful" data-test-reactions-icon-type="INTEREST" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Sjov" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Sjov</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-ENTERTAINMENT data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/qye2jwjc8dw20nuv6diudrsi" alt="funny" data-test-reactions-icon-type="ENTERTAINMENT" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+    </span>
+  
+
+      <button aria-pressed="false" aria-label="Reager med synes godt om" id="ember64" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button react-button__trigger
+          "><!---->
+<span class="artdeco-button__text">
+    
+        <div class="flex-wrap justify-center
+            artdeco-button__text align-items-center">
+              <svg role="none" aria-hidden="true" class="artdeco-button__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="thumbs-up-outline-small">
+<!---->    
+    <use href="#thumbs-up-outline-small" width="16" height="16"></use>
+</svg>
+
+
+            <span aria-hidden="true" class="artdeco-button__text react-button__text social-action-button__text
+                ">
+              Synes godt om
+            </span>
+        </div>
+      
+</span></button>
+
+      <button aria-label="Åbn reaktionsmenu" aria-expanded="false" id="ember65" class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view reactions-menu__trigger" data-finite-scroll-hotkey="l"><!---->
+<span class="artdeco-button__text">
+    
+        <svg role="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+      
+</span></button>
+    </span>
+  
+              <span tabindex="-1" id="ember66" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+  <div>
+    <button role="button" aria-label="Kommenter" id="feed-shared-social-action-bar-comment-ember61" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button comment-button flex-wrap " data-finite-scroll-hotkey="c">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="comment-small">
+<!---->    
+    <use href="#comment-small" width="16" height="16"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    Kommenter
+</span></button>
+  </div>
+  <div id="artdeco-gen-42" class="ember-view"><div id="ember69" class="ember-view"></div></div>
+</span>
+              
+    <div id="ember70" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+      <span tabindex="-1" id="ember72" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view flex-1 display-flex">
+        <button aria-expanded="false" aria-label="" id="ember73" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view 
+            artdeco-button social-actions-button social-reshare-button flex-wrap
+            artdeco-button--muted artdeco-button--3 artdeco-button--tertiary" data-finite-scroll-hotkey="r" type="button" tabindex="0">
+            <svg role="none" aria-hidden="true" class="artdeco-button__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="repost-small">
+<!---->    
+    <use href="#repost-small" width="16" height="16"></use>
+</svg>
+
+            <span class="artdeco-button__text social-action-button__text">Slå op igen</span>
+        
+<!----></button>
+
+        <div tabindex="-1" aria-hidden="true" id="ember74" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view social-reshare-button__share-dropdown-content"><!----></div>
+
+        <div id="artdeco-gen-43" class="ember-view"><div id="ember76" class="ember-view"></div></div>
+      </span>
+        <div>
+  
+      
+<!---->  
+  
+</div>
+
+<!---->
+<!---->    </div>
+  
+                <div class="feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+                  <span tabindex="-1" id="ember77" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+                    
+    <button aria-label="Send i en privat meddelelse" id="ember78" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button send-privately-button flex-wrap
+         send-privately-button" data-finite-scroll-hotkey="s" type="button">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="send-privately-small" data-rtl="true">
+<!---->    
+    <use href="#send-privately-small" width="16" height="16"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    
+        <span class="artdeco-button__text social-action-button__text">
+          Send
+        </span>
+    
+</span></button>
+  
+                    <div id="artdeco-gen-44" class="ember-view"><div id="ember80" class="ember-view"></div></div>
+                  </span>
+                </div>
+<!----><!---->          
+    </div>
+  
+<!----><!----><!---->    
+    </div>
+  
+  
+                  <!---->                </div>
+
+                  
+    
+    <div id="ember81" class="update-v2-social-activity
+        
+        
+        ">
+      
+<!----><!---->
+<!---->
+        <span aria-live="polite" role="alert" class="visually-hidden" aria-label=""></span>
+
+<!---->
+          
+<!---->                    
+
+          
+    <div class="align-items-start comments-quick-comments display-flex justify-center ph2
+        comments-quick-comments--animate-in">
+<!---->      <ul class="comments-quick-comments__container comments-quick-comments__container--scrollable">
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              comments-quick-comments-hscroll-bar-button--first
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="0">
+            <button aria-label="Svar på samtalen med Elsker dette, Rasmus" id="ember283" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Elsker dette, Rasmus
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="1">
+            <button aria-label="Svar på samtalen med Spændende 🔥" id="ember284" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Spændende 🔥
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="2">
+            <button aria-label="Svar på samtalen med Det lyder virkelig indsigtsfuldt, Rasmus" id="ember285" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Det lyder virkelig indsigtsfuldt, Rasmus
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="3">
+            <button aria-label="Svar på samtalen med Fantastisk!" id="ember286" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Fantastisk!
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="4">
+            <button aria-label="Svar på samtalen med 💯 Super" id="ember287" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    💯 Super
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="5">
+            <button aria-label="Svar på samtalen med Det er fantastisk, Rasmus" id="ember288" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Det er fantastisk, Rasmus
+</span></button>
+          </li>
+          <li class="comments-quick-comments__list-item flex-shrink-zero
+              
+              comments-quick-comments-hscroll-bar-button--last
+              " dir="function(){var[e,...i]=(0,c.reifyPositional)(t)
+0
+for(var a=arguments.length,s=new Array(a),o=0;o<a;o++)s[o]=arguments[o]
+if((0,r.isInvokableRef)(n)){var u=i.length>0?i[0]:s[0]
+return(0,r.updateRef)(n,u)}return e.call(cr,...i,...s)}" data-index="6">
+            <button aria-label="Svar på samtalen med Spændt på dette" id="ember289" class="comments-quick-comments__reply-button comments-quick-comments__reply-button--dark-mode artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view"><!---->
+<span class="artdeco-button__text">
+    Spændt på dette
+</span></button>
+          </li>
+      </ul>
+
+        <button class="mr2 comments-quick-comments__scroll-button-v2 comments-quick-comments__scroll-right--button" aria-label="Næste" type="button">
+          <svg role="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="chevron-right-small" data-rtl="true">
+<!---->    
+    <use href="#chevron-right-small" width="16" height="16"></use>
+</svg>
+
+        </button>
+    </div>
+  
+
+          <div class="feed-shared-update-v2__comments-container display-flex flex-column
+              ">
+              <div id="ember290" class="comments-comment-box--cr
+    
+    comments-comment-box--no-avatar
+    
+    " data-scroll-name="true">
+      <div class="display-flex flex-1">
+<!---->
+<!---->        <form class="comments-comment-box__form" data-engageiq-button-injected="true">
+          <div class="comments-comment-texteditor
+              ">
+            <div class="display-flex
+                flex-wrap">
+              <div class="comments-comment-box-comment__text-editor">
+  
+      
+      
+  
+    <div>
+<!---->        
+    
+    <div class="editor-container relative">
+      <div>
+        <div class="editor-content ql-container"><div class="ql-editor ql-blank" data-gramm="false" contenteditable="true" data-placeholder="Tilføj en kommentar …" aria-placeholder="Tilføj en kommentar …" aria-label="Tekstredigeringsværktøj til oprettelse af indhold" role="textbox" aria-multiline="true" aria-describedby="ember311-text-editor-placeholder" data-test-ql-editor-contenteditable="true"><p><br></p></div><div class="ql-clipboard" contenteditable="true" tabindex="-1"></div></div>
+          <span class="a11y-text" aria-hidden="true" id="ember311-text-editor-placeholder">
+            Tilføj en kommentar …
+          </span>
+
+<!---->      </div>
+<!---->    </div>
+  
+  
+    </div>
+  
+
+  
+  
+</div>
+<!---->              <div class="display-flex justify-space-between">
+                <div class="display-flex">
+                    
+      
+                        
+    <div>
+      <span tabindex="-1" id="ember312" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top ember-view">
+        <button title="Åbn Emoji-keyboard" aria-label="Åbn Emoji-keyboard" aria-expanded="false" aria-controls="artdeco-hoverable-comments_overlay_emoji__emoji-hoverable__content" id="ember313" class="comments-comment-box__emoji-picker-trigger emoji-hoverable-trigger artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view" type="button">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" data-supported-dps="24x24" data-test-icon="emoji-medium">
+<!---->    
+    <use href="#emoji-medium" width="24" height="24"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    Åbn Emoji-keyboard
+</span></button>
+          
+      </span>
+
+        <div id="comments_overlay_emoji__emoji-hoverable__content" class="ember-view"><div id="ember315" class="ember-view"></div></div>
+    </div>
+  
+                    
+  
+                    <div class="comments-comment-box__detour-container">
+                        <button aria-label="Tilføj et foto" id="ember292" class="comments-comment-box__detour-icons artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view" type="button">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" data-supported-dps="24x24" data-test-icon="image-medium">
+<!---->    
+    <use href="#image-medium" width="24" height="24"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    
+</span></button>
+                    </div>
+                </div>
+                <div class="display-flex align-items-center">
+<!----><!---->                </div>
+              </div>
+            </div>
+          </div>
+<!----><!---->        <button type="button" class="engageiq-button" title="Generate Comments with EngageIQ"><img src="chrome-extension://hbogmdflnoognnfafegmkmhcahfglpbd/icons/icon16.png" alt="EngageIQ" width="16" height="16"></button></form>
+      </div>
+
+    <!---->
+</div>
+
+<!---->
+<!---->
+                <div class="comments-sort-order-toggle mr2 ml3 mb2">
+  <div id="ember293" class="comments-sort-order-toggle__dropdown artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-left ember-view">
+    <button aria-expanded="false" id="ember294" class="comments-sort-order-toggle__trigger artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view" type="button" tabindex="0">
+      <span class="visually-hidden">
+        Sorteret efter Mest relevant
+      </span>
+      <span aria-hidden="true" class="display-flex align-items-center t-black--light t-bold">
+        Mest relevant
+        <svg role="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+      </span>
+    
+<!----></button>
+    <div tabindex="-1" aria-hidden="true" id="ember295" class="dropdown-options comments-sort-order-toggle__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"><!----></div>
+  </div>
+</div>
+              <div id="ember296" class="comments-comments-list
+    comments-comments-list--cr">
+<!----><!---->
+    <div class="comments-comment-list__container">
+          
+                
+    <article class="comments-comment-entity
+        
+        
+        
+        " data-id="urn:li:comment:(activity:7312747707863830528,7312753038102822912)" id="ember297" tabindex="-1">
+        
+    <div class="comments-comment-meta__container
+        comments-comment-meta__container--parent">
+      <div class="comments-comment-meta__actor">
+        <a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM  comments-comment-meta__image-link" aria-label="Vis Mona Borksted Nielsens profil" target="_self" href="https://www.linkedin.com/in/mona-borksted-nielsen-a9b98a7" data-test-app-aware-link="">
+          
+    <div class="ivm-image-view-model   ">
+        
+    <div class="ivm-view-attr__img-wrapper
+        
+        ">
+<!---->
+<!---->          <img width="32" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" height="32" alt="Vis Mona Borksted Nielsens profil" id="ember298" class="EntityPhoto-circle-1-ghost-person ivm-view-attr__ghost-entity   evi-image lazy-image ghost-person ember-view">
+    </div>
+  
+          </div>
+  
+        </a>
+
+        <a class="DOgZOenwMQbHzVlKpcdwpsKlJNhiKoDGZrrVVbuM  comments-comment-meta__description-container tap-target overflow-hidden" aria-label="Se: Mona Borksted Nielsen • Følger Nordic Market Manager at Continia Software a/s - Master International Business" target="_self" href="https://www.linkedin.com/in/mona-borksted-nielsen-a9b98a7" data-test-app-aware-link="">
+          <h3 class="comments-comment-meta__description">
+            <span class="comments-comment-meta__description-title">
+              <!---->Mona Borksted Nielsen<!---->
+            </span><span class="comments-comment-meta__data">
+                <span class="white-space-pre"> </span>• Følger<!---->
+              </span><!----></h3><div class="comments-comment-meta__description-subtitle">
+              Nordic Market Manager at Continia Software a/s - Master International Business
+            </div></a>
+      </div>
+        <div class="comments-comment-meta__info">
+<!---->          <time class="comments-comment-meta__data">
+            36m
+          </time>
+
+            <div class="comment-options-trigger comments-comment-meta__options">
+  <div id="ember299" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view">
+    <button aria-expanded="false" id="ember300" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view artdeco-button artdeco-button--1 artdeco-button--circle artdeco-button--tertiary artdeco-button--muted" type="button" tabindex="0">
+        <svg role="img" aria-hidden="false" aria-label="Se valgmuligheder for Mona Borksted Nielsens kommentar" class="comment-options-dropdown__trigger-icon t-black--light" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="overflow-web-ios-small">
+<!---->    
+    <use href="#overflow-web-ios-small" width="16" height="16"></use>
+</svg>
+
+    
+<!----></button>
+    <div tabindex="-1" aria-hidden="true" id="ember301" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view dropdown-options absolute"><!----></div>
+  </div>
+</div>
+        </div>
+    </div>
+  
+
+        
+  <div class="comments-thread-entity">
+      <div class="comments-thread-spacing__default"></div>
+    <div class="comments-thread-item">
+      
+          <section class="comments-comment-entity__content">
+              
+    <div class="break-words">
+      
+                  
+    <div class="feed-shared-inline-show-more-text
+        
+        
+        
+        
+        
+        
+         comments-comment-item__inline-show-more-text
+                      
+                      
+                      
+                      
+                      " tabindex="-1">
+      
+                    <span class="comments-comment-item__main-content feed-shared-main-content--comment t-14 t-black t-normal" dir="ltr">
+                      <div dir="ltr" class="update-components-text relative">
+    <span dir="ltr"><!---->Tak fordi du var med til at bidrage til en skøn dag 🤩<span class="white-space-pre"> </span></span>
+</div>
+                    </span>
+                  <!----><!---->    </div>
+  
+<!----><!---->              
+    </div>
+  
+<!---->          </section>
+        
+    </div>
+  </div>
+
+        
+    <div id="ember302" class="comment-social-activity
+    ">
+      
+  
+    <div>
+      <div id="ember303" class="ember-view"><!----></div>
+    </div>
+  
+          
+  <div class="comments-thread-entity">
+      <div class="comments-thread-spacing__default"></div>
+    <div class="comments-thread-item">
+      
+            <div class="comments-comment-social-bar--cr">
+    <div class="comments-comment-social-bar__action-group--cr">
+      
+    <span class="reactions-react-button comments-comment-social-bar__reaction-action-button--cr">
+      
+    <span class="reactions-menu reactions-menu--active reactions-menu--humor-enabled reactions-menu--v2
+        
+        
+        
+        " style="">
+        
+    <button aria-label="Reager med Synes godt om på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Synes godt om</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-LIKE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/aw9hgzu26674bp8ges58l68hz" alt="like" data-test-reactions-icon-type="LIKE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Hyld på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Hyld</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-PRAISE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/3ucoryxergmvijtgd5iop81ci" alt="celebrate" data-test-reactions-icon-type="PRAISE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Støt på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Støt</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-APPRECIATION data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/2bo3ynpenae7uhstqkrsj5ytl" alt="support" data-test-reactions-icon-type="APPRECIATION" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Vild med på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Vild med</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-EMPATHY data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/cfi6xloqadgsnlv6tqk1p343w" alt="love" data-test-reactions-icon-type="EMPATHY" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Indsigtsfuldt på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Indsigtsfuldt</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-INTEREST data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/8s2sxa4k2h741ngjfi5dqzbvu" alt="insightful" data-test-reactions-icon-type="INTEREST" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="Reager med Sjov på Mona Borksted Nielsens kommentar" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Sjov</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-ENTERTAINMENT data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/qye2jwjc8dw20nuv6diudrsi" alt="funny" data-test-reactions-icon-type="ENTERTAINMENT" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+    </span>
+  
+
+      <button aria-pressed="false" aria-label="Reager med synes godt om på Mona Borksted Nielsens kommentar" id="ember304" class="artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view social-actions-button react-button__trigger
+          "><!---->
+<span class="artdeco-button__text">
+    
+        <div class="flex-wrap justify-center
+            artdeco-button__text align-items-center">
+<!---->
+            <span aria-hidden="true" class="artdeco-button__text react-button__text social-action-button__text
+                ">
+              Synes godt om
+            </span>
+        </div>
+      
+</span></button>
+
+      <button aria-label="Åbn reaktionsmenu" aria-expanded="false" id="ember305" class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view reactions-menu__trigger" data-finite-scroll-hotkey="l"><!---->
+<span class="artdeco-button__text">
+    
+        <svg role="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+      
+</span></button>
+    </span>
+  <!----></div>
+
+      <div class="comments-comment-social-bar__vertical-divider"></div>
+
+      <div class="comments-comment-social-bar__action-group--cr">
+          <button aria-label="Svar på Mona Borksted Nielsens kommentar" id="ember306" class="artdeco-button artdeco-button--muted artdeco-button--1 artdeco-button--tertiary ember-view comments-comment-social-bar__reply-action-button--cr button reply"><!---->
+<span class="artdeco-button__text">
+    
+<!---->  <span aria-hidden="true">
+    Svar
+  </span>
+
+</span></button>
+<!----></div>
+
+<!----></div>
+
+<!---->
+          
+    </div>
+  </div>
+
+
+<!---->
+<!---->
+<!----><!----><!---->
+    </div>
+  
+        <div id="ember307" class="ember-view"><div id="ember308" class="ember-view"><!----></div></div>
+          
+  <div id="ember309" class="ember-view"><!----></div>
+
+<!----><!----><!---->          </article>
+  
+          
+    </div>
+<!----></div>
+          </div>
+    
+    </div>
+  
+  
+
+<!---->
+                  
+<!---->
+<!---->
+<!---->  
+
+<!---->
+          
+              </div>

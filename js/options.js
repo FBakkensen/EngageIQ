@@ -8,14 +8,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sub-step 1.2.10 & 1.2.11: Load saved API key on page load
   chrome.storage.sync.get(['apiKey'], function(result) {
     if (chrome.runtime.lastError) {
-      console.error("Error retrieving API key:", chrome.runtime.lastError.message);
+      console.error("EngageIQ: Error retrieving API key:", chrome.runtime.lastError.message);
       statusMessage.textContent = 'Error loading settings.';
       statusMessage.style.color = 'red';
     } else if (result.apiKey) {
       apiKeyInput.value = result.apiKey;
-      console.log("API Key loaded.");
+      console.log("EngageIQ: API Key loaded.");
     } else {
-      console.log("No API Key found in storage.");
+      console.log("EngageIQ: No API Key found in storage.");
     }
   });
 
@@ -31,11 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.set({ apiKey: apiKey }, function() {
       // Sub-step 1.2.8: Implement the set callback
       if (chrome.runtime.lastError) {
-        console.error("Error saving API key:", chrome.runtime.lastError.message);
+        console.error("EngageIQ: Error saving API key:", chrome.runtime.lastError.message);
         statusMessage.textContent = 'Error saving API key.';
         statusMessage.style.color = 'red';
       } else {
-        console.log("API Key saved successfully.");
+        console.log("EngageIQ: API Key saved successfully.");
         statusMessage.textContent = 'API Key saved successfully!';
         statusMessage.style.color = 'green';
 

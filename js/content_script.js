@@ -3,24 +3,27 @@
  * Content Script - Runs in the context of LinkedIn pages
  */
 
-console.log("EngageIQ Content Script Loaded");
+console.log("EngageIQ: Content Script Loaded");
 
 // Global variables
 let engageIQIframe = null;
 
 /**
- * Target CSS selectors for LinkedIn comment boxes
- * Note: These selectors will likely need iteration as LinkedIn updates their DOM structure
+ * Target CSS selectors for LinkedIn comment boxes/editors
+ * Note: These selectors WILL likely need iteration as LinkedIn updates their DOM structure.
+ * Validated against a DOM snippet (docs/LinkedinPostDOMSnippet.txt) on 2025-04-01.
  */
 const COMMENT_BOX_SELECTORS = [
+  // Targets the outer form element of the comment box (Matches snippet line 569)
   '.feed-shared-update-v2 .comments-comment-box__form',
-  'div[aria-label="Write a comment"]',
-  '.comments-comment-texteditor__content' // Potential additional selector
+  
+  // Targets the editable div element within the comment form (Matches snippet line 584)
+  '.comments-comment-box__form .ql-editor',
 ];
 
 /**
- * Find all comment boxes on the page using the defined selectors
- * @returns {NodeList} List of comment box elements found on the page
+ * Find all comment boxes/editors on the page using the defined selectors
+ * @returns {NodeList} List of comment box/editor elements found on the page
  */
 function findCommentBoxes() {
   let allCommentBoxes = [];
@@ -33,7 +36,10 @@ function findCommentBoxes() {
     }
   });
   
-  return allCommentBoxes;
+  // Remove duplicates by converting to Set and back to Array
+  const uniqueElements = [...new Set(allCommentBoxes)];
+  
+  return uniqueElements; // Return only unique elements
 }
 
 /**
@@ -41,7 +47,7 @@ function findCommentBoxes() {
  */
 function processCommentBoxes() {
   const commentBoxes = findCommentBoxes();
-  console.log(`EngageIQ found ${commentBoxes.length} comment boxes`);
+  console.log(`EngageIQ: Found ${commentBoxes.length} comment boxes/editors`); // Updated log message
   
   commentBoxes.forEach(commentBox => {
     // Check if already processed to avoid duplicates
@@ -76,7 +82,7 @@ function processCommentBoxes() {
     // Mark as processed
     commentBox.setAttribute('data-engageiq-button-injected', 'true');
     
-    console.log('EngageIQ button injected for a comment box');
+    console.log('EngageIQ: Button injected for a comment box/editor'); // Updated log message
   });
 }
 
@@ -90,7 +96,7 @@ function getOrCreateIframe() {
     engageIQIframe.id = 'engageiq-popup-iframe';
     engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
     document.body.appendChild(engageIQIframe);
-    console.log('EngageIQ iframe created');
+    console.log('EngageIQ: Iframe created');
   }
   return engageIQIframe;
 }
@@ -108,10 +114,10 @@ function handleEngageIQButtonClick(event) {
   // Toggle the iframe visibility
   if (iframe.style.display === 'block') {
     iframe.style.display = 'none';
-    console.log('EngageIQ iframe hidden');
+    console.log('EngageIQ: Iframe hidden');
   } else {
     iframe.style.display = 'block';
-    console.log('EngageIQ iframe shown');
+    console.log('EngageIQ: Iframe shown');
   }
 }
 
@@ -130,7 +136,7 @@ function setupMutationObserver() {
   
   // Observe the body for changes, looking for added comment boxes
   observer.observe(document.body, { childList: true, subtree: true });
-  console.log('EngageIQ MutationObserver set up');
+  console.log('EngageIQ: MutationObserver set up');
 }
 
 // Initial processing after the DOM is fully loaded
