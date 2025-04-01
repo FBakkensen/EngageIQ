@@ -380,18 +380,18 @@
         *   *Verification:* Loading/error states hide accordion.
 
 *   **Step 6.3: Implement Suggestion Rendering Function (`js/popup.js`)**
-    *   [ ] **Sub-step 6.3.1:** Create function `displaySuggestions(suggestions)`.
+    *   [x] **Sub-step 6.3.1:** Create function `displaySuggestions(suggestions)`.
         *   *Verification:* Function exists.
-    *   [ ] **Sub-step 6.3.2:** Get reference to `#suggestionsAccordion`.
-    *   [ ] **Sub-step 6.3.3:** Clear previous content (`accordionContainer.innerHTML = '';`).
+    *   [x] **Sub-step 6.3.2:** Get reference to `#suggestionsAccordion`.
+    *   [x] **Sub-step 6.3.3:** Clear previous content (`accordionContainer.innerHTML = '';`).
         *   *Verification:* Container is cleared on re-render.
-    *   [ ] **Sub-step 6.3.4:** Define reaction type order (e.g., `['insightful', 'like', ...]`).
-    *   [ ] **Sub-step 6.3.5:** Iterate through ordered reaction types: generate unique IDs, create HTML string/DOM elements for accordion item (`.accordion-item`, `.accordion-header`, `.accordion-button`, `.accordion-collapse`, `.accordion-body`). Inside body: add paragraph for text (`id="suggestion-text-${reactionType}"`), add buttons ('-', '+', 'Accept') with classes/data attributes (`data-reaction="..."`). Append item to container.
+    *   [x] **Sub-step 6.3.4:** Define reaction type order (e.g., `['insightful', 'like', ...]`).
+    *   [x] **Sub-step 6.3.5:** Iterate through ordered reaction types: generate unique IDs, create HTML string/DOM elements for accordion item (`.accordion-item`, `.accordion-header`, `.accordion-button`, `.accordion-collapse`, `.accordion-body`). Inside body: add paragraph for text (`id="suggestion-text-${reactionType}"`), add buttons ('-', '+', 'Accept') with classes/data attributes (`data-reaction="..."`). Append item to container.
         *   *Verification:* Function generates and appends correct Bootstrap accordion structure for each suggestion, including text and buttons with identifiers.
 
 *   **Step 6.4: Add Basic Event Listeners for Buttons (`js/popup.js`)**
-    *   [ ] **Sub-step 6.4.1:** Implement `addAccordionButtonListeners()` function using event delegation on `#suggestionsAccordion`. Call this after populating accordion.
-    *   [ ] **Sub-step 6.4.2:** Inside listener: Identify clicked button (`.shorter-btn`, `.longer-btn`, `.accept-btn`) and `data-reaction`. Get current text content for relevant suggestion. Log button type and reaction. Send appropriate `postMessage` (`REQUEST_SHORTER`, `REQUEST_LONGER`, `ACCEPT_SUGGESTION`) to parent (Content Script) with necessary payload (reactionType, currentText / textToAccept). Use `"*"` origin target initially or refine.
+    *   [x] **Sub-step 6.4.1:** Implement `addAccordionButtonListeners()` function using event delegation on `#suggestionsAccordion`. Call this after populating accordion.
+    *   [x] **Sub-step 6.4.2:** Inside listener: Identify clicked button (`.shorter-btn`, `.longer-btn`, `.accept-btn`) and `data-reaction`. Get current text content for relevant suggestion. Log button type and reaction. Send appropriate `postMessage` (`REQUEST_SHORTER`, `REQUEST_LONGER`, `ACCEPT_SUGGESTION`) to parent (Content Script) with necessary payload (reactionType, currentText / textToAccept). Use `"*"` origin target initially or refine.
         *   *Verification:* Listener identifies buttons/reactions, logs clicks, sends correct `postMessage` to parent with payload.
 
 *   **Step 6.5: Verify UI Rendering and Basic Button Interaction**

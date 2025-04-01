@@ -93,9 +93,31 @@ function displaySuggestions(suggestions) {
     // Clear existing content
     suggestionsAccordion.innerHTML = '';
     
-    // Create proper Bootstrap accordion items for each suggestion
-    suggestions.forEach((suggestion, index) => {
-        const itemId = `suggestion-${index}`;
+    // Define reaction type order (LinkedIn standard reactions)
+    const reactionOrder = ['like', 'celebrate', 'support', 'funny', 'love', 'insightful'];
+    
+    // Convert suggestions array to an object keyed by reaction type for easy access
+    const suggestionsByType = {};
+    suggestions.forEach(suggestion => {
+        if (suggestion.type) {
+            suggestionsByType[suggestion.type.toLowerCase()] = suggestion;
+        }
+    });
+    
+    // Iterate through ordered reaction types
+    reactionOrder.forEach(reactionType => {
+        const suggestion = suggestionsByType[reactionType];
+        
+        // Skip if no suggestion for this reaction type
+        if (!suggestion) {
+            console.log(`EngageIQ: No suggestion for reaction type: ${reactionType}`);
+            return;
+        }
+        
+        // Create unique IDs for this reaction type
+        const itemId = `suggestion-${reactionType}`;
+        
+        // Create accordion item
         const accordionItem = document.createElement('div');
         accordionItem.className = 'accordion-item';
         
@@ -111,7 +133,10 @@ function displaySuggestions(suggestions) {
         button.setAttribute('data-bs-target', `#collapse-${itemId}`);
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-controls', `collapse-${itemId}`);
-        button.textContent = suggestion.type || `Suggestion ${index + 1}`;
+        
+        // Capitalize first letter of reaction type for display
+        const displayType = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
+        button.textContent = displayType;
         
         accordionHeader.appendChild(button);
         
@@ -124,8 +149,52 @@ function displaySuggestions(suggestions) {
         
         const accordionBody = document.createElement('div');
         accordionBody.className = 'accordion-body';
-        accordionBody.textContent = suggestion.text || 'No suggestion text available';
         
+        // Add suggestion text paragraph
+        const textParagraph = document.createElement('p');
+        textParagraph.id = `suggestion-text-${reactionType}`;
+        textParagraph.className = 'suggestion-text mb-2';
+        textParagraph.textContent = suggestion.text || 'No suggestion text available';
+        accordionBody.appendChild(textParagraph);
+        
+        // Add button group for controls
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'btn-group btn-group-sm';
+        buttonGroup.setAttribute('role', 'group');
+        buttonGroup.setAttribute('aria-label', 'Suggestion controls');
+        
+        // Add decrease length button
+        const decreaseBtn = document.createElement('button');
+        decreaseBtn.type = 'button';
+        decreaseBtn.className = 'btn btn-outline-secondary';
+        decreaseBtn.textContent = '-';
+        decreaseBtn.setAttribute('data-reaction', reactionType);
+        decreaseBtn.setAttribute('data-action', 'decrease');
+        decreaseBtn.title = 'Make suggestion shorter';
+        buttonGroup.appendChild(decreaseBtn);
+        
+        // Add increase length button
+        const increaseBtn = document.createElement('button');
+        increaseBtn.type = 'button';
+        increaseBtn.className = 'btn btn-outline-secondary';
+        increaseBtn.textContent = '+';
+        increaseBtn.setAttribute('data-reaction', reactionType);
+        increaseBtn.setAttribute('data-action', 'increase');
+        increaseBtn.title = 'Make suggestion longer';
+        buttonGroup.appendChild(increaseBtn);
+        
+        // Add accept button
+        const acceptBtn = document.createElement('button');
+        acceptBtn.type = 'button';
+        acceptBtn.className = 'btn btn-primary ms-2';
+        acceptBtn.textContent = 'Accept';
+        acceptBtn.setAttribute('data-reaction', reactionType);
+        acceptBtn.setAttribute('data-action', 'accept');
+        acceptBtn.title = 'Use this suggestion';
+        buttonGroup.appendChild(acceptBtn);
+        
+        // Add button group to accordion body
+        accordionBody.appendChild(buttonGroup);
         collapseDiv.appendChild(accordionBody);
         
         // Add header and body to the accordion item
@@ -136,7 +205,92 @@ function displaySuggestions(suggestions) {
         suggestionsAccordion.appendChild(accordionItem);
     });
     
+    // Add event listeners to the buttons
+    addAccordionButtonListeners();
+    
     showState('suggestions');
+}
+
+/**
+ * Adds event listeners to the buttons in the suggestions accordion
+ * Uses event delegation to handle all button clicks with a single listener
+ */
+function addAccordionButtonListeners() {
+    // Safety check if DOM references aren't initialized yet
+    if (!suggestionsAccordion) {
+        console.warn('EngageIQ: Cannot add button listeners - DOM references not initialized');
+        return;
+    }
+    
+    console.log('EngageIQ: Adding button event listeners to suggestion accordion');
+    
+    // Remove any existing listeners to prevent duplicates (if re-adding)
+    suggestionsAccordion.removeEventListener('click', handleAccordionButtonClick);
+    
+    // Add event listener using event delegation
+    suggestionsAccordion.addEventListener('click', handleAccordionButtonClick);
+}
+
+/**
+ * Event handler for accordion button clicks
+ * @param {Event} event - The click event
+ */
+function handleAccordionButtonClick(event) {
+    // Identify if a button was clicked
+    const button = event.target.closest('button[data-action]');
+    
+    // If not a button with data-action, ignore
+    if (!button) return;
+    
+    // Get the action and reaction from the button's data attributes
+    const action = button.getAttribute('data-action');
+    const reactionType = button.getAttribute('data-reaction');
+    
+    // Find the text element for this reaction type
+    const textElement = document.getElementById(`suggestion-text-${reactionType}`);
+    
+    if (!textElement) {
+        console.warn(`EngageIQ: Could not find text element for reaction type: ${reactionType}`);
+        return;
+    }
+    
+    // Get the current text content
+    const currentText = textElement.textContent;
+    
+    console.log(`EngageIQ: Button clicked - Action: ${action}, Reaction: ${reactionType}`);
+    
+    // Handle different actions
+    switch (action) {
+        case 'decrease':
+            console.log(`EngageIQ: Requesting shorter suggestion for ${reactionType}`);
+            sendMessageToContentScript({
+                type: 'REQUEST_SHORTER',
+                reactionType: reactionType,
+                currentText: currentText
+            });
+            break;
+            
+        case 'increase':
+            console.log(`EngageIQ: Requesting longer suggestion for ${reactionType}`);
+            sendMessageToContentScript({
+                type: 'REQUEST_LONGER',
+                reactionType: reactionType,
+                currentText: currentText
+            });
+            break;
+            
+        case 'accept':
+            console.log(`EngageIQ: Accepting suggestion for ${reactionType}: ${currentText}`);
+            sendMessageToContentScript({
+                type: 'ACCEPT_SUGGESTION',
+                reactionType: reactionType,
+                textToAccept: currentText
+            });
+            break;
+            
+        default:
+            console.warn(`EngageIQ: Unknown button action: ${action}`);
+    }
 }
 
 /**
