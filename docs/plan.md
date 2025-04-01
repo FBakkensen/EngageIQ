@@ -255,14 +255,14 @@
         *   *Verification:* `content_style.css` contains rules for iframe container. Ensure linked in manifest.
 
 *   **Step 3.5: Update Content Script (`js/content_script.js`) to Manage Iframe**
-    *   [ ] **Sub-step 3.5.1:** Define variable `engageIQIframe = null;`.
-    *   [ ] **Sub-step 3.5.2:** Create function `getOrCreateIframe()`: Checks existence, creates `<iframe>`, sets `id="engageiq-popup-iframe"`, sets `src = chrome.runtime.getURL("html/popup.html")`, appends to `document.body`, stores reference. Returns element.
+    *   [x] **Sub-step 3.5.1:** Define variable `engageIQIframe = null;`.
+    *   [x] **Sub-step 3.5.2:** Create function `getOrCreateIframe()`: Checks existence, creates `<iframe>`, sets `id="engageiq-popup-iframe"`, sets `src = chrome.runtime.getURL("html/popup.html")`, appends to `document.body`, stores reference. Returns element.
         *   *Verification:* Function creates/returns iframe, prevents duplicates.
-    *   [ ] **Sub-step 3.5.3:** Add click listener `handleEngageIQButtonClick` to the injected buttons (in Phase 2 loop).
+    *   [x] **Sub-step 3.5.3:** Add click listener `handleEngageIQButtonClick` to the injected buttons (in Phase 2 loop).
         *   *Verification:* `button.addEventListener('click', ...)` is added.
-    *   [ ] **Sub-step 3.5.4:** Create function `handleEngageIQButtonClick(event)`.
+    *   [x] **Sub-step 3.5.4:** Create function `handleEngageIQButtonClick(event)`.
         *   *Verification:* Function exists.
-    *   [ ] **Sub-step 3.5.5:** Inside handler: Call `getOrCreateIframe()`. Toggle iframe `display` style between `block` and `none`. Log showing/hiding action.
+    *   [x] **Sub-step 3.5.5:** Inside handler: Call `getOrCreateIframe()`. Toggle iframe `display` style between `block` and `none`. Log showing/hiding action.
         *   *Verification:* Handler calls creator function, toggles `display` style.
 
 *   **Step 3.6: Verify Basic Iframe Display Toggle**

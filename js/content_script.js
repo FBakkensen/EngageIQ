@@ -91,12 +91,8 @@ function processCommentBoxes() {
             }
         }
         
-        // Add click event listener (placeholder for now)
-        engageButton.addEventListener('click', function(event) {
-            event.preventDefault();
-            console.log("EngageIQ: Button clicked!");
-            // TODO: Implement button click handler in future steps
-        });
+        // Add click event listener - Updated for Step 3.5
+        engageButton.addEventListener('click', handleEngageIQButtonClick);
 
         // Mark the comment box as processed
         box.dataset.engageiqButtonInjected = 'true';
@@ -130,7 +126,65 @@ observer.observe(document.body, observerConfig);
 console.log("EngageIQ: Initial check for comment boxes.");
 processCommentBoxes();
 
-// --- Global variables (Placeholder for iframe, might be needed later) ---
-let _engageIQIframe = null;
+// --- Global variables ---
+let engageIQIframe = null; // Renamed from _engageIQIframe for Step 3.5.1
 
-// --- Phase 2: Button Injection Logic (To be implemented in Step 2.4) ---
+// --- Iframe Management (Step 3.5) ---
+
+/**
+ * Gets the existing iframe or creates it if it doesn't exist.
+ * Ensures only one instance of the iframe is added to the page.
+ * @returns {HTMLIFrameElement} The EngageIQ popup iframe element.
+ */
+function getOrCreateIframe() {
+    if (!engageIQIframe) {
+        console.log("EngageIQ: Creating popup iframe.");
+        engageIQIframe = document.createElement('iframe');
+        engageIQIframe.id = 'engageiq-popup-iframe'; // ID matches css/content_style.css
+        // Use chrome.runtime.getURL to access extension resources
+        try {
+            engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
+            console.log("EngageIQ: Iframe src set to:", engageIQIframe.src);
+            engageIQIframe.style.display = 'none'; // Start hidden
+            document.body.appendChild(engageIQIframe);
+            console.log("EngageIQ: Iframe appended to body.");
+        } catch (error) {
+            console.error("EngageIQ: Error setting iframe src or appending to body:", error);
+            // Handle error appropriately, maybe return null or throw
+            return null; 
+        }
+    } else {
+        console.log("EngageIQ: Reusing existing popup iframe.");
+    }
+    return engageIQIframe;
+}
+
+/**
+ * Handles the click event on the EngageIQ icon button.
+ * Toggles the visibility of the popup iframe.
+ * @param {Event} event - The click event object.
+ */
+function handleEngageIQButtonClick(event) {
+    event.preventDefault();
+    event.stopPropagation(); // Prevent event bubbling
+    console.log("EngageIQ: handleEngageIQButtonClick triggered.");
+
+    const iframe = getOrCreateIframe();
+
+    if (iframe) {
+        if (iframe.style.display === 'none' || iframe.style.display === '') {
+            iframe.style.display = 'block';
+            console.log("EngageIQ: Showing iframe.");
+            // TODO: Potentially send an initial message to the iframe
+            // iframe.contentWindow.postMessage({ type: 'POPUP_OPENED' }, '*'); // Specify target origin!
+        } else {
+            iframe.style.display = 'none';
+            console.log("EngageIQ: Hiding iframe.");
+        }
+    } else {
+        console.error("EngageIQ: Failed to get or create iframe.");
+        // Optionally show an error to the user
+    }
+}
+
+// --- Phase 2: Button Injection Logic (Implemented above) ---
