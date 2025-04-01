@@ -295,10 +295,10 @@
         *   *Verification:* Logic retrieves key, handles missing key error, creates dummy data, sends success/error response correctly.
 
 *   **Step 4.3: Enhance Popup Script (`js/popup.js`) to Display Data**
-    *   [ ] **Sub-step 4.3.1:** Open `js/popup.js`.
-    *   [ ] **Sub-step 4.3.2:** Get DOM references to `#loadingState`, `#errorState`, `#suggestionAccordionPlaceholder`.
+    *   [x] **Sub-step 4.3.1:** Open `js/popup.js`.
+    *   [x] **Sub-step 4.3.2:** Get DOM references to `#loadingState`, `#errorState`, `#suggestionAccordionPlaceholder`.
         *   *Verification:* Variables reference elements.
-    *   [ ] **Sub-step 4.3.3:** Enhance `message` listener: Add `switch` statement for `type`. Handle `SHOW_LOADING` (show loading, hide others), `SHOW_ERROR` (show error div with payload message, hide others), `SHOW_SUGGESTIONS` (hide loading/error, display stringified `payload.suggestions` in content placeholder).
+    *   [x] **Sub-step 4.3.3:** Enhance `message` listener: Add `switch` statement for `type`. Handle `SHOW_LOADING` (show loading, hide others), `SHOW_ERROR` (show error div with payload message, hide others), `SHOW_SUGGESTIONS` (hide loading/error, display stringified `payload.suggestions` in content placeholder).
         *   *Verification:* Listener manages visibility of states. `SHOW_ERROR` displays message. `SHOW_SUGGESTIONS` displays stringified dummy data.
 
 *   **Step 4.4: Verify End-to-End Communication Flow**
