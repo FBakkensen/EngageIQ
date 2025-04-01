@@ -1,1 +1,43 @@
+/**
+ * EngageIQ Chrome Extension
+ * Content Style - Applied to LinkedIn pages where content script runs
+ */
 
+/* Style for the EngageIQ button */
+.engageiq-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  margin: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.engageiq-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.engageiq-button img {
+  display: block;
+}
+
+/* Style for the EngageIQ popup iframe */
+#engageiq-popup-iframe {
+  position: fixed;
+  top: 20%;
+  right: 5%;
+  width: 350px;
+  height: 450px;
+  z-index: 9999;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  display: none; /* Initially hidden */
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}

@@ -174,8 +174,8 @@
         *   *Verification:* `content_scripts` declaration is correct. `css/content_style.css` exists.
 
 *   **Step 2.2: Implement Basic Content Script (`js/content_script.js`)**
-    *   [ ] **Sub-step 2.2.1:** Create/Open `js/content_script.js`.
-    *   [ ] **Sub-step 2.2.2:** Add a simple `console.log("EngageIQ Content Script Loaded");`.
+    *   [x] **Sub-step 2.2.1:** Create/Open `js/content_script.js`.
+    *   [x] **Sub-step 2.2.2:** Add a simple `console.log("EngageIQ Content Script Loaded");`.
         *   *Verification:* Log message appears in main page console on LinkedIn.
 
 *   **Step 2.3: Implement Comment Field Detection Logic**
