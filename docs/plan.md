@@ -283,8 +283,8 @@
 *   **Prerequisites:** Phases 0-3 completed.
 
 *   **Step 4.1: Update Content Script (`js/content_script.js`) for Outgoing Communication**
-    *   [ ] **Sub-step 4.1.1:** Modify `handleEngageIQButtonClick` function.
-    *   [ ] **Sub-step 4.1.2:** When showing iframe: Add dummy `postContent` extraction log. Send `SHOW_LOADING` message to iframe via `postMessage` (with origin target). Send `GENERATE_COMMENTS` message to background via `chrome.runtime.sendMessage` (with dummy content). Implement callback for `sendMessage` to handle response and relay `SHOW_SUGGESTIONS` or `SHOW_ERROR` to iframe via `postMessage`. Handle `chrome.runtime.lastError`.
+    *   [x] **Sub-step 4.1.1:** Modify `handleEngageIQButtonClick` function.
+    *   [x] **Sub-step 4.1.2:** When showing iframe: Add dummy `postContent` extraction log. Send `SHOW_LOADING` message to iframe via `postMessage` (with origin target). Send `GENERATE_COMMENTS` message to background via `chrome.runtime.sendMessage` (with dummy content). Implement callback for `sendMessage` to handle response and relay `SHOW_SUGGESTIONS` or `SHOW_ERROR` to iframe via `postMessage`. Handle `chrome.runtime.lastError`.
         *   *Verification:* Code exists for dummy extraction, `postMessage` to iframe, `sendMessage` to background, and callback handling response/errors.
 
 *   **Step 4.2: Implement Basic Background Script Logic (`js/background.js`)**
