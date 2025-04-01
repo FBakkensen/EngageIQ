@@ -351,11 +351,11 @@
         *   *Verification:* Code navigates response, checks finish reason, extracts/validates args, sends success (`args.comments`) or specific errors via `sendResponse`.
 
 *   **Step 5.6: Verify End-to-End Flow with Real API**
-    *   [ ] **Sub-step 5.6.1:** Ensure VALID API key saved.
-    *   [ ] **Sub-step 5.6.2:** Reload extension.
-    *   [ ] **Sub-step 5.6.3:** Go to LinkedIn, click button.
+    *   [x] **Sub-step 5.6.1:** Ensure VALID API key saved.
+    *   [x] **Sub-step 5.6.2:** Reload extension.
+    *   [x] **Sub-step 5.6.3:** Go to LinkedIn, click button.
         *   *Verification:* Popup shows loading, then `pre`-formatted JSON of *actual* Gemini suggestions based on (dummy) post content. Check consoles for success logs.
-    *   [ ] **Sub-step 5.6.4:** Test error handling (invalid key, network disconnect, rate limit, content policy if possible).
+    *   [x] **Sub-step 5.6.4:** Test error handling (invalid key, network disconnect, rate limit, content policy if possible).
         *   *Verification:* Popup displays the specific error messages defined in 5.4/5.5.
 
 ---
