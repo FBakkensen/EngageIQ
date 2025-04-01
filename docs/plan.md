@@ -320,9 +320,9 @@
 *   **Prerequisites:** Phase 4 completed, valid Gemini API key available.
 
 *   **Step 5.1: Define API Constants and Schemas**
-    *   [ ] **Sub-step 5.1.1:** In `background.js`, define constants for Gemini API endpoint URL (e.g., `v1beta/models/gemini-pro:generateContent`) and model name. **Verify endpoint supports JSON mode.**
+    *   [x] **Sub-step 5.1.1:** In `background.js`, define constants for Gemini API endpoint URL (e.g., `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=GEMINI_API_KEY`) and model name. **Verify endpoint supports JSON mode.**
         *   *Verification:* Constants exist.
-    *   [ ] **Sub-step 5.1.2:** Define `GENERATION_SCHEMA` constant object (matching PRD O5 structure).
+    *   [x] **Sub-step 5.1.2:** Define `GENERATION_SCHEMA` constant object (matching PRD O5 structure).
         *   *Verification:* Schema constant exists and matches PRD.
 
 *   **Step 5.2: Construct the Gemini API Request**

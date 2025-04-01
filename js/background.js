@@ -3,6 +3,51 @@
  * Background Script - Service worker that runs in the background
  */
 
+// API Configuration Constants
+const GEMINI_MODEL = 'gemini-2.0-flash'; // Using Gemini 2.0 Flash for faster responses
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_GENERATE_CONTENT_ENDPOINT = `${GEMINI_API_BASE_URL}/${GEMINI_MODEL}:generateContent`; // Will append ?key=API_KEY when making the request
+
+// JSON Schema for Gemini API function calling - defines the expected structure of the response
+const GENERATION_SCHEMA = {
+  type: 'object',
+  properties: {
+    comments: {
+      type: 'object',
+      properties: {
+        like: { type: 'string', description: 'Comment suggestion for \'Like\' reaction.' },
+        celebrate: { type: 'string', description: 'Comment suggestion for \'Celebrate\' reaction.' },
+        support: { type: 'string', description: 'Comment suggestion for \'Support\' reaction.' },
+        love: { type: 'string', description: 'Comment suggestion for \'Love\' reaction.' },
+        insightful: { type: 'string', description: 'Comment suggestion for \'Insightful\' reaction.' },
+        funny: { type: 'string', description: 'Comment suggestion for \'Funny\' reaction.' }
+      },
+      required: ['like', 'celebrate', 'support', 'love', 'insightful', 'funny']
+    }
+  },
+  required: ['comments']
+};
+
+// Define schema for length adjustment requests as well
+const LENGTH_ADJUSTMENT_SCHEMA = {
+  type: 'object',
+  properties: {
+    regeneratedComment: {
+      type: 'string',
+      description: 'The regenerated comment with adjusted length.'
+    }
+  },
+  required: ['regeneratedComment']
+};
+
+// Response handling constants - these represent the different sub-steps in the generation process
+const GENERATION_STEPS = {
+  EXTRACT_POST_CONTENT: 'Extracting and analyzing LinkedIn post content',
+  GENERATE_SUGGESTIONS: 'Generating personalized comment suggestions',
+  FORMAT_RESPONSES: 'Formatting responses for different engagement styles',
+  FINAL_VALIDATION: 'Performing final validation and quality checks'
+};
+
 console.log("EngageIQ: Background Script Loaded");
 
 // Listen for messages from content scripts
