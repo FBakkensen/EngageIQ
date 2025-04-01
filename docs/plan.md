@@ -201,7 +201,7 @@
         *   *Verification:* Button insertion code exists.
     *   [x] **Sub-step 2.4.6:** Mark comment box element as processed (e.g., set `data-engageiq-button-injected="true"`).
         *   *Verification:* Marker is applied after injection.
-    *   [ ] **Sub-step 2.4.7:** Call `processCommentBoxes()` once initially after script loads.
+    *   [x] **Sub-step 2.4.7:** Call `processCommentBoxes()` once initially after script loads.
         *   *Verification:* Initial call exists.
 
 *   **Step 2.5: Initial Verification on LinkedIn Page**
