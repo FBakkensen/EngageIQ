@@ -243,10 +243,10 @@
         *   *Verification:* `popup.css` exists. `popup.html` renders basic content.
 
 *   **Step 3.3: Create Basic Popup JavaScript (`js/popup.js`)**
-    *   [ ] **Sub-step 3.3.1:** Create/Open `js/popup.js`.
-    *   [ ] **Sub-step 3.3.2:** Add `console.log("EngageIQ Popup Script Loaded");`.
+    *   [x] **Sub-step 3.3.1:** Create/Open `js/popup.js`.
+    *   [x] **Sub-step 3.3.2:** Add `console.log("EngageIQ Popup Script Loaded");`.
         *   *Verification:* Log appears in iframe's console.
-    *   [ ] **Sub-step 3.3.3:** Add `window.addEventListener('message', ...)` structure with origin check placeholder and basic logging of received data.
+    *   [x] **Sub-step 3.3.3:** Add `window.addEventListener('message', ...)` structure with origin check placeholder and basic logging of received data.
         *   *Verification:* Listener structure exists. Logs appear in iframe console when messages are received later.
 
 *   **Step 3.4: Style the Iframe Container (`css/content_style.css`)**
