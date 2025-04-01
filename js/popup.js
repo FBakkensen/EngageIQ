@@ -99,8 +99,9 @@ function displaySuggestions(suggestions) {
     // Convert suggestions array to an object keyed by reaction type for easy access
     const suggestionsByType = {};
     suggestions.forEach(suggestion => {
-        if (suggestion.type) {
-            suggestionsByType[suggestion.type.toLowerCase()] = suggestion;
+        // Use the id property instead of type
+        if (suggestion.id) {
+            suggestionsByType[suggestion.id.toLowerCase()] = suggestion;
         }
     });
     
@@ -133,10 +134,14 @@ function displaySuggestions(suggestions) {
         button.setAttribute('data-bs-target', `#collapse-${itemId}`);
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-controls', `collapse-${itemId}`);
+        button.setAttribute('data-reaction-type', reactionType); // Store reaction type for manual toggle
         
         // Capitalize first letter of reaction type for display
         const displayType = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
         button.textContent = displayType;
+        
+        // Add manual click handler to toggle collapse
+        button.addEventListener('click', toggleAccordion);
         
         accordionHeader.appendChild(button);
         
@@ -208,7 +213,90 @@ function displaySuggestions(suggestions) {
     // Add event listeners to the buttons
     addAccordionButtonListeners();
     
+    // Try to initialize Bootstrap's Collapse, but we have a fallback toggle handler too
+    try {
+        if (window.bootstrap && window.bootstrap.Collapse) {
+            const accordionButtons = suggestionsAccordion.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                const targetId = button.getAttribute('data-bs-target');
+                if (targetId) {
+                    const collapseElement = document.querySelector(targetId);
+                    if (collapseElement) {
+                        new window.bootstrap.Collapse(collapseElement, {
+                            toggle: false
+                        });
+                        console.log(`EngageIQ: Initialized Bootstrap collapse for ${targetId}`);
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('EngageIQ: Error initializing Bootstrap:', error);
+    }
+    
     showState('suggestions');
+}
+
+/**
+ * Manual toggle handler for accordion items
+ * @param {Event} event - Click event
+ */
+function toggleAccordion(event) {
+    event.preventDefault(); // Prevent default behavior
+    
+    const button = event.currentTarget;
+    const targetId = button.getAttribute('data-bs-target');
+    
+    if (!targetId) return;
+    
+    const collapseElement = document.querySelector(targetId);
+    if (!collapseElement) return;
+    
+    // Check if Bootstrap's Collapse is available
+    if (window.bootstrap && window.bootstrap.Collapse) {
+        // Try to use Bootstrap
+        try {
+            const bsCollapse = window.bootstrap.Collapse.getInstance(collapseElement);
+            if (bsCollapse) {
+                bsCollapse.toggle();
+            } else {
+                new window.bootstrap.Collapse(collapseElement).toggle();
+            }
+            return;
+        } catch (error) {
+            console.warn('EngageIQ: Bootstrap Collapse error, using manual toggle:', error);
+        }
+    }
+    
+    // Manual toggle as fallback
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    
+    // First collapse all items (for accordion behavior)
+    document.querySelectorAll('.accordion-collapse.show').forEach(item => {
+        // Skip if this is our target
+        if (item.id === collapseElement.id) return;
+        
+        // Close this item
+        item.classList.remove('show');
+        const headerButton = document.querySelector(`[data-bs-target="#${item.id}"]`);
+        if (headerButton) {
+            headerButton.classList.add('collapsed');
+            headerButton.setAttribute('aria-expanded', 'false');
+        }
+    });
+    
+    // Now toggle our target
+    if (isExpanded) {
+        collapseElement.classList.remove('show');
+        button.classList.add('collapsed');
+        button.setAttribute('aria-expanded', 'false');
+    } else {
+        collapseElement.classList.add('show');
+        button.classList.remove('collapsed');
+        button.setAttribute('aria-expanded', 'true');
+    }
+    
+    console.log(`EngageIQ: Manually toggled accordion for ${button.textContent}`);
 }
 
 /**

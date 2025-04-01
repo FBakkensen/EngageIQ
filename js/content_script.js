@@ -201,8 +201,33 @@ function handleIframeMessage(event) {
                 pendingIframeMessages = [];
             }
             break;
+        
+        case 'REQUEST_SHORTER':
+            console.log(`EngageIQ: Received request for shorter suggestion - Type: ${event.data.reactionType}`);
+            // Will be implemented in Phase 7
+            // TODO: Send message to background script to request a shorter suggestion
+            break;
             
-        // Handle other message types from popup in future phases
+        case 'REQUEST_LONGER':
+            console.log(`EngageIQ: Received request for longer suggestion - Type: ${event.data.reactionType}`);
+            // Will be implemented in Phase 7
+            // TODO: Send message to background script to request a longer suggestion
+            break;
+            
+        case 'ACCEPT_SUGGESTION':
+            console.log(`EngageIQ: Suggestion accepted - Type: ${event.data.reactionType}`);
+            console.log(`EngageIQ: Text to use: ${event.data.textToAccept}`);
+            // Will be implemented in Phase 8
+            // TODO: Close the popup and insert the text into the comment box
+            
+            // For now, just hide the iframe to simulate completion
+            if (engageIQIframe) {
+                engageIQIframe.style.display = 'none';
+            }
+            break;
+            
+        default:
+            console.log(`EngageIQ: Unhandled iframe message type: ${event.data.type}`);
     }
 }
 

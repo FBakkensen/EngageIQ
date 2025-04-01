@@ -395,12 +395,12 @@
         *   *Verification:* Listener identifies buttons/reactions, logs clicks, sends correct `postMessage` to parent with payload.
 
 *   **Step 6.5: Verify UI Rendering and Basic Button Interaction**
-    *   [ ] **Sub-step 6.5.1:** Ensure valid API key saved. Reload extension.
-    *   [ ] **Sub-step 6.5.2:** Go to LinkedIn, click button.
+    *   [x] **Sub-step 6.5.1:** Ensure valid API key saved. Reload extension.
+    *   [x] **Sub-step 6.5.2:** Go to LinkedIn, click button.
         *   *Verification:* Popup shows loading, then Bootstrap Accordion with 6 items (reaction types). Suggestion text from API is displayed inside each (collapsed).
-    *   [ ] **Sub-step 6.5.3:** Click accordion headers.
+    *   [x] **Sub-step 6.5.3:** Click accordion headers.
         *   *Verification:* Items expand/collapse smoothly, showing text and buttons.
-    *   [ ] **Sub-step 6.5.4:** Click '-', '+', 'Accept' buttons.
+    *   [x] **Sub-step 6.5.4:** Click '-', '+', 'Accept' buttons.
         *   *Verification:* Iframe console logs button type/reaction. Main page console shows message received from iframe (`REQUEST_*`, `ACCEPT_*`). Popup closes on 'Accept'.
 
 ---
