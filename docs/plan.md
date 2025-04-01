@@ -333,8 +333,8 @@
         *   *Verification:* `requestBody` created correctly for JSON output using schema.
 
 *   **Step 5.3: Execute the API Call using `fetch`**
-    *   [ ] **Sub-step 5.3.1:** Replace dummy data generation with `fetch` call.
-    *   [ ] **Sub-step 5.3.2:** Use correct `API_URL` (check key in URL vs header), `POST` method, `Content-Type: application/json` header, `x-goog-api-key` header (preferred), stringified `requestBody`.
+    *   [x] **Sub-step 5.3.1:** Replace dummy data generation with `fetch` call.
+    *   [x] **Sub-step 5.3.2:** Use correct `API_URL` (check key in URL vs header), `POST` method, `Content-Type: application/json` header, `x-goog-api-key` header (preferred), stringified `requestBody`.
         *   *Verification:* `fetch` call structure is correct.
 
 *   **Step 5.4: Handle `fetch` Response and Errors**

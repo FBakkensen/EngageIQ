@@ -162,39 +162,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         
         console.log("EngageIQ: Gemini API request constructed and ready for fetch call");
         
-        // Log that we're still using dummy data for now until Step 5.3 is implemented
-        console.log("EngageIQ: Step 5.2 completed, but still returning dummy suggestions until Step 5.3 is implemented");
+        console.log("EngageIQ: Executing API call to Gemini");
         
-        // This dummy data will be replaced with the actual API call in Step 5.3
-        const dummySuggestions = [
-          {
-            id: 'suggestion-1',
-            text: 'Great insights shared in this post! I particularly appreciate the point about ' + 
-                  postContent.text.substring(0, 30) + '... Have you considered how this applies in different industries?',
-            tone: 'professional',
-            length: 'medium'
+        // Construct the full API URL with the API key
+        const apiUrl = `${GEMINI_GENERATE_CONTENT_ENDPOINT}?key=${result.apiKey}`;
+        
+        // Execute the fetch call
+        fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+            // Note: Using API key in URL query parameter instead of x-goog-api-key header
+            // as it's simpler for extension contexts and both are secure over HTTPS
           },
-          {
-            id: 'suggestion-2',
-            text: 'Thanks for sharing these thoughts! This resonates with some work we\'ve been doing at my company.',
-            tone: 'friendly',
-            length: 'short'
-          },
-          {
-            id: 'suggestion-3',
-            text: 'This is a fascinating perspective. I\'ve been researching this topic recently and found that ' + 
-                  'many professionals are shifting towards the approach you\'ve outlined. Would love to discuss this ' + 
-                  'further and perhaps collaborate on some ideas.',
-            tone: 'enthusiastic',
-            length: 'long'
+          body: JSON.stringify(requestBody)
+        })
+        .then(response => {
+          // Check if the response is OK (status in the range 200-299)
+          if (!response.ok) {
+            console.error(`EngageIQ: API call failed with status ${response.status}`);
+            return response.text().then(errorText => {
+              throw new Error(`API call failed: ${response.status} ${errorText}`);
+            });
           }
-        ];
-        
-        // Send success response with dummy suggestions
-        console.log("EngageIQ: Sending dummy suggestions as response");
-        sendResponse({
-          success: true,
-          suggestions: dummySuggestions
+          // Parse JSON response
+          return response.json();
+        })
+        .then(data => {
+          // This will be handled in Step 5.5
+          console.log("EngageIQ: Received API response:", data);
+          
+          // Temporary: Until Step 5.5 is implemented, still return dummy suggestions
+          console.log("EngageIQ: Step 5.3 completed, but still using dummy data until Step 5.5 is implemented");
+          const dummySuggestions = [
+            {
+              id: 'suggestion-1',
+              text: 'Great insights shared in this post! I particularly appreciate the point about ' + 
+                    postContent.text.substring(0, 30) + '... Have you considered how this applies in different industries?',
+              tone: 'professional',
+              length: 'medium'
+            },
+            {
+              id: 'suggestion-2',
+              text: 'Thanks for sharing these thoughts! This resonates with some work we\'ve been doing at my company.',
+              tone: 'friendly',
+              length: 'short'
+            },
+            {
+              id: 'suggestion-3',
+              text: 'This is a fascinating perspective. I\'ve been researching this topic recently and found that ' + 
+                    'many professionals are shifting towards the approach you\'ve outlined. Would love to discuss this ' + 
+                    'further and perhaps collaborate on some ideas.',
+              tone: 'enthusiastic',
+              length: 'long'
+            }
+          ];
+          
+          sendResponse({
+            success: true,
+            suggestions: dummySuggestions
+          });
+        })
+        .catch(error => {
+          console.error("EngageIQ: Error during API call:", error);
+          sendResponse({
+            success: false,
+            error: 'API Error',
+            details: error.message || 'Failed to get response from Gemini API'
+          });
         });
       });
       
