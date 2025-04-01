@@ -40,8 +40,22 @@ function processCommentBoxes() {
 
         console.log("EngageIQ: Injecting button into box:", box); // Add log for clarity
         const engageButton = document.createElement('button');
+        
+        // Add Bootstrap-like button classes
+        engageButton.className = 'engageiq-btn engageiq-btn-icon';
+        
+        // Create and add icon image
+        const iconImg = document.createElement('img');
+        iconImg.src = chrome.runtime.getURL('icons/icon16.png');
+        iconImg.alt = 'EngageIQ';
+        iconImg.width = 16;
+        iconImg.height = 16;
+        engageButton.appendChild(iconImg);
+        
+        // Add tooltip
+        engageButton.title = 'Generate Comments with EngageIQ';
 
-        // TODO (Step 2.4.3 - 2.4.5): Style, add title, and append button
+        // TODO (Step 2.4.5): Append button
 
         // TODO (Step 2.4.6): Set data-engageiq-button-injected attribute after injection
     });

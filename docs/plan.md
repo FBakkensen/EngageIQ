@@ -193,7 +193,7 @@
         *   *Verification:* Check logic exists.
     *   [x] **Sub-step 2.4.2:** If not injected, create button element (`document.createElement('button')`).
         *   *Verification:* Button creation code exists.
-    *   [ ] **Sub-step 2.4.3:** Style button as icon button: Set `type="button"`, basic CSS (no border/bg), add `<img>` inside with `src = chrome.runtime.getURL("icons/icon16.png")`, set img size.
+    *   [x] **Sub-step 2.4.3:** Style button as icon button: Set `type="button"`, basic CSS (no border/bg), add `<img>` inside with `src = chrome.runtime.getURL("icons/icon16.png")`, set img size.
         *   *Verification:* Button contains `<img>` with correct icon URL. Basic styling applied.
     *   [ ] **Sub-step 2.4.4:** Add `title` attribute to button for tooltip ("Generate Comments with EngageIQ").
         *   *Verification:* `button.title` is set.
