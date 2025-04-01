@@ -181,7 +181,7 @@
 *   **Step 2.3: Implement Comment Field Detection Logic**
     *   [x] **Sub-step 2.3.1:** Define initial target CSS selectors for comment box containers/inputs (e.g., `.feed-shared-update-v2 .comments-comment-box__form`, `div[aria-label="Write a comment"]`). **Document these WILL need iteration.**
         *   *Verification:* Initial selectors documented in code comments.
-    *   [ ] **Sub-step 2.3.2:** Implement `findCommentBoxes()` using `document.querySelectorAll()`.
+    *   [x] **Sub-step 2.3.2:** Implement `findCommentBoxes()` using `document.querySelectorAll()`.
         *   *Verification:* Calling function in console returns expected elements.
     *   [ ] **Sub-step 2.3.3:** Set up a `MutationObserver` watching `document.body` (subtree, childList) to call `processCommentBoxes()` on changes.
         *   *Verification:* Observer callback triggers logs/function calls on LinkedIn page interaction.

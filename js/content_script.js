@@ -5,146 +5,67 @@
 
 console.log("EngageIQ: Content Script Loaded");
 
-// Global variables
-let engageIQIframe = null;
-
-/**
- * Target CSS selectors for LinkedIn comment boxes/editors
- * Note: These selectors WILL likely need iteration as LinkedIn updates their DOM structure.
- * Validated against a DOM snippet (docs/LinkedinPostDOMSnippet.txt) on 2025-04-01.
- */
+// Initial selectors for comment boxes (May need refinement based on LinkedIn updates)
+// TODO: Refine selectors based on testing on live LinkedIn feed and single post pages.
 const COMMENT_BOX_SELECTORS = [
-  // Targets the outer form element of the comment box (Matches snippet line 569)
-  '.feed-shared-update-v2 .comments-comment-box__form',
-  
-  // Targets the editable div element within the comment form (Matches snippet line 584)
-  '.comments-comment-box__form .ql-editor',
-];
+    ".feed-shared-update-v2 .comments-comment-box__form", // Standard feed post comment form
+    "div[aria-label=\"Write a comment\"]", // Common label for comment input areas
+    // Add more selectors here if needed
+].join(', '); // Combine selectors for a single query
 
 /**
- * Find all comment boxes/editors on the page using the defined selectors
- * @returns {NodeList} List of comment box/editor elements found on the page
+ * Finds potential LinkedIn comment box elements in the current document.
+ * @returns {NodeList} A NodeList containing the found comment box elements.
  */
 function findCommentBoxes() {
-  let allCommentBoxes = [];
-  
-  // Try each selector and collect results
-  COMMENT_BOX_SELECTORS.forEach(selector => {
-    const elements = document.querySelectorAll(selector);
-    if (elements.length > 0) {
-      allCommentBoxes = [...allCommentBoxes, ...elements];
-    }
-  });
-  
-  // Remove duplicates by converting to Set and back to Array
-  const uniqueElements = [...new Set(allCommentBoxes)];
-  
-  return uniqueElements; // Return only unique elements
+    // console.log(`EngageIQ: Searching for comment boxes with selectors: ${COMMENT_BOX_SELECTORS}`);
+    return document.querySelectorAll(COMMENT_BOX_SELECTORS);
 }
 
 /**
- * Process all comment boxes to inject the EngageIQ button if not already done
+ * Processes found comment boxes to potentially inject the EngageIQ button.
+ * This function will be expanded in Step 2.4.
  */
 function processCommentBoxes() {
-  const commentBoxes = findCommentBoxes();
-  console.log(`EngageIQ: Found ${commentBoxes.length} comment boxes/editors`); // Updated log message
-  
-  commentBoxes.forEach(commentBox => {
-    // Check if already processed to avoid duplicates
-    if (commentBox.getAttribute('data-engageiq-button-injected') === 'true') {
-      return; // Skip this box, already processed
-    }
-    
-    // Create the button element
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'engageiq-button';
-    button.title = 'Generate Comments with EngageIQ';
-    
-    // Create the icon image
-    const icon = document.createElement('img');
-    icon.src = chrome.runtime.getURL('icons/icon16.png');
-    icon.alt = 'EngageIQ';
-    icon.width = 16;
-    icon.height = 16;
-    
-    // Append icon to button
-    button.appendChild(icon);
-    
-    // Add click event listener
-    button.addEventListener('click', handleEngageIQButtonClick);
-    
-    // Find the most appropriate insertion point (direct parent of the input element or its immediate child)
-    // This is a simplified approach; might need adjustment for specific LinkedIn DOM structure
-    const insertionPoint = commentBox;
-    insertionPoint.appendChild(button);
-    
-    // Mark as processed
-    commentBox.setAttribute('data-engageiq-button-injected', 'true');
-    
-    console.log('EngageIQ: Button injected for a comment box/editor'); // Updated log message
-  });
+    console.log("EngageIQ: Processing comment boxes...");
+    const commentBoxes = findCommentBoxes();
+    console.log(`EngageIQ: Found ${commentBoxes.length} potential comment boxes.`);
+
+    commentBoxes.forEach(_box => {
+        // TODO (Step 2.4): Check if button already injected
+        // TODO (Step 2.4): Inject button if needed
+        // console.log("EngageIQ: Processing box:", box);
+    });
 }
 
-/**
- * Creates or returns the existing iframe for the EngageIQ popup
- * @returns {HTMLIFrameElement} The iframe element
- */
-function getOrCreateIframe() {
-  if (engageIQIframe === null) {
-    engageIQIframe = document.createElement('iframe');
-    engageIQIframe.id = 'engageiq-popup-iframe';
-    engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
-    document.body.appendChild(engageIQIframe);
-    console.log('EngageIQ: Iframe created');
-  }
-  return engageIQIframe;
-}
+// --- MutationObserver Setup --- 
 
-/**
- * Handle clicks on the EngageIQ button
- * @param {Event} event - The click event
- */
-function handleEngageIQButtonClick(event) {
-  event.preventDefault();
-  event.stopPropagation();
-  
-  const iframe = getOrCreateIframe();
-  
-  // Toggle the iframe visibility
-  if (iframe.style.display === 'block') {
-    iframe.style.display = 'none';
-    console.log('EngageIQ: Iframe hidden');
-  } else {
-    iframe.style.display = 'block';
-    console.log('EngageIQ: Iframe shown');
-  }
-}
+// Options for the observer (which mutations to observe)
+const observerConfig = {
+    childList: true, // Observe additions/removals of child nodes
+    subtree: true    // Observe the entire subtree under document.body
+};
 
-/**
- * Set up a MutationObserver to watch for DOM changes that might introduce new comment boxes
- */
-function setupMutationObserver() {
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        processCommentBoxes();
-        break; // Process once per batch of mutations
-      }
-    }
-  });
-  
-  // Observe the body for changes, looking for added comment boxes
-  observer.observe(document.body, { childList: true, subtree: true });
-  console.log('EngageIQ: MutationObserver set up');
-}
+// Callback function to execute when mutations are observed
+const mutationCallback = (_mutationsList, _observer) => {
+    // We are simply re-processing all boxes on any change for simplicity in MVP.
+    // A more optimized approach might inspect mutationsList directly.
+    console.log("EngageIQ: DOM change detected, re-processing comment boxes.");
+    processCommentBoxes(); 
+};
 
-// Initial processing after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-  processCommentBoxes();
-  setupMutationObserver();
-});
+// Create an observer instance linked to the callback function
+const observer = new MutationObserver(mutationCallback);
 
-// Also process immediately in case the script loads after DOMContentLoaded
+// Start observing the target node for configured mutations
+console.log("EngageIQ: Starting MutationObserver on document.body.");
+observer.observe(document.body, observerConfig);
+
+// Initial run to catch any comment boxes present on load
+console.log("EngageIQ: Initial check for comment boxes.");
 processCommentBoxes();
-setupMutationObserver();
+
+// --- Global variables (Placeholder for iframe, might be needed later) ---
+let _engageIQIframe = null;
+
+// --- Phase 2: Button Injection Logic (To be implemented in Step 2.4) ---
