@@ -43,6 +43,7 @@ function processCommentBoxes() {
         
         // Add Bootstrap-like button classes
         engageButton.className = 'engageiq-btn engageiq-btn-icon';
+        engageButton.type = 'button'; // Set button type
         
         // Create and add icon image
         const iconImg = document.createElement('img');
@@ -55,9 +56,48 @@ function processCommentBoxes() {
         // Add tooltip
         engageButton.title = 'Generate Comments with EngageIQ';
 
-        // TODO (Step 2.4.5): Append button
+        // Determine insertion point and append button
+        // Strategy 1: Look for action buttons container
+        let insertionPoint = null;
+        
+        // Try to find action buttons container (common in LinkedIn comment boxes)
+        const actionButtonsContainer = box.querySelector('.comments-comment-box__controls-container') || 
+                                       box.querySelector('.comments-comment-texteditor__actions') ||
+                                       box.querySelector('.comments-comment-box__form-container');
+        
+        if (actionButtonsContainer) {
+            // Insert at the beginning of the action buttons container
+            insertionPoint = actionButtonsContainer;
+            insertionPoint.insertBefore(engageButton, insertionPoint.firstChild);
+            console.log("EngageIQ: Button inserted into action buttons container");
+        } else {
+            // Strategy 2: Look for the comment input field and insert after it
+            const commentInput = box.querySelector('div[contenteditable="true"]') ||
+                               box.querySelector('textarea') ||
+                               box.querySelector('input');
+            
+            if (commentInput && commentInput.parentNode) {
+                // Insert after the comment input
+                insertionPoint = commentInput.parentNode;
+                insertionPoint.appendChild(engageButton);
+                console.log("EngageIQ: Button inserted after comment input");
+            } else {
+                // Strategy 3: Fallback - just append to the comment box itself
+                insertionPoint = box;
+                box.appendChild(engageButton);
+                console.log("EngageIQ: Button inserted using fallback strategy");
+            }
+        }
+        
+        // Add click event listener (placeholder for now)
+        engageButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            console.log("EngageIQ: Button clicked!");
+            // TODO: Implement button click handler in future steps
+        });
 
-        // TODO (Step 2.4.6): Set data-engageiq-button-injected attribute after injection
+        // Mark the comment box as processed
+        box.dataset.engageiqButtonInjected = 'true';
     });
 }
 

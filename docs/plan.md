@@ -197,7 +197,7 @@
         *   *Verification:* Button contains `<img>` with correct icon URL. Basic styling applied.
     *   [x] **Sub-step 2.4.4:** Add `title` attribute to button for tooltip ("Generate Comments with EngageIQ").
         *   *Verification:* `button.title` is set.
-    *   [ ] **Sub-step 2.4.5:** Determine insertion point and append button to DOM relative to comment box.
+    *   [x] **Sub-step 2.4.5:** Determine insertion point and append button to DOM relative to comment box.
         *   *Verification:* Button insertion code exists.
     *   [ ] **Sub-step 2.4.6:** Mark comment box element as processed (e.g., set `data-engageiq-button-injected="true"`).
         *   *Verification:* Marker is applied after injection.
