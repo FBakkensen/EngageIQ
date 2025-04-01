@@ -183,7 +183,7 @@
         *   *Verification:* Initial selectors documented in code comments.
     *   [x] **Sub-step 2.3.2:** Implement `findCommentBoxes()` using `document.querySelectorAll()`.
         *   *Verification:* Calling function in console returns expected elements.
-    *   [ ] **Sub-step 2.3.3:** Set up a `MutationObserver` watching `document.body` (subtree, childList) to call `processCommentBoxes()` on changes.
+    *   [x] **Sub-step 2.3.3:** Set up a `MutationObserver` watching `document.body` (subtree, childList) to call `processCommentBoxes()` on changes.
         *   *Verification:* Observer callback triggers logs/function calls on LinkedIn page interaction.
     *   [ ] **Sub-step 2.3.4:** Create `processCommentBoxes()` that calls `findCommentBoxes()` and iterates results.
         *   *Verification:* Function exists.
