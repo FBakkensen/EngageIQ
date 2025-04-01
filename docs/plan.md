@@ -250,8 +250,8 @@
         *   *Verification:* Listener structure exists. Logs appear in iframe console when messages are received later.
 
 *   **Step 3.4: Style the Iframe Container (`css/content_style.css`)**
-    *   [ ] **Sub-step 3.4.1:** Create/Open `css/content_style.css`.
-    *   [ ] **Sub-step 3.4.2:** Define CSS rules for `#engageiq-popup-iframe` (position: fixed, top, right, width, height, z-index, border, shadow, background-color, `display: none`).
+    *   [x] **Sub-step 3.4.1:** Create/Open `css/content_style.css`.
+    *   [x] **Sub-step 3.4.2:** Define CSS rules for `#engageiq-popup-iframe` (position: fixed, top, right, width, height, z-index, border, shadow, background-color, `display: none`).
         *   *Verification:* `content_style.css` contains rules for iframe container. Ensure linked in manifest.
 
 *   **Step 3.5: Update Content Script (`js/content_script.js`) to Manage Iframe**
