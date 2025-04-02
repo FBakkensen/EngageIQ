@@ -10,7 +10,8 @@
   },
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "*://*.linkedin.com/*",

@@ -368,11 +368,16 @@ function handleAccordionButtonClick(event) {
             break;
             
         case 'accept':
-            console.log(`EngageIQ: Accepting suggestion for ${reactionType}: ${currentText}`);
-            sendMessageToContentScript({
-                type: 'ACCEPT_SUGGESTION',
-                reactionType: reactionType,
-                textToAccept: currentText
+            console.log(`EngageIQ: Copying suggestion for ${reactionType} to clipboard: ${currentText}`);
+            // Use clipboard API to copy the text
+            navigator.clipboard.writeText(currentText).then(() => {
+                console.log('EngageIQ: Suggestion copied to clipboard successfully!');
+                // Optional: Provide visual feedback to the user (e.g., change button text)
+                // button.textContent = 'Copied!';
+                // setTimeout(() => { button.textContent = 'Accept'; }, 1500);
+            }).catch(err => {
+                console.error('EngageIQ: Failed to copy suggestion to clipboard:', err);
+                // Optional: Provide error feedback to the user
             });
             break;
             

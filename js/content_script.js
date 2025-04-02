@@ -192,6 +192,7 @@ function getOrCreateIframe() {
         // Use chrome.runtime.getURL to access extension resources
         try {
             engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
+            engageIQIframe.allow = "clipboard-write"; // Grant clipboard permission to the iframe
             console.log("EngageIQ: Iframe src set to:", engageIQIframe.src);
             engageIQIframe.style.display = 'none'; // Start hidden
             document.body.appendChild(engageIQIframe);
