@@ -398,5 +398,7 @@ export {
   processGenerationResponse,
   processRegenerationResponse,
   createGenerationRequestBody,
-  createRegenerationRequestBody
+  createRegenerationRequestBody,
+  createCommentRegenerationPrompt,
+  createCommentGenerationPrompt
 };
