@@ -39,15 +39,21 @@
   border-radius: 50%;
   background-color: transparent;
   margin: 0 4px;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .engageiq-btn-icon:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+}
+
+.engageiq-btn-icon:active {
+  transform: scale(0.95);
 }
 
 .engageiq-btn-icon img {
@@ -59,16 +65,33 @@
 /* Style for the EngageIQ popup iframe */
 #engageiq-popup-iframe {
   position: fixed;
-  top: 20%;
+  top: 15%;
   right: 5%;
-  width: 350px;
-  height: 450px;
+  width: 380px;
+  height: 480px;
   z-index: 9999;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
   background-color: #ffffff;
   display: none; /* Initially hidden */
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
+  overflow: hidden; /* Prevents content from overflowing */
+}
+
+/* Add a subtle animation when the iframe appears */
+#engageiq-popup-iframe.visible {
+  animation: fadeInScale 0.25s ease forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

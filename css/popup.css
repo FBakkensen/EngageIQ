@@ -18,10 +18,130 @@ body {
     'Noto Color Emoji'; /* Match Bootstrap's default */
   font-size: 0.875rem; /* Slightly smaller base size for the compact popup */
   min-width: 350px; /* Prevent the popup from becoming too narrow */
+  color: #333;
+  background-color: #f8f9fa;
 }
 
 /* Ensure container inside popup doesn't add extra horizontal padding */
 .container {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  max-width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Header styling */
+h5 {
+  font-weight: 600;
+  color: #0a66c2; /* LinkedIn blue color */
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+}
+
+/* Loading state styling */
+#loadingState {
+  padding: 16px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Error state enhancements */
+#errorState {
+  font-size: 0.85rem;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+/* Accordion styling */
+.accordion {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.accordion-item {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 5px;
+  border-radius: 6px;
+}
+
+.accordion-button {
+  padding: 10px 15px;
+  font-weight: 500;
+  background-color: #f8f9fa;
+  font-size: 0.9rem;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #e7f3ff; /* Light blue when expanded */
+  color: #0a66c2;
+  box-shadow: none;
+}
+
+.accordion-button:focus {
+  box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.25);
+  border-color: transparent;
+}
+
+.accordion-body {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fff;
+}
+
+/* Length adjustment buttons */
+.length-adjustment {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 5px;
+}
+
+.length-adjustment button {
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  color: #0a66c2;
+  background-color: #f8f9fa;
+  border: 1px solid rgba(10, 102, 194, 0.3);
+  transition: all 0.2s ease;
+}
+
+.length-adjustment button:hover {
+  background-color: #e7f3ff;
+}
+
+/* Accept button styling */
+.btn-accept {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  background-color: #0a66c2;
+  border-color: #0a66c2;
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-accept:hover {
+  background-color: #084d92;
+  border-color: #084d92;
+  transform: translateY(-1px);
+}
+
+/* Text wrapping for suggestion content */
+.suggestion-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }

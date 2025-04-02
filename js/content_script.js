@@ -52,13 +52,16 @@ function processCommentBoxes() {
     const iconUrl = chrome.runtime.getURL('icons/icon48.png');
     iconImg.src = iconUrl;
     iconImg.alt = 'EngageIQ';
-    iconImg.width = 16;
-    iconImg.height = 16;
+    iconImg.width = 20;
+    iconImg.height = 20;
     console.log('EngageIQ: Using icon URL:', iconUrl);
     engageButton.appendChild(iconImg);
 
     // Add tooltip
-    engageButton.title = 'Generate Comments with EngageIQ';
+    engageButton.title = 'Generate AI-powered comments with EngageIQ';
+    // Add ARIA attributes for accessibility
+    engageButton.setAttribute('aria-label', 'Generate comments with EngageIQ');
+    engageButton.setAttribute('role', 'button');
 
     // Determine insertion point and append button
     // Strategy 1: Look for action buttons container
@@ -409,117 +412,113 @@ function sendMessageToIframe(message) {
  * @param {Event} event - The click event object.
  */
 function handleEngageIQButtonClick(event) {
+  // Prevent default button behavior and event propagation
   event.preventDefault();
-  event.stopPropagation(); // Prevent event bubbling
-  console.log('EngageIQ: handleEngageIQButtonClick triggered.');
+  event.stopPropagation();
 
+  console.log('EngageIQ: Button clicked.');
+
+  // Get or create the iframe
   const iframe = getOrCreateIframe();
 
-  if (iframe) {
-    if (iframe.style.display === 'none' || iframe.style.display === '') {
-      iframe.style.display = 'block';
-      console.log('EngageIQ: Showing iframe.');
+  // Toggle iframe visibility
+  if (iframe.style.display === 'none' || iframe.style.display === '') {
+    iframe.style.display = 'block';
+    iframe.classList.add('visible'); // Add animation class
+    
+    // Get the clicked button element
+    const clickedButton = event.currentTarget;
+    // Step 8.3.2: Extract real post content
+    const extractedText = extractPostContent(clickedButton);
 
-      // Step 8.3.2: Extract real post content
-      const clickedButton = event.target.closest('button'); // Get the actual button clicked
-      if (!clickedButton) {
-        console.error('EngageIQ: Could not find the clicked button element.');
-        sendMessageToIframe({
-          type: 'SHOW_ERROR',
-          error: 'Internal Error',
-          details: 'Could not identify the source button.',
-        });
-        return;
-      }
-      const extractedText = extractPostContent(clickedButton);
-
-      // Step 8.3.3: Check if content is valid
-      if (extractedText === null || extractedText.trim() === '') {
-        const errorMessage =
-          extractedText === null
-            ? 'Could not find post structure.'
-            : 'Post text appears empty or could not be extracted.';
-        console.error(`EngageIQ: ${errorMessage}`);
-        sendMessageToIframe({
-          type: 'SHOW_ERROR',
-          error: 'Extraction Failed',
-          details: errorMessage,
-        });
-        // Keep iframe open but show error, do not proceed to background
-        return;
-      }
-
-      // Content is valid, prepare it for the background script
-      const postContent = {
-        text: extractedText,
-        // Add other fields like author/timestamp later if needed/possible
-      };
-      // console.log("EngageIQ: Extracted post content:", postContent); // Commented out for privacy/cleanliness
-
-      // Send SHOW_LOADING message to iframe
+    // Step 8.3.3: Check if content is valid
+    if (extractedText === null || extractedText.trim() === '') {
+      const errorMessage =
+        extractedText === null
+          ? 'Could not find post structure.'
+          : 'Post text appears empty or could not be extracted.';
+      console.error(`EngageIQ: ${errorMessage}`);
       sendMessageToIframe({
-        type: 'SHOW_LOADING',
-        message: 'Generating comment suggestions...',
+        type: 'SHOW_ERROR',
+        error: 'Extraction Failed',
+        details: errorMessage,
       });
-      console.log('EngageIQ: Sent SHOW_LOADING message to iframe');
+      // Keep iframe open but show error, do not proceed to background
+      return;
+    }
 
-      // Send GENERATE_COMMENTS message to background script
-      chrome.runtime.sendMessage(
-        {
-          type: 'GENERATE_COMMENTS',
-          postContent: postContent, // Use the real extracted content
-        },
-        (response) => {
-          // Handle chrome.runtime.lastError first
-          if (chrome.runtime.lastError) {
-            console.error(
-              'EngageIQ: Error sending message to background script:',
-              chrome.runtime.lastError
-            );
+    // Content is valid, prepare it for the background script
+    const postContent = {
+      text: extractedText,
+      // Add other fields like author/timestamp later if needed/possible
+    };
+    // console.log("EngageIQ: Extracted post content:", postContent); // Commented out for privacy/cleanliness
 
-            // Send error message to iframe
-            sendMessageToIframe({
-              type: 'SHOW_ERROR',
-              error: 'Failed to communicate with background script',
-              details: chrome.runtime.lastError.message,
-            });
-            return;
-          }
+    // Send SHOW_LOADING message to iframe
+    sendMessageToIframe({
+      type: 'SHOW_LOADING',
+      message: 'Generating comment suggestions...',
+    });
+    console.log('EngageIQ: Sent SHOW_LOADING message to iframe');
 
-          // Handle successful response
-          console.log(
-            'EngageIQ: Received response from background script:',
-            response
+    // Send GENERATE_COMMENTS message to background script
+    chrome.runtime.sendMessage(
+      {
+        type: 'GENERATE_COMMENTS',
+        postContent: postContent, // Use the real extracted content
+      },
+      (response) => {
+        // Handle chrome.runtime.lastError first
+        if (chrome.runtime.lastError) {
+          console.error(
+            'EngageIQ: Error sending message to background script:',
+            chrome.runtime.lastError
           );
 
-          if (response && response.success) {
-            // Send suggestions to iframe
-            sendMessageToIframe({
-              type: 'SHOW_SUGGESTIONS',
-              suggestions: response.suggestions,
-            });
-            console.log('EngageIQ: Sent SHOW_SUGGESTIONS to iframe');
-          } else {
-            // Send error to iframe
-            sendMessageToIframe({
-              type: 'SHOW_ERROR',
-              error: response?.error || 'Failed to generate suggestions',
-              details: response?.details || 'Unknown error',
-            });
-            console.log('EngageIQ: Sent SHOW_ERROR to iframe');
-          }
+          // Send error message to iframe
+          sendMessageToIframe({
+            type: 'SHOW_ERROR',
+            error: 'Failed to communicate with background script',
+            details: chrome.runtime.lastError.message,
+          });
+          return;
         }
-      );
-      console.log(
-        'EngageIQ: Sent GENERATE_COMMENTS message to background script'
-      );
-    } else {
-      iframe.style.display = 'none';
-      console.log('EngageIQ: Hiding iframe.');
-    }
+
+        // Handle successful response
+        console.log(
+          'EngageIQ: Received response from background script:',
+          response
+        );
+
+        if (response && response.success) {
+          // Send suggestions to iframe
+          sendMessageToIframe({
+            type: 'SHOW_SUGGESTIONS',
+            suggestions: response.suggestions,
+          });
+          console.log('EngageIQ: Sent SHOW_SUGGESTIONS to iframe');
+        } else {
+          // Send error to iframe
+          sendMessageToIframe({
+            type: 'SHOW_ERROR',
+            error: response?.error || 'Failed to generate suggestions',
+            details: response?.details || 'Unknown error',
+          });
+          console.log('EngageIQ: Sent SHOW_ERROR to iframe');
+        }
+      }
+    );
+    console.log(
+      'EngageIQ: Sent GENERATE_COMMENTS message to background script'
+    );
   } else {
-    console.error('EngageIQ: Failed to get or create iframe.');
-    // Optionally show an error to the user
+    console.log('EngageIQ: Hiding popup iframe.');
+    iframe.classList.remove('visible'); // Remove animation class
+    // Add a small delay before hiding to allow animation to complete
+    setTimeout(() => {
+      iframe.style.display = 'none';
+    }, 200); // 200ms delay for animation to complete
+    return;
   }
 }
 
