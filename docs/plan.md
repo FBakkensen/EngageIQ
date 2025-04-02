@@ -461,13 +461,14 @@
 *   **Prerequisites:** Phase 2 completed (button injection).
 
 *   **Step 8.1: Analyze LinkedIn Post Structure (Investigation)**
-    *   [ ] **Sub-step 8.1.1:** Manually inspect feed/single post HTML using dev tools.
-    *   [ ] **Sub-step 8.1.2:** Identify common ancestor selector for a whole post (e.g., `.feed-shared-update-v2`).
-        *   *Verification:* Reliable ancestor selector identified.
-    *   [ ] **Sub-step 8.1.3:** Identify selector(s) for main post text content element(s) within ancestor (e.g., `.feed-shared-inline-show-more-text`, `.update-components-text`).
-        *   *Verification:* Candidate text selectors identified.
-    *   [ ] **Sub-step 8.1.4:** Consider "See more" handling strategy. **MVP Decision:** Grab visible text only.
-        *   *Verification:* MVP strategy decided.
+    *   [x] **Sub-step 8.1.1:** Manually inspect feed/single post HTML using dev tools.
+        *   *Verification:* `docs/LinkedinPostDOMSnippet.txt` created and contains representative HTML.
+    *   [x] **Sub-step 8.1.2:** Identify common ancestor selector for a whole post (e.g., `.feed-shared-update-v2`).
+        *   *Verification:* Reliable ancestor selector identified: `.feed-shared-update-v2` (based on snippet).
+    *   [x] **Sub-step 8.1.3:** Identify selector(s) for main post text content element(s) within ancestor (e.g., `.feed-shared-inline-show-more-text`, `.update-components-text`).
+        *   *Verification:* Candidate text selector identified: `.update-components-text span[dir="ltr"]` (based on snippet).
+    *   [x] **Sub-step 8.1.4:** Consider "See more" handling strategy. **MVP Decision:** Grab visible text only.
+        *   *Verification:* MVP strategy confirmed.
 
 *   **Step 8.2: Implement Post Content Extraction Function (`js/content_script.js`)**
     *   [ ] **Sub-step 8.2.1:** Create function `extractPostContent(clickedButtonElement)`.
