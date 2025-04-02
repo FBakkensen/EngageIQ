@@ -561,6 +561,8 @@
         *   *Verification:* File exists.
     *   [ ] **Sub-step 9.6.2:** Add content: Name, Description, Features, Install Instructions, Usage, API Key Requirement (link), Privacy Note, Known Issues/Limitations.
         *   *Verification:* README contains required sections.
+    *   [ ] **Sub-step 9.6.3:** Add MIT License.
+        *   *Verification:* License file reference in README.
 
 *   **Step 9.7: Final Asset and Manifest Check**
     *   [ ] **Sub-step 9.7.1:** Double-check icon paths/sizes in `manifest.json`.
