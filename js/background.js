@@ -728,5 +728,18 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
 // Optional: Listener for extension installation or update
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('EngageIQ: Extension installed or updated:', details.reason);
-  // Perform any setup tasks here if needed
+  
+  // Perform manifest and asset verification
+  if (details.reason === 'install' || details.reason === 'update') {
+    console.log('EngageIQ: Running manifest and asset verification...');
+    // We'll execute the verification script in the next update cycle
+    setTimeout(() => {
+      chrome.scripting.executeScript({
+        target: { tabId: -1 }, // Run in the background context
+        files: ['js/manifest_check.js']
+      }).catch(err => {
+        console.error('EngageIQ: Error executing manifest check script:', err);
+      });
+    }, 1000);
+  }
 });
