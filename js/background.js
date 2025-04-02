@@ -458,10 +458,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
               console.log('EngageIQ: Successfully parsed API response');
 
-              // Send success response with real suggestions
-              sendResponse({
-                success: true,
-                suggestions: formattedSuggestions,
+              // Get the current model for inclusion in the response
+              getCurrentModel().then(currentModel => {
+                // Send the successful response with suggestions and model info
+                sendResponse({
+                  success: true,
+                  suggestions: formattedSuggestions,
+                  modelInfo: {
+                    name: currentModel
+                  }
+                });
+              }).catch(error => {
+                // If there's an error getting the model, still send the suggestions
+                console.error('EngageIQ: Error getting current model:', error);
+                sendResponse({
+                  success: true,
+                  suggestions: formattedSuggestions
+                });
               });
             })
             // Sub-step 5.4.3: Implement .catch(error => ...) block

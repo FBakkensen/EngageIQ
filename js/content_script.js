@@ -555,10 +555,14 @@ function handleEngageIQButtonClick(event) {
         );
 
         if (response && response.success) {
+          // Extract model information if available
+          const modelInfo = response.modelInfo || null;
+          
           // Send suggestions to iframe
           sendMessageToIframe({
             type: 'SHOW_SUGGESTIONS',
             suggestions: response.suggestions,
+            modelInfo: modelInfo // Include model info in the message
           });
           console.log('EngageIQ: Sent SHOW_SUGGESTIONS to iframe');
         } else {

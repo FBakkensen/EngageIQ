@@ -504,7 +504,7 @@ function handleAccordionButtonClick(event) {
  * @param {Object} data - Message data object
  */
 function processMessage(data) {
-  const { type, error, details, suggestions, payload } = data;
+  const { type, error, details, suggestions, payload, modelInfo } = data;
   let actionData = null;
 
   if (!type) {
@@ -546,6 +546,12 @@ function processMessage(data) {
       console.log('EngageIQ: Showing suggestions');
       if (Array.isArray(suggestions) && suggestions.length > 0) {
         displaySuggestions(suggestions);
+        
+        // Update model indicator if model info is provided
+        if (modelInfo && modelInfo.name) {
+          console.log(`EngageIQ: Updating model indicator with: ${modelInfo.name}`);
+          updateModelIndicator(modelInfo.name);
+        }
       } else {
         console.warn(
           'EngageIQ: Received SHOW_SUGGESTIONS but suggestions array is empty or invalid:',
@@ -570,6 +576,12 @@ function processMessage(data) {
             `EngageIQ: Updating text for ${reactionType} with: ${newText.substring(0, 50)}...`
           );
           textElement.textContent = newText;
+          
+          // Update model indicator if model info is provided
+          if (payload.modelInfo && payload.modelInfo.name) {
+            console.log(`EngageIQ: Updating model indicator with: ${payload.modelInfo.name}`);
+            updateModelIndicator(payload.modelInfo.name);
+          }
         } else {
           console.error(
             `EngageIQ: Could not find text element with ID: ${textElementId} to update.`
@@ -596,6 +608,23 @@ function processMessage(data) {
     default:
       console.log('EngageIQ: Received unhandled message type:', type);
   }
+}
+
+/**
+ * Updates the model indicator with the provided model name
+ * @param {string} modelName - The name of the model to display
+ */
+function updateModelIndicator(modelName) {
+  const modelIndicator = document.getElementById('modelIndicator');
+  if (!modelIndicator) {
+    console.warn('EngageIQ: Cannot update model indicator - element not found');
+    return;
+  }
+  
+  modelIndicator.innerHTML = `
+    <span class="model-indicator-label">Model:</span>
+    <span class="model-indicator-value">${modelName}</span>
+  `;
 }
 
 /**
@@ -626,9 +655,6 @@ document.addEventListener('DOMContentLoaded', () => {
   errorMessage = document.getElementById('errorMessage');
   suggestionsAccordion = document.getElementById('suggestionsAccordion');
   
-  // Initialize model indicator element reference
-  const modelIndicator = document.getElementById('modelIndicator');
-
   // Process any messages that were received before DOM was ready
   while (messageQueue.length > 0) {
     const message = messageQueue.shift();
