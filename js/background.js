@@ -4,10 +4,79 @@
  */
 
 // API Configuration Constants
-const GEMINI_MODEL = 'gemini-2.0-flash'; // Using Gemini 2.0 Flash for faster responses
+// Default model to use if none is specified in storage
+const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash'; // Using Gemini 2.0 Flash as default for faster responses
 const GEMINI_API_BASE_URL =
   'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_GENERATE_CONTENT_ENDPOINT = `${GEMINI_API_BASE_URL}/${GEMINI_MODEL}:generateContent`; // Will append ?key=API_KEY when making the request
+
+/**
+ * Gets the currently selected Gemini model from storage
+ * This function is part of the model selection feature that allows users to choose
+ * different Gemini models based on their needs (speed vs quality vs rate limits).
+ *
+ * The function performs the following steps:
+ * 1. Retrieves the model preference from Chrome storage
+ * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
+ * 3. Validates the model against a list of supported models
+ * 4. Falls back to DEFAULT_GEMINI_MODEL if the stored model is invalid
+ *
+ * @returns {Promise<string>} The selected model or default if none is found
+ */
+async function getCurrentModel() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['geminiModel'], (result) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          'EngageIQ: Error retrieving model from storage:',
+          chrome.runtime.lastError
+        );
+        resolve(DEFAULT_GEMINI_MODEL);
+        return;
+      }
+
+      // Get the model from storage or use default
+      const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
+
+      // Validate the model name against allowed models
+      // These are the four models supported by the extension as specified in the requirements
+      const validModels = [
+        'gemini-2.5-pro-exp-03-25', // Latest experimental model with highest quality but stricter rate limits
+        'gemini-2.0-flash', // Default model with good balance of speed and quality
+        'gemini-2.0-flash-lite', // Fastest model with highest rate limits
+        'gemini-1.5-pro', // Previous generation model for specific use cases
+      ];
+
+      if (!validModels.includes(model)) {
+        console.error(
+          `EngageIQ: Invalid model name: ${model}. Falling back to default model.`
+        );
+        resolve(DEFAULT_GEMINI_MODEL);
+        return;
+      }
+
+      console.log(`EngageIQ: Using model: ${model}`);
+      resolve(model);
+    });
+  });
+}
+
+/**
+ * Constructs the API endpoint URL with the current model
+ * This is a key part of the model selection feature, as it dynamically
+ * builds the API URL based on the user's model preference.
+ *
+ * @returns {Promise<string>} The complete API endpoint URL for the selected model
+ */
+async function getGenerateContentEndpoint() {
+  try {
+    const model = await getCurrentModel();
+    return `${GEMINI_API_BASE_URL}/${model}:generateContent`; // Will append ?key=API_KEY when making the request
+  } catch (error) {
+    console.error(`EngageIQ: Error getting model for API endpoint: ${error}`);
+    // Fallback to default model in case of any error
+    return `${GEMINI_API_BASE_URL}/${DEFAULT_GEMINI_MODEL}:generateContent`;
+  }
+}
 
 // JSON Schema for Gemini API function calling - defines the expected structure of the response
 const GENERATION_SCHEMA = {
@@ -201,232 +270,263 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('EngageIQ: Executing API call to Gemini');
 
         // Construct the full API URL with the API key
-        const apiUrl = `${GEMINI_GENERATE_CONTENT_ENDPOINT}?key=${result.apiKey}`;
+        getGenerateContentEndpoint().then((apiUrl) => {
+          const fullApiUrl = `${apiUrl}?key=${result.apiKey}`;
 
-        // Execute the fetch call
-        fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // Note: Using API key in URL query parameter instead of x-goog-api-key header
-            // as it's simpler for extension contexts and both are secure over HTTPS
-          },
-          body: JSON.stringify(requestBody),
-        })
-          // Sub-step 5.4.1: Implement .then(response => ...) block
-          .then((response) => {
-            // Sub-step 5.4.2: Check response.ok and handle specific status codes
-            if (!response.ok) {
-              console.error(
-                `EngageIQ: API call failed with status ${response.status}`
-              );
+          // Execute the fetch call
+          fetch(fullApiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Note: Using API key in URL query parameter instead of x-goog-api-key header
+              // as it's simpler for extension contexts and both are secure over HTTPS
+            },
+            body: JSON.stringify(requestBody),
+          })
+            // Sub-step 5.4.1: Implement .then(response => ...) block
+            .then((response) => {
+              // Sub-step 5.4.2: Check response.ok and handle specific status codes
+              if (!response.ok) {
+                console.error(
+                  `EngageIQ: API call failed with status ${response.status}`
+                );
 
-              // Handle specific error status codes
-              let errorMessage;
-              switch (response.status) {
-                case 400:
-                  errorMessage =
-                    'Bad Request: The API request was malformed or invalid';
-                  break;
-                case 401:
-                case 403:
-                  errorMessage =
-                    'Authentication Error: Invalid or expired API key';
-                  break;
-                case 429:
-                  errorMessage =
-                    'Rate Limit Exceeded: Too many requests to the Gemini API';
-                  break;
-                case 500:
-                case 501:
-                case 502:
-                case 503:
-                case 504:
-                  errorMessage =
-                    'Gemini API Server Error: The service is currently unavailable';
-                  break;
-                default:
-                  errorMessage = `Unexpected Error: HTTP status ${response.status}`;
+                // Handle specific error status codes
+                let errorMessage;
+                switch (response.status) {
+                  case 400:
+                    errorMessage =
+                      'Bad Request: The API request was malformed or invalid';
+                    break;
+                  case 401:
+                  case 403:
+                    errorMessage =
+                      'Authentication Error: Invalid or expired API key';
+                    break;
+                  case 404:
+                    errorMessage =
+                      'Model Not Found: The selected Gemini model may not exist or be deprecated';
+                    break;
+                  case 429:
+                    errorMessage =
+                      'Rate Limit Exceeded: Too many requests to the Gemini API';
+                    break;
+                  case 500:
+                  case 501:
+                  case 502:
+                  case 503:
+                  case 504:
+                    errorMessage =
+                      'Gemini API Server Error: The service is currently unavailable';
+                    break;
+                  default:
+                    errorMessage = `Unexpected Error: HTTP status ${response.status}`;
+                }
+
+                // Get more details from response text if available
+                return response.text().then((errorText) => {
+                  console.error(`EngageIQ: API error details: ${errorText}`);
+                  throw new Error(errorMessage);
+                });
               }
 
-              // Get more details from response text if available
-              return response.text().then((errorText) => {
-                console.error(`EngageIQ: API error details: ${errorText}`);
-                throw new Error(errorMessage);
+              // Parse JSON response if status is OK
+              return response.json();
+            })
+            .then((data) => {
+              console.log('EngageIQ: Received API response');
+
+              // Sub-step 5.5.2: Navigate response structure
+              if (!data || !data.candidates || data.candidates.length === 0) {
+                console.error(
+                  'EngageIQ: Invalid response format - no candidates found'
+                );
+                throw new Error('Invalid response format: No candidates found');
+              }
+
+              const candidate = data.candidates[0];
+
+              // Sub-step 5.5.3: Check finishReason (SAFETY blocks, etc)
+              if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+                console.error(
+                  `EngageIQ: Generation stopped due to ${candidate.finishReason}`
+                );
+                throw new Error(
+                  `Generation stopped: ${candidate.finishReason}`
+                );
+              }
+
+              // Check promptFeedback for safety issues
+              if (
+                data.promptFeedback &&
+                data.promptFeedback.blockReason &&
+                data.promptFeedback.blockReason !== 'NONE'
+              ) {
+                console.error(
+                  `EngageIQ: Prompt blocked due to ${data.promptFeedback.blockReason}`
+                );
+                throw new Error(
+                  `Prompt blocked: ${data.promptFeedback.blockReason}`
+                );
+              }
+
+              // Extract functionCall and args
+              if (
+                !candidate.content ||
+                !candidate.content.parts ||
+                candidate.content.parts.length === 0 ||
+                !candidate.content.parts[0].functionCall
+              ) {
+                console.error(
+                  'EngageIQ: Invalid response format - functionCall not found'
+                );
+                throw new Error(
+                  'Invalid response format: Function call data not found'
+                );
+              }
+
+              const functionCall = candidate.content.parts[0].functionCall;
+
+              if (functionCall.name !== 'generateLinkedInComments') {
+                console.error(
+                  `EngageIQ: Unexpected function name: ${functionCall.name}`
+                );
+                throw new Error(
+                  `Unexpected function name: ${functionCall.name}`
+                );
+              }
+
+              // Extract and validate args
+              let args = functionCall.args;
+
+              // Check if args is a string and parse it if needed
+              if (typeof args === 'string') {
+                try {
+                  args = JSON.parse(args);
+                } catch (error) {
+                  console.error(
+                    'EngageIQ: Failed to parse args string:',
+                    error
+                  );
+                  throw new Error('Failed to parse response data');
+                }
+              }
+
+              // Validate structure (.comments object exists)
+              if (!args || !args.comments) {
+                console.error('EngageIQ: Missing comments object in response');
+                throw new Error(
+                  'Invalid response format: Missing comments object'
+                );
+              }
+
+              const comments = args.comments;
+
+              // Validate all required reaction types exist
+              const requiredTypes = [
+                'like',
+                'celebrate',
+                'support',
+                'love',
+                'insightful',
+                'funny',
+              ];
+              const missingTypes = requiredTypes.filter(
+                (type) => !comments[type]
+              );
+
+              if (missingTypes.length > 0) {
+                console.error(
+                  `EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`
+                );
+                throw new Error(
+                  `Missing comment types: ${missingTypes.join(', ')}`
+                );
+              }
+
+              // Format the response expected by the content script
+              const formattedSuggestions = [
+                {
+                  id: 'like',
+                  text: comments.like,
+                  tone: 'positive',
+                  length: 'medium',
+                },
+                {
+                  id: 'celebrate',
+                  text: comments.celebrate,
+                  tone: 'celebratory',
+                  length: 'medium',
+                },
+                {
+                  id: 'support',
+                  text: comments.support,
+                  tone: 'supportive',
+                  length: 'medium',
+                },
+                {
+                  id: 'love',
+                  text: comments.love,
+                  tone: 'appreciative',
+                  length: 'medium',
+                },
+                {
+                  id: 'insightful',
+                  text: comments.insightful,
+                  tone: 'thoughtful',
+                  length: 'medium',
+                },
+                {
+                  id: 'funny',
+                  text: comments.funny,
+                  tone: 'humorous',
+                  length: 'medium',
+                },
+              ];
+
+              console.log('EngageIQ: Successfully parsed API response');
+
+              // Get the current model for inclusion in the response
+              getCurrentModel()
+                .then((currentModel) => {
+                  // Send the successful response with suggestions and model info
+                  sendResponse({
+                    success: true,
+                    suggestions: formattedSuggestions,
+                    modelInfo: {
+                      name: currentModel,
+                    },
+                  });
+                })
+                .catch((error) => {
+                  // If there's an error getting the model, still send the suggestions
+                  console.error(
+                    'EngageIQ: Error getting current model:',
+                    error
+                  );
+                  sendResponse({
+                    success: true,
+                    suggestions: formattedSuggestions,
+                  });
+                });
+            })
+            // Sub-step 5.4.3: Implement .catch(error => ...) block
+            .catch((error) => {
+              // Log network or processing error
+              console.error('EngageIQ: Error during API call:', error);
+
+              // Determine if it's a network error or a handled HTTP error
+              const errorMessage =
+                error.message || 'Unknown network or processing error';
+
+              // Send error response back to content script
+              sendResponse({
+                success: false,
+                error: 'GENERATION_ERROR',
+                details: errorMessage,
               });
-            }
-
-            // Parse JSON response if status is OK
-            return response.json();
-          })
-          .then((data) => {
-            console.log('EngageIQ: Received API response');
-
-            // Sub-step 5.5.2: Navigate response structure
-            if (!data || !data.candidates || data.candidates.length === 0) {
-              console.error(
-                'EngageIQ: Invalid response format - no candidates found'
-              );
-              throw new Error('Invalid response format: No candidates found');
-            }
-
-            const candidate = data.candidates[0];
-
-            // Sub-step 5.5.3: Check finishReason (SAFETY blocks, etc)
-            if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-              console.error(
-                `EngageIQ: Generation stopped due to ${candidate.finishReason}`
-              );
-              throw new Error(`Generation stopped: ${candidate.finishReason}`);
-            }
-
-            // Check promptFeedback for safety issues
-            if (
-              data.promptFeedback &&
-              data.promptFeedback.blockReason &&
-              data.promptFeedback.blockReason !== 'NONE'
-            ) {
-              console.error(
-                `EngageIQ: Prompt blocked due to ${data.promptFeedback.blockReason}`
-              );
-              throw new Error(
-                `Prompt blocked: ${data.promptFeedback.blockReason}`
-              );
-            }
-
-            // Extract functionCall and args
-            if (
-              !candidate.content ||
-              !candidate.content.parts ||
-              candidate.content.parts.length === 0 ||
-              !candidate.content.parts[0].functionCall
-            ) {
-              console.error(
-                'EngageIQ: Invalid response format - functionCall not found'
-              );
-              throw new Error(
-                'Invalid response format: Function call data not found'
-              );
-            }
-
-            const functionCall = candidate.content.parts[0].functionCall;
-
-            if (functionCall.name !== 'generateLinkedInComments') {
-              console.error(
-                `EngageIQ: Unexpected function name: ${functionCall.name}`
-              );
-              throw new Error(`Unexpected function name: ${functionCall.name}`);
-            }
-
-            // Extract and validate args
-            let args = functionCall.args;
-
-            // Check if args is a string and parse it if needed
-            if (typeof args === 'string') {
-              try {
-                args = JSON.parse(args);
-              } catch (error) {
-                console.error('EngageIQ: Failed to parse args string:', error);
-                throw new Error('Failed to parse response data');
-              }
-            }
-
-            // Validate structure (.comments object exists)
-            if (!args || !args.comments) {
-              console.error('EngageIQ: Missing comments object in response');
-              throw new Error(
-                'Invalid response format: Missing comments object'
-              );
-            }
-
-            const comments = args.comments;
-
-            // Validate all required reaction types exist
-            const requiredTypes = [
-              'like',
-              'celebrate',
-              'support',
-              'love',
-              'insightful',
-              'funny',
-            ];
-            const missingTypes = requiredTypes.filter(
-              (type) => !comments[type]
-            );
-
-            if (missingTypes.length > 0) {
-              console.error(
-                `EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`
-              );
-              throw new Error(
-                `Missing comment types: ${missingTypes.join(', ')}`
-              );
-            }
-
-            // Format the response expected by the content script
-            const formattedSuggestions = [
-              {
-                id: 'like',
-                text: comments.like,
-                tone: 'positive',
-                length: 'medium',
-              },
-              {
-                id: 'celebrate',
-                text: comments.celebrate,
-                tone: 'celebratory',
-                length: 'medium',
-              },
-              {
-                id: 'support',
-                text: comments.support,
-                tone: 'supportive',
-                length: 'medium',
-              },
-              {
-                id: 'love',
-                text: comments.love,
-                tone: 'appreciative',
-                length: 'medium',
-              },
-              {
-                id: 'insightful',
-                text: comments.insightful,
-                tone: 'thoughtful',
-                length: 'medium',
-              },
-              {
-                id: 'funny',
-                text: comments.funny,
-                tone: 'humorous',
-                length: 'medium',
-              },
-            ];
-
-            console.log('EngageIQ: Successfully parsed API response');
-
-            // Send success response with real suggestions
-            sendResponse({
-              success: true,
-              suggestions: formattedSuggestions,
             });
-          })
-          // Sub-step 5.4.3: Implement .catch(error => ...) block
-          .catch((error) => {
-            // Log network or processing error
-            console.error('EngageIQ: Error during API call:', error);
-
-            // Determine if it's a network error or a handled HTTP error
-            const errorMessage =
-              error.message || 'Unknown network or processing error';
-
-            // Send error response back to content script
-            sendResponse({
-              success: false,
-              error: 'GENERATION_ERROR',
-              details: errorMessage,
-            });
-          });
+        });
       });
 
       // Return true to indicate we'll respond asynchronously
@@ -584,162 +684,181 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
     console.log('EngageIQ: Created regeneration request body.');
 
     // Step 7.1.7: Perform fetch call to Gemini API
-    const apiUrl = `${GEMINI_GENERATE_CONTENT_ENDPOINT}?key=${apiKey}`;
-    console.log(`EngageIQ: Performing regeneration API call to ${apiUrl}`);
+    getGenerateContentEndpoint().then((apiUrl) => {
+      const fullApiUrl = `${apiUrl}?key=${apiKey}`;
+      console.log(
+        `EngageIQ: Performing regeneration API call to ${fullApiUrl}`
+      );
 
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    })
-      // Step 7.1.8: Handle fetch response/errors (Initial check)
-      .then((response) => {
-        if (!response.ok) {
-          console.error(
-            `EngageIQ: Regeneration API call failed with status ${response.status}`
-          );
-          // Attempt to get more details from the response body
-          return response
-            .text()
-            .then((errorText) => {
-              console.error(`EngageIQ: API error details: ${errorText}`);
-              // Throw an error that will be caught by the .catch block
-              throw new Error(
-                `API Error: Status ${response.status}. ${errorText ? errorText.substring(0, 150) : 'No details available.'}`
-              );
-            })
-            .catch((parsingError) => {
-              // Handle cases where reading the error text fails
-              console.error(
-                `EngageIQ: Could not parse error response body: ${parsingError}`
-              );
-              throw new Error(
-                `API Error: Status ${response.status}. Failed to get error details.`
-              );
-            });
-        }
-        // If response is ok, parse JSON
-        return response.json();
+      fetch(fullApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       })
-      // Step 7.1.9: Parse successful response
-      .then((data) => {
-        console.log('EngageIQ: Received regeneration API response:', data);
+        // Step 7.1.8: Handle fetch response/errors (Initial check)
+        .then((response) => {
+          if (!response.ok) {
+            console.error(
+              `EngageIQ: Regeneration API call failed with status ${response.status}`
+            );
 
-        // Basic validation of response structure
-        if (!data || !data.candidates || data.candidates.length === 0) {
-          throw new Error('Invalid API response format: No candidates found.');
-        }
-        const candidate = data.candidates[0];
+            // Add specific error handling for model-related errors
+            let errorDetails = '';
+            if (response.status === 404) {
+              errorDetails =
+                'The selected Gemini model may not exist or be deprecated.';
+            }
 
-        // Check finishReason
-        if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-          throw new Error(
-            `Generation stopped unexpectedly: ${candidate.finishReason}`
-          );
-        }
-
-        // Check promptFeedback for safety issues
-        if (
-          data.promptFeedback &&
-          data.promptFeedback.blockReason &&
-          data.promptFeedback.blockReason !== 'NONE'
-        ) {
-          throw new Error(
-            `Prompt blocked by safety filters: ${data.promptFeedback.blockReason}`
-          );
-        }
-
-        // Extract function call details
-        if (
-          !candidate.content ||
-          !candidate.content.parts ||
-          candidate.content.parts.length === 0 ||
-          !candidate.content.parts[0].functionCall
-        ) {
-          throw new Error(
-            'Invalid API response format: Function call data not found.'
-          );
-        }
-        const functionCall = candidate.content.parts[0].functionCall;
-
-        // Verify the correct function was called
-        if (functionCall.name !== 'regenerateComment') {
-          throw new Error(
-            `Unexpected function called by API: ${functionCall.name}`
-          );
-        }
-
-        // Extract arguments
-        let args = functionCall.args;
-        if (typeof args === 'string') {
-          try {
-            args = JSON.parse(args);
-          } catch (e) {
-            throw new Error('Failed to parse function arguments string.');
+            // Attempt to get more details from the response body
+            return response
+              .text()
+              .then((errorText) => {
+                console.error(`EngageIQ: API error details: ${errorText}`);
+                // Throw an error that will be caught by the .catch block
+                throw new Error(
+                  `API Error: Status ${response.status}. ${errorDetails ? errorDetails + ' ' : ''}${errorText ? errorText.substring(0, 150) : 'No details available.'}`
+                );
+              })
+              .catch((parsingError) => {
+                // Handle cases where reading the error text fails
+                console.error(
+                  `EngageIQ: Could not parse error response body: ${parsingError}`
+                );
+                throw new Error(
+                  `API Error: Status ${response.status}. Failed to get error details.`
+                );
+              });
           }
-        }
+          // If response is ok, parse JSON
+          return response.json();
+        })
+        // Step 7.1.9: Parse successful response
+        .then((data) => {
+          console.log('EngageIQ: Received regeneration API response:', data);
 
-        // Validate the expected argument is present
-        if (!args || !args.regeneratedComment) {
-          throw new Error(
-            "Invalid API response format: Missing 'regeneratedComment' in arguments."
+          // Basic validation of response structure
+          if (!data || !data.candidates || data.candidates.length === 0) {
+            throw new Error(
+              'Invalid API response format: No candidates found.'
+            );
+          }
+          const candidate = data.candidates[0];
+
+          // Check finishReason
+          if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+            throw new Error(
+              `Generation stopped unexpectedly: ${candidate.finishReason}`
+            );
+          }
+
+          // Check promptFeedback for safety issues
+          if (
+            data.promptFeedback &&
+            data.promptFeedback.blockReason &&
+            data.promptFeedback.blockReason !== 'NONE'
+          ) {
+            throw new Error(
+              `Prompt blocked by safety filters: ${data.promptFeedback.blockReason}`
+            );
+          }
+
+          // Extract function call details
+          if (
+            !candidate.content ||
+            !candidate.content.parts ||
+            candidate.content.parts.length === 0 ||
+            !candidate.content.parts[0].functionCall
+          ) {
+            throw new Error(
+              'Invalid API response format: Function call data not found.'
+            );
+          }
+          const functionCall = candidate.content.parts[0].functionCall;
+
+          // Verify the correct function was called
+          if (functionCall.name !== 'regenerateComment') {
+            throw new Error(
+              `Unexpected function called by API: ${functionCall.name}`
+            );
+          }
+
+          // Extract arguments
+          let args = functionCall.args;
+          if (typeof args === 'string') {
+            try {
+              args = JSON.parse(args);
+            } catch (e) {
+              throw new Error('Failed to parse function arguments string.');
+            }
+          }
+
+          // Validate the expected argument is present
+          if (!args || !args.regeneratedComment) {
+            throw new Error(
+              "Invalid API response format: Missing 'regeneratedComment' in arguments."
+            );
+          }
+
+          const newText = args.regeneratedComment;
+          console.log(
+            `EngageIQ: Successfully regenerated comment for ${reactionType}`
           );
-        }
 
-        const newText = args.regeneratedComment;
-        console.log(
-          `EngageIQ: Successfully regenerated comment for ${reactionType}`
-        );
-
-        // Send success response back to the caller (content script)
-        sendResponse({
-          success: true,
-          type: 'REGENERATION_SUCCESS', // Specific type for content script handling
-          payload: {
-            newText: newText,
-            reactionType: reactionType, // Pass back the reactionType for UI update
-          },
+          // Send success response back to the caller (content script)
+          sendResponse({
+            success: true,
+            type: 'REGENERATION_SUCCESS', // Specific type for content script handling
+            payload: {
+              newText: newText,
+              reactionType: reactionType, // Pass back the reactionType for UI update
+            },
+          });
+        })
+        // Step 7.1.8: Handle fetch errors (Catch block for fetch/parsing/validation errors)
+        .catch((error) => {
+          console.error(
+            'EngageIQ: Error during regeneration API call or processing:',
+            error
+          );
+          sendResponse({
+            success: false,
+            type: 'REGENERATION_ERROR', // Consistent error type
+            error: 'API_ERROR', // General API error category
+            details: error.message || 'Unknown regeneration error occurred.',
+            payload: {
+              // Include reactionType in error payload for context
+              reactionType: reactionType,
+            },
+          });
         });
-      })
-      // Step 7.1.8: Handle fetch errors (Catch block for fetch/parsing/validation errors)
-      .catch((error) => {
-        console.error(
-          'EngageIQ: Error during regeneration API call or processing:',
-          error
-        );
-        sendResponse({
-          success: false,
-          type: 'REGENERATION_ERROR', // Consistent error type
-          error: 'API_ERROR', // General API error category
-          details: error.message || 'Unknown regeneration error occurred.',
-          payload: {
-            // Include reactionType in error payload for context
-            reactionType: reactionType,
-          },
-        });
-      });
 
-    // --- End Implementation of 7.1.5 - 7.1.9 ---
+      // --- End Implementation of 7.1.5 - 7.1.9 ---
+    }); // End of getGenerateContentEndpoint().then() callback
   }); // End of chrome.storage.sync.get callback
 }
 
 // Optional: Listener for extension installation or update
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('EngageIQ: Extension installed or updated:', details.reason);
-  
+
   // Perform manifest and asset verification
   if (details.reason === 'install' || details.reason === 'update') {
     console.log('EngageIQ: Running manifest and asset verification...');
     // We'll execute the verification script in the next update cycle
     setTimeout(() => {
-      chrome.scripting.executeScript({
-        target: { tabId: -1 }, // Run in the background context
-        files: ['js/manifest_check.js']
-      }).catch(err => {
-        console.error('EngageIQ: Error executing manifest check script:', err);
-      });
+      chrome.scripting
+        .executeScript({
+          target: { tabId: -1 }, // Run in the background context
+          files: ['js/manifest_check.js'],
+        })
+        .catch((err) => {
+          console.error(
+            'EngageIQ: Error executing manifest check script:',
+            err
+          );
+        });
     }, 1000);
   }
 });

@@ -364,17 +364,16 @@ function handleIframeMessage(event) {
     }
 
     case 'ACCEPT_SUGGESTION': {
-      console.log(
-        `EngageIQ: Suggestion accepted - Text: ${event.data.text}`
-      );
-      
+      console.log(`EngageIQ: Suggestion accepted - Text: ${event.data.text}`);
+
       // Use the activeCommentBox reference
       if (activeCommentBox) {
         console.log('EngageIQ: Using stored active comment box reference');
         // Find the contenteditable div or textarea for the comment
-        const commentInput = activeCommentBox.querySelector('div[contenteditable="true"]') || 
-                             activeCommentBox.querySelector('textarea');
-        
+        const commentInput =
+          activeCommentBox.querySelector('div[contenteditable="true"]') ||
+          activeCommentBox.querySelector('textarea');
+
         if (commentInput) {
           // Insert text into the comment input
           if (commentInput.tagName.toLowerCase() === 'div') {
@@ -382,7 +381,9 @@ function handleIframeMessage(event) {
             commentInput.textContent = event.data.text;
             // Trigger input event to notify LinkedIn the field has changed
             commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-            console.log('EngageIQ: Text inserted into contenteditable comment box');
+            console.log(
+              'EngageIQ: Text inserted into contenteditable comment box'
+            );
           } else {
             // For textarea
             commentInput.value = event.data.text;
@@ -391,44 +392,65 @@ function handleIframeMessage(event) {
             console.log('EngageIQ: Text inserted into textarea comment box');
           }
         } else {
-          console.warn('EngageIQ: Could not find comment input element in the active comment box');
+          console.warn(
+            'EngageIQ: Could not find comment input element in the active comment box'
+          );
           // Fallback to clipboard only
-          alert('Could not insert text directly. The text has been copied to your clipboard.');
+          alert(
+            'Could not insert text directly. The text has been copied to your clipboard.'
+          );
         }
       } else {
         console.warn('EngageIQ: No active comment box reference found');
         // Fallback: Try to find the most recently interacted comment box
-        const commentBoxes = document.querySelectorAll('[data-engageiq-button-injected="true"]');
-        console.log(`EngageIQ: Found ${commentBoxes.length} comment boxes as fallback`);
-        
+        const commentBoxes = document.querySelectorAll(
+          '[data-engageiq-button-injected="true"]'
+        );
+        console.log(
+          `EngageIQ: Found ${commentBoxes.length} comment boxes as fallback`
+        );
+
         if (commentBoxes.length > 0) {
           // Attempt to use the last comment box as a fallback
           const lastCommentBox = commentBoxes[commentBoxes.length - 1];
-          console.log('EngageIQ: Attempting to use last comment box as fallback');
-          const commentInput = lastCommentBox.querySelector('div[contenteditable="true"]') || 
-                              lastCommentBox.querySelector('textarea');
-          
+          console.log(
+            'EngageIQ: Attempting to use last comment box as fallback'
+          );
+          const commentInput =
+            lastCommentBox.querySelector('div[contenteditable="true"]') ||
+            lastCommentBox.querySelector('textarea');
+
           if (commentInput) {
             // Insert text using the same logic as above
             if (commentInput.tagName.toLowerCase() === 'div') {
               commentInput.textContent = event.data.text;
               commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-              console.log('EngageIQ: Text inserted into contenteditable comment box (fallback method)');
+              console.log(
+                'EngageIQ: Text inserted into contenteditable comment box (fallback method)'
+              );
             } else {
               commentInput.value = event.data.text;
               commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-              console.log('EngageIQ: Text inserted into textarea comment box (fallback method)');
+              console.log(
+                'EngageIQ: Text inserted into textarea comment box (fallback method)'
+              );
             }
           } else {
-            console.warn('EngageIQ: Could not find comment input element in fallback comment box');
-            alert('Could not insert text directly. The text has been copied to your clipboard.');
+            console.warn(
+              'EngageIQ: Could not find comment input element in fallback comment box'
+            );
+            alert(
+              'Could not insert text directly. The text has been copied to your clipboard.'
+            );
           }
         } else {
           console.warn('EngageIQ: No comment boxes found as fallback');
-          alert('Could not insert text directly. The text has been copied to your clipboard.');
+          alert(
+            'Could not insert text directly. The text has been copied to your clipboard.'
+          );
         }
       }
-      
+
       // Hide the iframe and reset the active comment box reference
       if (engageIQIframe) {
         engageIQIframe.style.display = 'none';
@@ -480,7 +502,9 @@ function handleEngageIQButtonClick(event) {
   console.log('EngageIQ: Button clicked.');
 
   // Store the active comment box reference
-  activeCommentBox = event.currentTarget.closest('[data-engageiq-button-injected="true"]');
+  activeCommentBox = event.currentTarget.closest(
+    '[data-engageiq-button-injected="true"]'
+  );
 
   // Get or create the iframe
   const iframe = getOrCreateIframe();
@@ -489,7 +513,7 @@ function handleEngageIQButtonClick(event) {
   if (iframe.style.display === 'none' || iframe.style.display === '') {
     iframe.style.display = 'block';
     iframe.classList.add('visible'); // Add animation class
-    
+
     // Get the clicked button element
     const clickedButton = event.currentTarget;
     // Step 8.3.2: Extract real post content
@@ -555,10 +579,14 @@ function handleEngageIQButtonClick(event) {
         );
 
         if (response && response.success) {
+          // Extract model information if available
+          const modelInfo = response.modelInfo || null;
+
           // Send suggestions to iframe
           sendMessageToIframe({
             type: 'SHOW_SUGGESTIONS',
             suggestions: response.suggestions,
+            modelInfo: modelInfo, // Include model info in the message
           });
           console.log('EngageIQ: Sent SHOW_SUGGESTIONS to iframe');
         } else {

@@ -24,8 +24,78 @@
             placeholder="Enter your API key"
           />
         </div>
+
+        <div class="mb-3">
+          <label for="geminiModel" class="form-label">Gemini Model</label>
+          <select
+            class="form-select"
+            id="geminiModel"
+            aria-describedby="modelHelp"
+          >
+            <option value="gemini-2.5-pro-exp-03-25">
+              gemini-2.5-pro-exp-03-25 - Latest experimental model with advanced
+              capabilities
+            </option>
+            <option value="gemini-2.0-flash" selected>
+              gemini-2.0-flash (Default) - Fast responses with good quality
+            </option>
+            <option value="gemini-2.0-flash-lite">
+              gemini-2.0-flash-lite - Fastest responses, optimized for
+              efficiency
+            </option>
+            <option value="gemini-1.5-pro">
+              gemini-1.5-pro - Previous generation full-capability model
+            </option>
+          </select>
+          <div id="modelHelp" class="form-text">
+            Select the Gemini model to use for generating comments. Different
+            models offer varying balances of speed, quality, and rate limits.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <h5>Model Rate Limits</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Model</th>
+                  <th>Queries per Minute (QPM)</th>
+                  <th>Queries per Day (QPD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>gemini-2.5-pro-exp-03-25</td>
+                  <td>10</td>
+                  <td>60</td>
+                </tr>
+                <tr>
+                  <td>gemini-2.0-flash</td>
+                  <td>60</td>
+                  <td>1,000</td>
+                </tr>
+                <tr>
+                  <td>gemini-2.0-flash-lite</td>
+                  <td>120</td>
+                  <td>2,000</td>
+                </tr>
+                <tr>
+                  <td>gemini-1.5-pro</td>
+                  <td>10</td>
+                  <td>60</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="form-text">
+            Rate limits are subject to change by Google. Refer to the official
+            Gemini API documentation for the most up-to-date information.
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary" id="saveButton">
-          Save Key
+          Save Settings
         </button>
       </form>
 

@@ -186,3 +186,26 @@ a:focus-visible {
   outline-offset: 2px;
   text-decoration: underline;
 }
+
+/* Model indicator styling */
+.model-indicator {
+  font-size: 0.7rem;
+  color: #6c757d;
+  text-align: right;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.model-indicator-label {
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.model-indicator-value {
+  font-family: monospace;
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
