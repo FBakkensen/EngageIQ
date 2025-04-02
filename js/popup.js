@@ -473,23 +473,24 @@ function handleAccordionButtonClick(event) {
 
     case 'accept':
       console.log(
-        `EngageIQ: Copying suggestion for ${reactionType} to clipboard: ${currentText}`
+        `EngageIQ: Accepting suggestion for ${reactionType}: ${currentText}`
       );
-      // Use clipboard API to copy the text
+      // Send message to content script to insert text into comment box
+      sendMessageToContentScript({
+        type: 'ACCEPT_SUGGESTION',
+        text: currentText
+      });
+      // Optional: Still copy to clipboard as a fallback
       navigator.clipboard
         .writeText(currentText)
         .then(() => {
-          console.log('EngageIQ: Suggestion copied to clipboard successfully!');
-          // Optional: Provide visual feedback to the user (e.g., change button text)
-          // button.textContent = 'Copied!';
-          // setTimeout(() => { button.textContent = 'Accept'; }, 1500);
+          console.log('EngageIQ: Suggestion copied to clipboard as fallback');
         })
         .catch((err) => {
           console.error(
             'EngageIQ: Failed to copy suggestion to clipboard:',
             err
           );
-          // Optional: Provide error feedback to the user
         });
       break;
 

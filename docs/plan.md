@@ -549,11 +549,11 @@
         *   *Verification:* Works smoothly.
     *   [x] **Sub-step 9.5.7:** Test Length Adjustment (+/- buttons).
         *   *Verification:* Text updates correctly.
-    *   [ ] **Sub-step 9.5.8:** Test Accept Suggestion.
+    *   [x] **Sub-step 9.5.8:** Test Accept Suggestion.
         *   *Verification:* Text inserted into comment field, popup closes.
-    *   [ ] **Sub-step 9.5.9:** Test Error Handling Cases (No Key, Invalid Key, Network Error, Content Extraction Fails, Rate Limit, Content Policy).
+    *   [x] **Sub-step 9.5.9:** Test Error Handling Cases (No Key, Invalid Key, Network Error, Content Extraction Fails, Rate Limit, Content Policy).
         *   *Verification:* Correct error messages displayed in popup for each case.
-    *   [ ] **Sub-step 9.5.10:** Test extension reload/re-enable.
+    *   [x] **Sub-step 9.5.10:** Test extension reload/re-enable.
         *   *Verification:* Functionality persists.
 
 *   **Step 9.6: Prepare Basic Documentation (README)**
