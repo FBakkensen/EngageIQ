@@ -11,6 +11,15 @@ const GEMINI_API_BASE_URL =
 
 /**
  * Gets the currently selected Gemini model from storage
+ * This function is part of the model selection feature that allows users to choose
+ * different Gemini models based on their needs (speed vs quality vs rate limits).
+ * 
+ * The function performs the following steps:
+ * 1. Retrieves the model preference from Chrome storage
+ * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
+ * 3. Validates the model against a list of supported models
+ * 4. Falls back to DEFAULT_GEMINI_MODEL if the stored model is invalid
+ * 
  * @returns {Promise<string>} The selected model or default if none is found
  */
 async function getCurrentModel() {
@@ -26,11 +35,12 @@ async function getCurrentModel() {
       const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
       
       // Validate the model name against allowed models
+      // These are the four models supported by the extension as specified in the requirements
       const validModels = [
-        'gemini-2.5-pro-exp-03-25',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-lite',
-        'gemini-1.5-pro'
+        'gemini-2.5-pro-exp-03-25', // Latest experimental model with highest quality but stricter rate limits
+        'gemini-2.0-flash',        // Default model with good balance of speed and quality
+        'gemini-2.0-flash-lite',   // Fastest model with highest rate limits
+        'gemini-1.5-pro'           // Previous generation model for specific use cases
       ];
       
       if (!validModels.includes(model)) {
@@ -45,7 +55,13 @@ async function getCurrentModel() {
   });
 }
 
-// Function to construct the API endpoint URL with the current model
+/**
+ * Constructs the API endpoint URL with the current model
+ * This is a key part of the model selection feature, as it dynamically
+ * builds the API URL based on the user's model preference.
+ * 
+ * @returns {Promise<string>} The complete API endpoint URL for the selected model
+ */
 async function getGenerateContentEndpoint() {
   try {
     const model = await getCurrentModel();

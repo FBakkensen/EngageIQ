@@ -612,7 +612,10 @@ function processMessage(data) {
 
 /**
  * Updates the model indicator with the provided model name
- * @param {string} modelName - The name of the model to display
+ * Part of the model selection feature that displays the currently selected model in the popup UI.
+ * This provides users with visual confirmation of which model is being used for their comment generation.
+ * 
+ * @param {string} modelName - The name of the model to display (e.g., 'gemini-2.0-flash')
  */
 function updateModelIndicator(modelName) {
   const modelIndicator = document.getElementById('modelIndicator');
@@ -625,6 +628,57 @@ function updateModelIndicator(modelName) {
     <span class="model-indicator-label">Model:</span>
     <span class="model-indicator-value">${modelName}</span>
   `;
+}
+
+/**
+ * Retrieves and displays the current Gemini model in the model indicator
+ * This function is part of the model selection feature and ensures that users
+ * can see which model is currently being used for comment generation.
+ * 
+ * The function performs the following steps:
+ * 1. Retrieves the model preference from Chrome storage
+ * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
+ * 3. Updates the UI to display the model name
+ * 
+ * This provides transparency to users about which model is processing their requests,
+ * which is especially important when different models have different rate limits and capabilities.
+ */
+function displayCurrentModel() {
+  const modelIndicator = document.getElementById('modelIndicator');
+  if (!modelIndicator) {
+    console.warn('EngageIQ: Cannot display model - modelIndicator element not found');
+    return;
+  }
+
+  // Default model value (matches the default in background.js)
+  const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+
+  // Get the current model from Chrome storage
+  chrome.storage.sync.get(['geminiModel'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('EngageIQ: Error retrieving model from storage:', chrome.runtime.lastError);
+      displayModelValue(DEFAULT_GEMINI_MODEL);
+      return;
+    }
+    
+    // Get the model from storage or use default
+    const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
+    displayModelValue(model);
+  });
+
+  /**
+   * Displays the model value in the UI
+   * Creates a formatted display of the model name with appropriate styling
+   * 
+   * @param {string} modelValue - The model value to display
+   */
+  function displayModelValue(modelValue) {
+    console.log(`EngageIQ: Displaying model: ${modelValue}`);
+    modelIndicator.innerHTML = `
+      <span class="model-indicator-label">Model:</span>
+      <span class="model-indicator-value">${modelValue}</span>
+    `;
+  }
 }
 
 /**
@@ -670,45 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Notify the content script that the popup is ready
   notifyPopupReady();
 });
-
-/**
- * Retrieves and displays the current Gemini model in the model indicator
- */
-function displayCurrentModel() {
-  const modelIndicator = document.getElementById('modelIndicator');
-  if (!modelIndicator) {
-    console.warn('EngageIQ: Cannot display model - modelIndicator element not found');
-    return;
-  }
-
-  // Default model value (matches the default in background.js)
-  const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
-
-  // Get the current model from Chrome storage
-  chrome.storage.sync.get(['geminiModel'], (result) => {
-    if (chrome.runtime.lastError) {
-      console.error('EngageIQ: Error retrieving model from storage:', chrome.runtime.lastError);
-      displayModelValue(DEFAULT_GEMINI_MODEL);
-      return;
-    }
-    
-    // Get the model from storage or use default
-    const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
-    displayModelValue(model);
-  });
-
-  /**
-   * Displays the model value in the UI
-   * @param {string} modelValue - The model value to display
-   */
-  function displayModelValue(modelValue) {
-    console.log(`EngageIQ: Displaying model: ${modelValue}`);
-    modelIndicator.innerHTML = `
-      <span class="model-indicator-label">Model:</span>
-      <span class="model-indicator-value">${modelValue}</span>
-    `;
-  }
-}
 
 /**
  * Listen for messages from the parent window (content script).

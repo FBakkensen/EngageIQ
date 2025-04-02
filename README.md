@@ -9,6 +9,7 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 - **AI-Powered Comment Generation**: Generate six different comment suggestions based on LinkedIn's standard reaction types (Like, Celebrate, Support, Love, Insightful, Funny).
 - **Contextual Understanding**: Suggestions are based on the specific content of the LinkedIn post.
 - **Language Matching**: Comments are generated in the same language as the post.
+- **Model Selection**: Choose from different Gemini AI models to optimize for speed, quality, or rate limits.
 - **Length Adjustment**: Easily adjust the length of suggestions to be longer or shorter.
 - **Seamless Integration**: Simple one-click insertion of chosen comments into LinkedIn's comment field.
 - **User-Friendly Interface**: Clean, Bootstrap-styled popup with an intuitive accordion interface.
@@ -33,6 +34,7 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 1. **Set Up Your API Key**:
    - Click on the extension options/settings
    - Enter your Gemini API key and save
+   - Select your preferred Gemini model from the dropdown menu
    - If you don't have a Gemini API key, you can obtain one from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 2. **Generate Comments**:
@@ -50,6 +52,20 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 ## API Key Requirement
 
 EngageIQ requires a Google Gemini API key to function. You can obtain a key from [Google AI Studio](https://makersuite.google.com/app/apikey). Your API key is stored securely in your browser using Chrome's storage API and is only used to make requests to the Gemini API when you generate or adjust comments.
+
+## Gemini Model Selection
+
+EngageIQ allows you to choose from different Gemini AI models to tailor the experience to your needs:
+
+- **gemini-2.5-pro-exp-03-25**: Latest experimental model with advanced capabilities and highest quality responses. Best for complex content but has more restrictive rate limits (10 QPM, 60 QPD).
+
+- **gemini-2.0-flash** (Default): Offers a good balance of quality and performance with fast response times. Suitable for most users with moderate rate limits (60 QPM, 1,000 QPD).
+
+- **gemini-2.0-flash-lite**: Fastest response times optimized for efficiency. Slightly reduced quality but with the most generous rate limits (120 QPM, 2,000 QPD).
+
+- **gemini-1.5-pro**: Previous generation model with comprehensive understanding. Slower response times with restricted rate limits (10 QPM, 60 QPD).
+
+You can change your model selection at any time through the extension options page.
 
 ## Privacy Note
 
