@@ -11,6 +11,7 @@
 // Import the UI modules
 import { initSuggestionRenderer, displaySuggestions } from '../js/ui/suggestion-renderer.js';
 import { initErrorHandler, displayError } from '../js/ui/error-handler.js';
+import { initAccordion } from '../js/ui/accordion-controller.js';
 
 // Log script load confirmation - Compliant with user preference MEMORY[e17fa962-c53a-4d19-ae3a-66c3cbc4dce7]
 console.log('EngageIQ: Popup Script Loaded');
@@ -138,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
   errorMessage = document.getElementById('errorMessage');
   suggestionsAccordion = document.getElementById('suggestionsAccordion');
 
+  // Initialize the accordion controller directly
+  initAccordion(suggestionsAccordion);
+  
   // Initialize UI modules with the required references
   initSuggestionRenderer({
     accordionElement: suggestionsAccordion,

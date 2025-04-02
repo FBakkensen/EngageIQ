@@ -8,15 +8,19 @@
  *  - Handling button interactions (accept, increase/decrease length)
  */
 
+// Import accordion controller
+import { initAccordion } from './accordion-controller.js';
+
 // Log module load confirmation
 console.log('EngageIQ: Suggestion Renderer Module Loaded');
 
 /**
- * References to DOM elements (to be initialized when module is used)
+ * References to DOM elements and controllers (to be initialized when module is used)
  */
 let suggestionsAccordion;
 let showStateFn; // Function to show different UI states
 let sendMessageFn; // Function to send messages to content script
+let accordionController; // Reference to accordion controller instance
 
 /**
  * Initializes the module with required DOM elements and functions
@@ -31,6 +35,19 @@ export function initSuggestionRenderer(config) {
   sendMessageFn = config.sendMessageFunction;
   
   console.log('EngageIQ: Suggestion Renderer initialized');
+  
+  // Initialize the accordion controller if the accordion element is available
+  if (suggestionsAccordion) {
+    accordionController = initAccordion(suggestionsAccordion);
+  }
+}
+
+/**
+ * Provides access to the accordion controller instance
+ * @returns {Object|null} The accordion controller instance or null if not initialized
+ */
+export function getAccordionController() {
+  return accordionController;
 }
 
 /**
@@ -109,9 +126,6 @@ export function displaySuggestions(suggestions) {
     const displayType =
       reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
     button.textContent = displayType;
-
-    // Add manual click handler to toggle collapse
-    button.addEventListener('click', toggleAccordion);
 
     accordionHeader.appendChild(button);
 
@@ -203,98 +217,7 @@ export function displaySuggestions(suggestions) {
   // Add event listeners to the buttons
   addAccordionButtonListeners();
 
-  // Try to initialize Bootstrap's Collapse, but we have a fallback toggle handler too
-  try {
-    if (window.bootstrap && window.bootstrap.Collapse) {
-      const accordionButtons =
-        suggestionsAccordion.querySelectorAll('.accordion-button');
-      accordionButtons.forEach((button) => {
-        const targetId = button.getAttribute('data-bs-target');
-        if (targetId) {
-          const collapseElement = document.querySelector(targetId);
-          if (collapseElement) {
-            new window.bootstrap.Collapse(collapseElement, {
-              toggle: false,
-            });
-            console.log(
-              `EngageIQ: Initialized Bootstrap collapse for ${targetId}`
-            );
-          }
-        }
-      });
-    }
-  } catch (error) {
-    console.error('EngageIQ: Error initializing Bootstrap:', error);
-  }
-
   showStateFn('suggestions');
-}
-
-/**
- * Manual toggle handler for accordion items
- * @param {Event} event - Click event
- */
-function toggleAccordion(event) {
-  event.preventDefault(); // Prevent default behavior
-
-  const button = event.currentTarget;
-  const targetId = button.getAttribute('data-bs-target');
-
-  if (!targetId) return;
-
-  const collapseElement = document.querySelector(targetId);
-  if (!collapseElement) return;
-
-  // Check if Bootstrap's Collapse is available
-  if (window.bootstrap && window.bootstrap.Collapse) {
-    // Try to use Bootstrap
-    try {
-      const bsCollapse = window.bootstrap.Collapse.getInstance(collapseElement);
-      if (bsCollapse) {
-        bsCollapse.toggle();
-      } else {
-        new window.bootstrap.Collapse(collapseElement).toggle();
-      }
-      return;
-    } catch (error) {
-      console.warn(
-        'EngageIQ: Bootstrap Collapse error, using manual toggle:',
-        error
-      );
-    }
-  }
-
-  // Manual toggle as fallback
-  const isExpanded = button.getAttribute('aria-expanded') === 'true';
-
-  // First collapse all items (for accordion behavior)
-  document.querySelectorAll('.accordion-collapse.show').forEach((item) => {
-    // Skip if this is our target
-    if (item.id === collapseElement.id) return;
-
-    // Close this item
-    item.classList.remove('show');
-    const headerButton = document.querySelector(
-      `[data-bs-target="#${item.id}"]`
-    );
-    if (headerButton) {
-      headerButton.classList.add('collapsed');
-      headerButton.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  // Now toggle our target
-  if (isExpanded) {
-    collapseElement.classList.remove('show');
-    button.classList.add('collapsed');
-    button.setAttribute('aria-expanded', 'false');
-  } else {
-    collapseElement.classList.add('show');
-    button.classList.remove('collapsed');
-    button.setAttribute('aria-expanded', 'true');
-  }
-
-  console.log(`EngageIQ: Manually toggled accordion for ${button.textContent}`);
 }
 
 /**
