@@ -35,6 +35,18 @@
         "html/manifest_check.html",
         "js/popup.js",
         "js/manifest_check.js",
+        "js/models/gemini-model.js",
+        "js/services/api-service.js",
+        "js/services/comment-generation.js",
+        "js/services/regeneration-service.js",
+        "js/services/post-extractor.js",
+        "js/services/message-service.js",
+        "js/ui/button-injector.js",
+        "js/ui/iframe-manager.js",
+        "js/ui/suggestion-renderer.js",
+        "js/ui/error-handler.js",
+        "js/ui/accordion-controller.js",
+        "js/utils/storage-utils.js",
         "css/popup.css",
         "css/options.css",
         "assets/css/bootstrap.min.css",
@@ -45,5 +57,8 @@
       ],
       "matches": ["*://*.linkedin.com/*"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
