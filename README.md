@@ -17,11 +17,13 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 ## Installation Instructions
 
 ### From Chrome Web Store (Coming Soon)
+
 1. Visit the Chrome Web Store (link will be provided upon publication)
 2. Click "Add to Chrome"
 3. Follow the prompts to complete installation
 
 ### Manual Installation (Developer Mode)
+
 1. Download or clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" using the toggle in the top-right corner
@@ -32,12 +34,14 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 ## Usage
 
 1. **Set Up Your API Key**:
+
    - Click on the extension options/settings
    - Enter your Gemini API key and save
    - Select your preferred Gemini model from the dropdown menu
    - If you don't have a Gemini API key, you can obtain one from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 2. **Generate Comments**:
+
    - Navigate to LinkedIn
    - Find a post you want to comment on
    - Click the EngageIQ icon button near the comment field

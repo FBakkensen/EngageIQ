@@ -1,139 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EngageIQ - Manifest Verification</title>
-  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
-  <style>
-    body {
-      padding: 20px;
-      font-family: Arial, sans-serif;
-    }
-    .verification-item {
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 4px;
-    }
-    .verification-success {
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-      color: #155724;
-    }
-    .verification-error {
-      background-color: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-    }
-    .verification-warning {
-      background-color: #fff3cd;
-      border: 1px solid #ffeeba;
-      color: #856404;
-    }
-    .verification-info {
-      background-color: #d1ecf1;
-      border: 1px solid #bee5eb;
-      color: #0c5460;
-    }
-    #results {
-      margin-top: 20px;
-      max-height: 500px;
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>EngageIQ - Manifest and Asset Verification</h1>
-    <p>This tool verifies that all assets referenced in the manifest.json exist and that the manifest is properly configured for production.</p>
-    
-    <div class="card mb-4">
-      <div class="card-header">
-        <h2 class="h5 mb-0">Verification Status</h2>
-      </div>
-      <div class="card-body">
-        <div id="summary">
-          <p>Click the button below to run the verification checks.</p>
-        </div>
-        <button id="runVerification" class="btn btn-primary">Run Verification</button>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">
-        <h2 class="h5 mb-0">Verification Results</h2>
-      </div>
-      <div class="card-body">
-        <div id="results">
-          <p class="text-muted">Results will appear here after running the verification.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="../assets/js/bootstrap.bundle.min.js"></script>
-  <script src="../js/manifest_check.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const runButton = document.getElementById('runVerification');
-      const resultsDiv = document.getElementById('results');
-      const summaryDiv = document.getElementById('summary');
-      
-      // Override console methods to capture output
-      const originalConsoleLog = console.log;
-      const originalConsoleError = console.error;
-      const originalConsoleWarn = console.warn;
-      
-      function addLogEntry(message, type) {
-        const entry = document.createElement('div');
-        entry.className = `verification-item verification-${type}`;
-        entry.textContent = message;
-        resultsDiv.appendChild(entry);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EngageIQ - Manifest Verification</title>
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
+    <style>
+      body {
+        padding: 20px;
+        font-family: Arial, sans-serif;
       }
-      
-      runButton.addEventListener('click', function() {
-        // Clear previous results
-        resultsDiv.innerHTML = '';
-        summaryDiv.innerHTML = '<p>Verification in progress...</p>';
-        
+      .verification-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .verification-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .verification-error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .verification-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+      }
+      .verification-info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      #results {
+        margin-top: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>EngageIQ - Manifest and Asset Verification</h1>
+      <p>
+        This tool verifies that all assets referenced in the manifest.json exist
+        and that the manifest is properly configured for production.
+      </p>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Verification Status</h2>
+        </div>
+        <div class="card-body">
+          <div id="summary">
+            <p>Click the button below to run the verification checks.</p>
+          </div>
+          <button id="runVerification" class="btn btn-primary">
+            Run Verification
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="h5 mb-0">Verification Results</h2>
+        </div>
+        <div class="card-body">
+          <div id="results">
+            <p class="text-muted">
+              Results will appear here after running the verification.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/manifest_check.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const runButton = document.getElementById('runVerification');
+        const resultsDiv = document.getElementById('results');
+        const summaryDiv = document.getElementById('summary');
+
         // Override console methods to capture output
-        console.log = function(message) {
-          originalConsoleLog.apply(console, arguments);
-          if (typeof message === 'string' && message.startsWith('EngageIQ:')) {
-            addLogEntry(message, 'info');
-          }
-        };
-        
-        console.error = function(message) {
-          originalConsoleError.apply(console, arguments);
-          if (typeof message === 'string' && message.startsWith('EngageIQ:')) {
-            addLogEntry(message, 'error');
-          }
-        };
-        
-        console.warn = function(message) {
-          originalConsoleWarn.apply(console, arguments);
-          if (typeof message === 'string' && message.startsWith('EngageIQ:')) {
-            addLogEntry(message, 'warning');
-          }
-        };
-        
-        // Run the verification
-        runVerification().then(function(results) {
-          // Update summary
-          if (results) {
-            summaryDiv.innerHTML = '<div class="alert alert-success">✅ All manifest and asset checks passed!</div>';
-          } else {
-            summaryDiv.innerHTML = '<div class="alert alert-danger">❌ Some manifest or asset checks failed. See details below.</div>';
-          }
-          
-          // Restore original console methods
-          console.log = originalConsoleLog;
-          console.error = originalConsoleError;
-          console.warn = originalConsoleWarn;
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+
+        function addLogEntry(message, type) {
+          const entry = document.createElement('div');
+          entry.className = `verification-item verification-${type}`;
+          entry.textContent = message;
+          resultsDiv.appendChild(entry);
+        }
+
+        runButton.addEventListener('click', function () {
+          // Clear previous results
+          resultsDiv.innerHTML = '';
+          summaryDiv.innerHTML = '<p>Verification in progress...</p>';
+
+          // Override console methods to capture output
+          console.log = function (message) {
+            originalConsoleLog.apply(console, arguments);
+            if (
+              typeof message === 'string' &&
+              message.startsWith('EngageIQ:')
+            ) {
+              addLogEntry(message, 'info');
+            }
+          };
+
+          console.error = function (message) {
+            originalConsoleError.apply(console, arguments);
+            if (
+              typeof message === 'string' &&
+              message.startsWith('EngageIQ:')
+            ) {
+              addLogEntry(message, 'error');
+            }
+          };
+
+          console.warn = function (message) {
+            originalConsoleWarn.apply(console, arguments);
+            if (
+              typeof message === 'string' &&
+              message.startsWith('EngageIQ:')
+            ) {
+              addLogEntry(message, 'warning');
+            }
+          };
+
+          // Run the verification
+          runVerification().then(function (results) {
+            // Update summary
+            if (results) {
+              summaryDiv.innerHTML =
+                '<div class="alert alert-success">✅ All manifest and asset checks passed!</div>';
+            } else {
+              summaryDiv.innerHTML =
+                '<div class="alert alert-danger">❌ Some manifest or asset checks failed. See details below.</div>';
+            }
+
+            // Restore original console methods
+            console.log = originalConsoleLog;
+            console.error = originalConsoleError;
+            console.warn = originalConsoleWarn;
+          });
         });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

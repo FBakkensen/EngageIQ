@@ -72,13 +72,14 @@ function displayError(message, details, actionData) {
   }
 
   console.log(`EngageIQ: Displaying error: ${message}`);
-  
+
   // Get error action elements
   const errorAction = document.getElementById('errorAction');
   const errorActionText = document.getElementById('errorActionText');
-  
+
   // Display the main error message
-  errorMessage.textContent = getUserFriendlyErrorMessage(message) || 'Unknown error';
+  errorMessage.textContent =
+    getUserFriendlyErrorMessage(message) || 'Unknown error';
 
   // Display action guidance if provided
   if (errorAction && errorActionText && actionData && actionData.text) {
@@ -87,7 +88,7 @@ function displayError(message, details, actionData) {
   } else if (errorAction) {
     errorAction.style.display = 'none';
   }
-  
+
   // Log additional details if provided
   if (details) {
     console.log(`EngageIQ: Error details: ${details}`);
@@ -103,32 +104,41 @@ function displayError(message, details, actionData) {
  */
 function getUserFriendlyErrorMessage(technicalMessage) {
   if (!technicalMessage) return 'An unknown error occurred';
-  
+
   // Map of technical error messages to user-friendly messages
   const errorMessageMap = {
-    'API key not found': 'No API key has been set. Please go to the extension options to set your API key.',
-    'Invalid API key': 'The API key you provided appears to be invalid. Please check your API key in the extension options.',
-    'Network error': 'Could not connect to the AI service. Please check your internet connection and try again.',
-    'Rate limit exceeded': 'You have made too many requests. Please wait a few minutes and try again.',
-    'Content extraction failed': 'We couldn\'t analyze the post content. Please try again or use a different post.',
-    'No suggestions available': 'We couldn\'t generate suggestions for this post. The content may be too short or not appropriate for comments.',
-    'Content policy violation': 'We couldn\'t generate suggestions because the content may violate our content policy.',
-    'Generation failed': 'We encountered an issue while generating suggestions. Please try again.',
-    'SAFETY': 'We couldn\'t generate suggestions because the content may contain sensitive topics.'    
+    'API key not found':
+      'No API key has been set. Please go to the extension options to set your API key.',
+    'Invalid API key':
+      'The API key you provided appears to be invalid. Please check your API key in the extension options.',
+    'Network error':
+      'Could not connect to the AI service. Please check your internet connection and try again.',
+    'Rate limit exceeded':
+      'You have made too many requests. Please wait a few minutes and try again.',
+    'Content extraction failed':
+      "We couldn't analyze the post content. Please try again or use a different post.",
+    'No suggestions available':
+      "We couldn't generate suggestions for this post. The content may be too short or not appropriate for comments.",
+    'Content policy violation':
+      "We couldn't generate suggestions because the content may violate our content policy.",
+    'Generation failed':
+      'We encountered an issue while generating suggestions. Please try again.',
+    SAFETY:
+      "We couldn't generate suggestions because the content may contain sensitive topics.",
   };
-  
+
   // Check for exact matches in our map
   if (errorMessageMap[technicalMessage]) {
     return errorMessageMap[technicalMessage];
   }
-  
+
   // Check for partial matches
   for (const key in errorMessageMap) {
     if (technicalMessage.includes(key)) {
       return errorMessageMap[key];
     }
   }
-  
+
   // Return the original message if no mapping found
   return technicalMessage;
 }
@@ -252,7 +262,10 @@ function displaySuggestions(suggestions) {
     decreaseBtn.setAttribute('data-action', 'decrease');
     decreaseBtn.title = 'Make suggestion shorter';
     // Add ARIA attributes for screen readers
-    decreaseBtn.setAttribute('aria-label', `Make ${displayType} suggestion shorter`);
+    decreaseBtn.setAttribute(
+      'aria-label',
+      `Make ${displayType} suggestion shorter`
+    );
 
     buttonGroup.appendChild(decreaseBtn);
 
@@ -265,7 +278,10 @@ function displaySuggestions(suggestions) {
     increaseBtn.setAttribute('data-action', 'increase');
     increaseBtn.title = 'Make suggestion longer';
     // Add ARIA attributes for screen readers
-    increaseBtn.setAttribute('aria-label', `Make ${displayType} suggestion longer`);
+    increaseBtn.setAttribute(
+      'aria-label',
+      `Make ${displayType} suggestion longer`
+    );
 
     buttonGroup.appendChild(increaseBtn);
 
@@ -478,7 +494,7 @@ function handleAccordionButtonClick(event) {
       // Send message to content script to insert text into comment box
       sendMessageToContentScript({
         type: 'ACCEPT_SUGGESTION',
-        text: currentText
+        text: currentText,
       });
       // Optional: Still copy to clipboard as a fallback
       navigator.clipboard
@@ -525,20 +541,20 @@ function processMessage(data) {
       console.log('EngageIQ: Showing error state:', error);
       // Ensure loading is explicitly hidden before showing error
       if (loadingState) loadingState.style.display = 'none';
-      
+
       // Handle specific error cases with actionable guidance
       actionData = null;
-      
+
       if (error.includes('API key')) {
         actionData = {
-          text: 'Open the extension options page to set or update your API key.'
+          text: 'Open the extension options page to set or update your API key.',
         };
       } else if (error.includes('Network error')) {
         actionData = {
-          text: 'Please check your internet connection and try again later.'
+          text: 'Please check your internet connection and try again later.',
         };
       }
-      
+
       displayError(error, details, actionData);
       break;
 
@@ -546,10 +562,12 @@ function processMessage(data) {
       console.log('EngageIQ: Showing suggestions');
       if (Array.isArray(suggestions) && suggestions.length > 0) {
         displaySuggestions(suggestions);
-        
+
         // Update model indicator if model info is provided
         if (modelInfo && modelInfo.name) {
-          console.log(`EngageIQ: Updating model indicator with: ${modelInfo.name}`);
+          console.log(
+            `EngageIQ: Updating model indicator with: ${modelInfo.name}`
+          );
           updateModelIndicator(modelInfo.name);
         }
       } else {
@@ -576,10 +594,12 @@ function processMessage(data) {
             `EngageIQ: Updating text for ${reactionType} with: ${newText.substring(0, 50)}...`
           );
           textElement.textContent = newText;
-          
+
           // Update model indicator if model info is provided
           if (payload.modelInfo && payload.modelInfo.name) {
-            console.log(`EngageIQ: Updating model indicator with: ${payload.modelInfo.name}`);
+            console.log(
+              `EngageIQ: Updating model indicator with: ${payload.modelInfo.name}`
+            );
             updateModelIndicator(payload.modelInfo.name);
           }
         } else {
@@ -598,10 +618,7 @@ function processMessage(data) {
           payload
         );
         // Show an error to the user for invalid payload
-        displayError(
-          'Failed to update suggestion',
-          'Invalid response format'
-        );
+        displayError('Failed to update suggestion', 'Invalid response format');
       }
       break;
 
@@ -614,7 +631,7 @@ function processMessage(data) {
  * Updates the model indicator with the provided model name
  * Part of the model selection feature that displays the currently selected model in the popup UI.
  * This provides users with visual confirmation of which model is being used for their comment generation.
- * 
+ *
  * @param {string} modelName - The name of the model to display (e.g., 'gemini-2.0-flash')
  */
 function updateModelIndicator(modelName) {
@@ -623,7 +640,7 @@ function updateModelIndicator(modelName) {
     console.warn('EngageIQ: Cannot update model indicator - element not found');
     return;
   }
-  
+
   modelIndicator.innerHTML = `
     <span class="model-indicator-label">Model:</span>
     <span class="model-indicator-value">${modelName}</span>
@@ -634,19 +651,21 @@ function updateModelIndicator(modelName) {
  * Retrieves and displays the current Gemini model in the model indicator
  * This function is part of the model selection feature and ensures that users
  * can see which model is currently being used for comment generation.
- * 
+ *
  * The function performs the following steps:
  * 1. Retrieves the model preference from Chrome storage
  * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
  * 3. Updates the UI to display the model name
- * 
+ *
  * This provides transparency to users about which model is processing their requests,
  * which is especially important when different models have different rate limits and capabilities.
  */
 function displayCurrentModel() {
   const modelIndicator = document.getElementById('modelIndicator');
   if (!modelIndicator) {
-    console.warn('EngageIQ: Cannot display model - modelIndicator element not found');
+    console.warn(
+      'EngageIQ: Cannot display model - modelIndicator element not found'
+    );
     return;
   }
 
@@ -656,11 +675,14 @@ function displayCurrentModel() {
   // Get the current model from Chrome storage
   chrome.storage.sync.get(['geminiModel'], (result) => {
     if (chrome.runtime.lastError) {
-      console.error('EngageIQ: Error retrieving model from storage:', chrome.runtime.lastError);
+      console.error(
+        'EngageIQ: Error retrieving model from storage:',
+        chrome.runtime.lastError
+      );
       displayModelValue(DEFAULT_GEMINI_MODEL);
       return;
     }
-    
+
     // Get the model from storage or use default
     const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
     displayModelValue(model);
@@ -669,7 +691,7 @@ function displayCurrentModel() {
   /**
    * Displays the model value in the UI
    * Creates a formatted display of the model name with appropriate styling
-   * 
+   *
    * @param {string} modelValue - The model value to display
    */
   function displayModelValue(modelValue) {
@@ -708,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
   errorState = document.getElementById('errorState');
   errorMessage = document.getElementById('errorMessage');
   suggestionsAccordion = document.getElementById('suggestionsAccordion');
-  
+
   // Process any messages that were received before DOM was ready
   while (messageQueue.length > 0) {
     const message = messageQueue.shift();

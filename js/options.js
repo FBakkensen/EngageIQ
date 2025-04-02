@@ -1,6 +1,6 @@
 /**
  * EngageIQ Chrome Extension - Options Page Script
- * 
+ *
  * This script handles the options page functionality, including:
  * - Loading and saving the API key
  * - Loading and saving the Gemini model preference
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // const saveButton = document.getElementById('saveButton'); // ESLint: Commented out as unused (no-unused-vars). Ref'd in plan but not directly used in code.
   const statusMessage = document.getElementById('statusMessage');
   const settingsForm = document.getElementById('settingsForm');
-  
+
   /**
    * Model Selection Feature: Get reference to the model dropdown
    * This dropdown allows users to select from different Gemini models:
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         console.log('EngageIQ: No API Key found in storage.');
       }
-      
+
       /**
        * Model Selection Feature: Set the dropdown value based on stored preference
        * If no preference is found, the dropdown will use the default value from HTML
@@ -54,7 +54,10 @@ document.addEventListener('DOMContentLoaded', function () {
        */
       if (result.geminiModel) {
         geminiModelSelect.value = result.geminiModel;
-        console.log('EngageIQ: Gemini model preference loaded:', result.geminiModel);
+        console.log(
+          'EngageIQ: Gemini model preference loaded:',
+          result.geminiModel
+        );
       } else {
         console.log('EngageIQ: No model preference found, using default.');
       }
@@ -71,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Get values from form fields
     const apiKey = apiKeyInput.value.trim(); // Trim whitespace
-    
+
     /**
      * Model Selection Feature: Get the selected model value
      * This will be saved to Chrome storage and used by the background script
@@ -83,25 +86,28 @@ document.addEventListener('DOMContentLoaded', function () {
      * Save both settings to Chrome storage
      * Stores both the API key and model preference in a single operation
      */
-    chrome.storage.sync.set({ apiKey: apiKey, geminiModel: geminiModel }, function () {
-      // Handle the storage callback
-      if (chrome.runtime.lastError) {
-        console.error(
-          'EngageIQ: Error saving settings:',
-          chrome.runtime.lastError.message
-        );
-        statusMessage.textContent = 'Error saving settings.';
-        statusMessage.style.color = 'red';
-      } else {
-        console.log('EngageIQ: Settings saved successfully.');
-        statusMessage.textContent = 'Settings saved successfully!';
-        statusMessage.style.color = 'green';
+    chrome.storage.sync.set(
+      { apiKey: apiKey, geminiModel: geminiModel },
+      function () {
+        // Handle the storage callback
+        if (chrome.runtime.lastError) {
+          console.error(
+            'EngageIQ: Error saving settings:',
+            chrome.runtime.lastError.message
+          );
+          statusMessage.textContent = 'Error saving settings.';
+          statusMessage.style.color = 'red';
+        } else {
+          console.log('EngageIQ: Settings saved successfully.');
+          statusMessage.textContent = 'Settings saved successfully!';
+          statusMessage.style.color = 'green';
 
-        // Clear the message after a few seconds
-        setTimeout(function () {
-          statusMessage.textContent = '';
-        }, 3000); // 3 seconds
+          // Clear the message after a few seconds
+          setTimeout(function () {
+            statusMessage.textContent = '';
+          }, 3000); // 3 seconds
+        }
       }
-    });
+    );
   });
 });

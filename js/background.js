@@ -13,42 +13,47 @@ const GEMINI_API_BASE_URL =
  * Gets the currently selected Gemini model from storage
  * This function is part of the model selection feature that allows users to choose
  * different Gemini models based on their needs (speed vs quality vs rate limits).
- * 
+ *
  * The function performs the following steps:
  * 1. Retrieves the model preference from Chrome storage
  * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
  * 3. Validates the model against a list of supported models
  * 4. Falls back to DEFAULT_GEMINI_MODEL if the stored model is invalid
- * 
+ *
  * @returns {Promise<string>} The selected model or default if none is found
  */
 async function getCurrentModel() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['geminiModel'], (result) => {
       if (chrome.runtime.lastError) {
-        console.error('EngageIQ: Error retrieving model from storage:', chrome.runtime.lastError);
+        console.error(
+          'EngageIQ: Error retrieving model from storage:',
+          chrome.runtime.lastError
+        );
         resolve(DEFAULT_GEMINI_MODEL);
         return;
       }
-      
+
       // Get the model from storage or use default
       const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
-      
+
       // Validate the model name against allowed models
       // These are the four models supported by the extension as specified in the requirements
       const validModels = [
         'gemini-2.5-pro-exp-03-25', // Latest experimental model with highest quality but stricter rate limits
-        'gemini-2.0-flash',        // Default model with good balance of speed and quality
-        'gemini-2.0-flash-lite',   // Fastest model with highest rate limits
-        'gemini-1.5-pro'           // Previous generation model for specific use cases
+        'gemini-2.0-flash', // Default model with good balance of speed and quality
+        'gemini-2.0-flash-lite', // Fastest model with highest rate limits
+        'gemini-1.5-pro', // Previous generation model for specific use cases
       ];
-      
+
       if (!validModels.includes(model)) {
-        console.error(`EngageIQ: Invalid model name: ${model}. Falling back to default model.`);
+        console.error(
+          `EngageIQ: Invalid model name: ${model}. Falling back to default model.`
+        );
         resolve(DEFAULT_GEMINI_MODEL);
         return;
       }
-      
+
       console.log(`EngageIQ: Using model: ${model}`);
       resolve(model);
     });
@@ -59,7 +64,7 @@ async function getCurrentModel() {
  * Constructs the API endpoint URL with the current model
  * This is a key part of the model selection feature, as it dynamically
  * builds the API URL based on the user's model preference.
- * 
+ *
  * @returns {Promise<string>} The complete API endpoint URL for the selected model
  */
 async function getGenerateContentEndpoint() {
@@ -346,7 +351,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.error(
                   `EngageIQ: Generation stopped due to ${candidate.finishReason}`
                 );
-                throw new Error(`Generation stopped: ${candidate.finishReason}`);
+                throw new Error(
+                  `Generation stopped: ${candidate.finishReason}`
+                );
               }
 
               // Check promptFeedback for safety issues
@@ -384,7 +391,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.error(
                   `EngageIQ: Unexpected function name: ${functionCall.name}`
                 );
-                throw new Error(`Unexpected function name: ${functionCall.name}`);
+                throw new Error(
+                  `Unexpected function name: ${functionCall.name}`
+                );
               }
 
               // Extract and validate args
@@ -395,7 +404,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 try {
                   args = JSON.parse(args);
                 } catch (error) {
-                  console.error('EngageIQ: Failed to parse args string:', error);
+                  console.error(
+                    'EngageIQ: Failed to parse args string:',
+                    error
+                  );
                   throw new Error('Failed to parse response data');
                 }
               }
@@ -475,23 +487,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               console.log('EngageIQ: Successfully parsed API response');
 
               // Get the current model for inclusion in the response
-              getCurrentModel().then(currentModel => {
-                // Send the successful response with suggestions and model info
-                sendResponse({
-                  success: true,
-                  suggestions: formattedSuggestions,
-                  modelInfo: {
-                    name: currentModel
-                  }
+              getCurrentModel()
+                .then((currentModel) => {
+                  // Send the successful response with suggestions and model info
+                  sendResponse({
+                    success: true,
+                    suggestions: formattedSuggestions,
+                    modelInfo: {
+                      name: currentModel,
+                    },
+                  });
+                })
+                .catch((error) => {
+                  // If there's an error getting the model, still send the suggestions
+                  console.error(
+                    'EngageIQ: Error getting current model:',
+                    error
+                  );
+                  sendResponse({
+                    success: true,
+                    suggestions: formattedSuggestions,
+                  });
                 });
-              }).catch(error => {
-                // If there's an error getting the model, still send the suggestions
-                console.error('EngageIQ: Error getting current model:', error);
-                sendResponse({
-                  success: true,
-                  suggestions: formattedSuggestions
-                });
-              });
             })
             // Sub-step 5.4.3: Implement .catch(error => ...) block
             .catch((error) => {
@@ -669,7 +686,9 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
     // Step 7.1.7: Perform fetch call to Gemini API
     getGenerateContentEndpoint().then((apiUrl) => {
       const fullApiUrl = `${apiUrl}?key=${apiKey}`;
-      console.log(`EngageIQ: Performing regeneration API call to ${fullApiUrl}`);
+      console.log(
+        `EngageIQ: Performing regeneration API call to ${fullApiUrl}`
+      );
 
       fetch(fullApiUrl, {
         method: 'POST',
@@ -684,13 +703,14 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
             console.error(
               `EngageIQ: Regeneration API call failed with status ${response.status}`
             );
-            
+
             // Add specific error handling for model-related errors
             let errorDetails = '';
             if (response.status === 404) {
-              errorDetails = 'The selected Gemini model may not exist or be deprecated.';
+              errorDetails =
+                'The selected Gemini model may not exist or be deprecated.';
             }
-            
+
             // Attempt to get more details from the response body
             return response
               .text()
@@ -720,7 +740,9 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
 
           // Basic validation of response structure
           if (!data || !data.candidates || data.candidates.length === 0) {
-            throw new Error('Invalid API response format: No candidates found.');
+            throw new Error(
+              'Invalid API response format: No candidates found.'
+            );
           }
           const candidate = data.candidates[0];
 
@@ -820,18 +842,23 @@ function handleRegenerationRequest(requestType, payload, sendResponse) {
 // Optional: Listener for extension installation or update
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('EngageIQ: Extension installed or updated:', details.reason);
-  
+
   // Perform manifest and asset verification
   if (details.reason === 'install' || details.reason === 'update') {
     console.log('EngageIQ: Running manifest and asset verification...');
     // We'll execute the verification script in the next update cycle
     setTimeout(() => {
-      chrome.scripting.executeScript({
-        target: { tabId: -1 }, // Run in the background context
-        files: ['js/manifest_check.js']
-      }).catch(err => {
-        console.error('EngageIQ: Error executing manifest check script:', err);
-      });
+      chrome.scripting
+        .executeScript({
+          target: { tabId: -1 }, // Run in the background context
+          files: ['js/manifest_check.js'],
+        })
+        .catch((err) => {
+          console.error(
+            'EngageIQ: Error executing manifest check script:',
+            err
+          );
+        });
     }, 1000);
   }
 });
