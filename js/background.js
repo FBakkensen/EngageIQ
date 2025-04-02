@@ -40,6 +40,18 @@ const LENGTH_ADJUSTMENT_SCHEMA = {
   required: ['regeneratedComment']
 };
 
+// Step 7.1.4: Define REGENERATION_SCHEMA constant
+const REGENERATION_SCHEMA = {
+  type: 'object',
+  properties: {
+    regeneratedComment: {
+      type: 'string',
+      description: 'The regenerated comment with adjusted length.'
+    }
+  },
+  required: ['regeneratedComment']
+};
+
 // Response handling constants - these represent the different sub-steps in the generation process
 const GENERATION_STEPS = {
   EXTRACT_POST_CONTENT: 'Extracting and analyzing LinkedIn post content',
@@ -327,6 +339,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
       
+    // Step 7.1.1: Add REGENERATE_LONGER and REGENERATE_SHORTER cases
+    case 'REGENERATE_LONGER':
+    case 'REGENERATE_SHORTER': {
+        console.log(`EngageIQ: Processing ${message.type} request`);
+        // Step 7.1.1 / 7.1.2: Call handler function
+        handleRegenerationRequest(message.type, message.payload, sendResponse);
+        // Step 7.1.1: Return true for async response
+        return true;
+    }
+
     // Ready for future message types to be added in subsequent phases
     default: {
       console.warn("EngageIQ: Unknown message type received:", message.type);
@@ -338,4 +360,230 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
   }
+});
+
+// Step 7.1.2: Create handleRegenerationRequest function
+/**
+ * Handles requests to regenerate comments (longer or shorter).
+ * Retrieves API key and prepares for the API call (actual call implemented later).
+ * @param {string} requestType - The type of regeneration request ('REGENERATE_LONGER' or 'REGENERATE_SHORTER').
+ * @param {object} payload - Data associated with the request (e.g., original comment, post content).
+ * @param {function} sendResponse - Callback function to send the response asynchronously.
+ */
+function handleRegenerationRequest(requestType, payload, sendResponse) {
+  console.log(`EngageIQ: Entering handleRegenerationRequest for ${requestType}`);
+
+  // Step 7.1.3: Retrieve API key
+  chrome.storage.sync.get(['apiKey'], (result) => {
+    if (chrome.runtime.lastError) {
+      // Handle potential errors accessing storage
+      console.error("EngageIQ: Error retrieving API key from storage:", chrome.runtime.lastError);
+      sendResponse({
+        success: false,
+        type: 'REGENERATION_ERROR', // Consistent error type
+        error: 'STORAGE_ERROR',
+        details: 'Failed to access Chrome storage to retrieve API key.',
+        payload: { reactionType: payload?.reactionType } // Include reactionType if available
+      });
+      return;
+    }
+
+    if (!result.apiKey) {
+      // Step 7.1.3: Handle missing key error
+      console.error("EngageIQ: No API key found in storage for regeneration request");
+      sendResponse({
+        success: false,
+        type: 'REGENERATION_ERROR', // Consistent error type
+        error: 'API_KEY_MISSING',
+        details: 'API key is missing. Please set it in the extension options.',
+        payload: { reactionType: payload?.reactionType } // Include reactionType
+      });
+      return; // Stop execution if key is missing
+    }
+
+    const apiKey = result.apiKey;
+    console.log("EngageIQ: API key retrieved successfully for regeneration.");
+
+    // --- Start Implementation of 7.1.5 - 7.1.9 ---
+
+    // Ensure payload contains necessary data
+    if (!payload || !payload.originalText || !payload.reactionType) {
+        console.error("EngageIQ: Invalid payload for regeneration request:", payload);
+        sendResponse({
+            success: false,
+            type: 'REGENERATION_ERROR',
+            error: 'INVALID_PAYLOAD',
+            details: 'Missing originalText or reactionType in regeneration request.',
+            payload: { reactionType: payload?.reactionType }
+        });
+        return;
+    }
+
+    const { originalText, reactionType } = payload;
+
+    // Step 7.1.5: Construct regeneration prompt
+    const lengthInstruction = requestType === 'REGENERATE_LONGER' ? 'longer' : 'shorter';
+    const prompt = `
+      You are an AI assistant helping refine a comment for a LinkedIn post.
+      The original comment provided is for the '${reactionType}' reaction.
+      Original comment: "${originalText}"
+
+      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).
+      Maintain the original tone, language, and professional style suitable for LinkedIn.
+      Focus solely on adjusting the length based on the original comment's content and intent.
+      Output the single regenerated comment using the provided function tool.
+    `;
+    console.log("EngageIQ: Constructed regeneration prompt.");
+
+    // Step 7.1.6: Create requestBody for regeneration
+    const requestBody = {
+        contents: [
+            { parts: [{ text: prompt }] }
+        ],
+        tools: [
+            {
+                function_declarations: [
+                    {
+                        name: "regenerateComment", // Function name for the tool
+                        description: `Regenerate the provided LinkedIn comment to be ${lengthInstruction}`,
+                        parameters: REGENERATION_SCHEMA // Use the schema defined earlier (Sub-step 7.1.4)
+                    }
+                ]
+            }
+        ],
+        tool_config: {
+            function_calling_config: {
+                mode: "ANY",
+                allowed_function_names: ["regenerateComment"] // Match the function name above
+            }
+        },
+        // Re-use safety settings from the initial generation for consistency
+        safety_settings: [
+             {
+               category: "HARM_CATEGORY_HARASSMENT",
+               threshold: "BLOCK_MEDIUM_AND_ABOVE"
+             },
+             {
+               category: "HARM_CATEGORY_HATE_SPEECH",
+               threshold: "BLOCK_MEDIUM_AND_ABOVE"
+             },
+             {
+               category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+               threshold: "BLOCK_MEDIUM_AND_ABOVE"
+             },
+             {
+               category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+               threshold: "BLOCK_MEDIUM_AND_ABOVE"
+             }
+        ]
+    };
+    console.log("EngageIQ: Created regeneration request body.");
+
+    // Step 7.1.7: Perform fetch call to Gemini API
+    const apiUrl = `${GEMINI_GENERATE_CONTENT_ENDPOINT}?key=${apiKey}`;
+    console.log(`EngageIQ: Performing regeneration API call to ${apiUrl}`);
+
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    })
+    // Step 7.1.8: Handle fetch response/errors (Initial check)
+    .then(response => {
+        if (!response.ok) {
+            console.error(`EngageIQ: Regeneration API call failed with status ${response.status}`);
+            // Attempt to get more details from the response body
+            return response.text().then(errorText => {
+                console.error(`EngageIQ: API error details: ${errorText}`);
+                // Throw an error that will be caught by the .catch block
+                throw new Error(`API Error: Status ${response.status}. ${errorText ? errorText.substring(0, 150) : 'No details available.'}`);
+            }).catch(parsingError => {
+                 // Handle cases where reading the error text fails
+                 console.error(`EngageIQ: Could not parse error response body: ${parsingError}`);
+                 throw new Error(`API Error: Status ${response.status}. Failed to get error details.`);
+            });
+        }
+        // If response is ok, parse JSON
+        return response.json();
+    })
+    // Step 7.1.9: Parse successful response
+    .then(data => {
+        console.log("EngageIQ: Received regeneration API response:", data);
+
+        // Basic validation of response structure
+        if (!data || !data.candidates || data.candidates.length === 0) {
+            throw new Error("Invalid API response format: No candidates found.");
+        }
+        const candidate = data.candidates[0];
+
+        // Check finishReason
+        if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+            throw new Error(`Generation stopped unexpectedly: ${candidate.finishReason}`);
+        }
+
+         // Check promptFeedback for safety issues
+        if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
+             throw new Error(`Prompt blocked by safety filters: ${data.promptFeedback.blockReason}`);
+        }
+
+        // Extract function call details
+        if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0 || !candidate.content.parts[0].functionCall) {
+            throw new Error("Invalid API response format: Function call data not found.");
+        }
+        const functionCall = candidate.content.parts[0].functionCall;
+
+        // Verify the correct function was called
+        if (functionCall.name !== "regenerateComment") {
+            throw new Error(`Unexpected function called by API: ${functionCall.name}`);
+        }
+
+        // Extract arguments
+        let args = functionCall.args;
+        if (typeof args === 'string') {
+            try { args = JSON.parse(args); } catch (e) { throw new Error("Failed to parse function arguments string."); }
+        }
+
+        // Validate the expected argument is present
+        if (!args || !args.regeneratedComment) {
+            throw new Error("Invalid API response format: Missing 'regeneratedComment' in arguments.");
+        }
+
+        const newText = args.regeneratedComment;
+        console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
+
+        // Send success response back to the caller (content script)
+        sendResponse({
+            success: true,
+            type: 'REGENERATION_SUCCESS', // Specific type for content script handling
+            payload: {
+                newText: newText,
+                reactionType: reactionType // Pass back the reactionType for UI update
+            }
+        });
+    })
+    // Step 7.1.8: Handle fetch errors (Catch block for fetch/parsing/validation errors)
+    .catch(error => {
+        console.error("EngageIQ: Error during regeneration API call or processing:", error);
+        sendResponse({
+            success: false,
+            type: 'REGENERATION_ERROR', // Consistent error type
+            error: 'API_ERROR', // General API error category
+            details: error.message || 'Unknown regeneration error occurred.',
+            payload: { // Include reactionType in error payload for context
+                reactionType: reactionType
+            }
+        });
+    });
+
+    // --- End Implementation of 7.1.5 - 7.1.9 ---
+
+  }); // End of chrome.storage.sync.get callback
+}
+
+// Optional: Listener for extension installation or update
+chrome.runtime.onInstalled.addListener(details => {
+    console.log("EngageIQ: Extension installed or updated:", details.reason);
+    // Perform any setup tasks here if needed
 });

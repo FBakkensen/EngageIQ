@@ -411,23 +411,23 @@
 *   **Prerequisites:** Phase 6 completed. Buttons send messages.
 
 *   **Step 7.1: Update Background Script (`js/background.js`) to Handle Regeneration Requests**
-    *   [ ] **Sub-step 7.1.1:** Add `REGENERATE_LONGER`, `REGENERATE_SHORTER` cases to `onMessage` listener. Call `handleRegenerationRequest`, `return true`.
+    *   [x] **Sub-step 7.1.1:** Add `REGENERATE_LONGER`, `REGENERATE_SHORTER` cases to `onMessage` listener. Call `handleRegenerationRequest`, `return true`.
         *   *Verification:* Listener handles new types.
-    *   [ ] **Sub-step 7.1.2:** Create `handleRegenerationRequest(requestType, payload, sendResponse)`.
+    *   [x] **Sub-step 7.1.2:** Create `handleRegenerationRequest(requestType, payload, sendResponse)`.
         *   *Verification:* Function exists.
-    *   [ ] **Sub-step 7.1.3:** Inside handler: Retrieve API key (`chrome.storage.sync.get`), handle missing key error (`sendResponse` error).
+    *   [x] **Sub-step 7.1.3:** Inside handler: Retrieve API key (`chrome.storage.sync.get`), handle missing key error (`sendResponse` error).
         *   *Verification:* Key retrieval/error handling exists.
-    *   [ ] **Sub-step 7.1.4:** Define `REGENERATION_SCHEMA` constant (single `regeneratedComment` string property).
+    *   [x] **Sub-step 7.1.4:** Define `REGENERATION_SCHEMA` constant (single `regeneratedComment` string property).
         *   *Verification:* Schema constant exists.
-    *   [ ] **Sub-step 7.1.5:** Construct regeneration prompt based on `requestType` ('longer'/'shorter'), `payload` (reactionType, currentText), instructing Gemini on task/constraints (maintain language/tone, adjust length, use JSON schema).
+    *   [x] **Sub-step 7.1.5:** Construct regeneration prompt based on `requestType` ('longer'/'shorter'), `payload` (reactionType, currentText), instructing Gemini on task/constraints (maintain language/tone, adjust length, use JSON schema).
         *   *Verification:* Regeneration prompt construction is correct.
-    *   [ ] **Sub-step 7.1.6:** Create `requestBody` for regeneration using new prompt and `REGENERATION_SCHEMA` (with appropriate tool/function name).
+    *   [x] **Sub-step 7.1.6:** Create `requestBody` for regeneration using new prompt and `REGENERATION_SCHEMA` (with appropriate tool/function name).
         *   *Verification:* `requestBody` for regeneration API call is correct.
-    *   [ ] **Sub-step 7.1.7:** Perform `fetch` call to Gemini API using regeneration request body.
+    *   [x] **Sub-step 7.1.7:** Perform `fetch` call to Gemini API using regeneration request body.
         *   *Verification:* `fetch` call exists.
-    *   [ ] **Sub-step 7.1.8:** Handle `fetch` response/errors: check `response.ok`, handle status codes (4xx, 5xx), handle network error (`catch`). Send `REGENERATION_ERROR` via `sendResponse` (include `reactionType` in payload).
+    *   [x] **Sub-step 7.1.8:** Handle `fetch` response/errors: check `response.ok`, handle status codes (4xx, 5xx), handle network error (`catch`). Send `REGENERATION_ERROR` via `sendResponse` (include `reactionType` in payload).
         *   *Verification:* Error handling for regeneration fetch exists, includes `reactionType`.
-    *   [ ] **Sub-step 7.1.9:** Parse successful response: Navigate JSON, check `finishReason`, extract `functionCall.args.regeneratedComment`. Handle parsing/structure errors by sending `REGENERATION_ERROR`. If success, `sendResponse` with `REGENERATION_SUCCESS` (payload includes `newText`, `reactionType`).
+    *   [x] **Sub-step 7.1.9:** Parse successful response: Navigate JSON, check `finishReason`, extract `functionCall.args.regeneratedComment`. Handle parsing/structure errors by sending `REGENERATION_ERROR`. If success, `sendResponse` with `REGENERATION_SUCCESS` (payload includes `newText`, `reactionType`).
         *   *Verification:* Success handler extracts `regeneratedComment`, sends success response. Error handling exists.
 
 *   **Step 7.2: Update Content Script (`js/content_script.js`) to Handle Regeneration Response**
