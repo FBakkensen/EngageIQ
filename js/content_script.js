@@ -4,6 +4,16 @@
  */
 
 import { initializeButtonInjection } from './ui/button-injector.js';
+import { 
+  getOrCreateIframe,
+  sendMessageToIframe,
+  showIframe,
+  hideIframe,
+  setActiveCommentBox,
+  getActiveCommentBox,
+  resetActiveCommentBox,
+  initializeIframeManager
+} from './ui/iframe-manager.js';
 
 console.log('EngageIQ: Content Script Loaded');
 
@@ -57,88 +67,12 @@ function extractPostContent(clickedButtonElement) {
   return trimmedText;
 }
 
-// --- Global variables ---
-let engageIQIframe = null; // Renamed from _engageIQIframe for Step 3.5.1
-let pendingIframeMessages = []; // Store messages that need to be sent to the iframe
-let popupReady = false; // Track if the popup has reported it's ready to receive messages
-let activeCommentBox = null; // Track the active comment box that was clicked
-
-// --- Iframe Management (Step 3.5) ---
-
 /**
- * Gets the existing iframe or creates it if it doesn't exist.
- * Ensures only one instance of the iframe is added to the page.
- * @returns {HTMLIFrameElement} The EngageIQ popup iframe element.
+ * Custom message handler for iframe messages
+ * @param {MessageEvent} event - The message event from the iframe
  */
-function getOrCreateIframe() {
-  if (!engageIQIframe) {
-    console.log('EngageIQ: Creating popup iframe.');
-    engageIQIframe = document.createElement('iframe');
-    engageIQIframe.id = 'engageiq-popup-iframe'; // ID matches css/content_style.css
-    // Use chrome.runtime.getURL to access extension resources
-    try {
-      engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
-      engageIQIframe.allow = 'clipboard-write'; // Grant clipboard permission to the iframe
-      console.log('EngageIQ: Iframe src set to:', engageIQIframe.src);
-      engageIQIframe.style.display = 'none'; // Start hidden
-      document.body.appendChild(engageIQIframe);
-      console.log('EngageIQ: Iframe appended to body.');
-
-      // Reset popup ready state when creating a new iframe
-      popupReady = false;
-
-      // Setup message listener for communication from iframe
-      setupIframeMessageListener();
-    } catch (error) {
-      console.error(
-        'EngageIQ: Error setting iframe src or appending to body:',
-        error
-      );
-      // Handle error appropriately, maybe return null or throw
-      return null;
-    }
-  } else {
-    console.log('EngageIQ: Reusing existing popup iframe.');
-  }
-  return engageIQIframe;
-}
-
-/**
- * Sets up a listener for messages from the popup iframe
- */
-function setupIframeMessageListener() {
-  window.addEventListener('message', handleIframeMessage);
-}
-
-/**
- * Handles messages received from the popup iframe
- * @param {MessageEvent} event - The message event object
- */
-function handleIframeMessage(event) {
-  // Check if the message is from our iframe
-  if (!engageIQIframe || !event.data || !event.data.type) {
-    return; // Not for us or not properly formatted
-  }
-
-  console.log('EngageIQ: Received message from iframe:', event.data.type);
-
+function handleCustomIframeMessages(event) {
   switch (event.data.type) {
-    case 'POPUP_READY':
-      console.log('EngageIQ: Popup reported ready to receive messages');
-      popupReady = true;
-
-      // Send any pending messages
-      if (pendingIframeMessages.length > 0) {
-        console.log(
-          `EngageIQ: Sending ${pendingIframeMessages.length} pending messages to popup`
-        );
-        pendingIframeMessages.forEach((message) => {
-          sendMessageToIframe(message);
-        });
-        pendingIframeMessages = [];
-      }
-      break;
-
     case 'REQUEST_SHORTER':
     case 'REQUEST_LONGER': {
       const requestType = event.data.type; // 'REQUEST_SHORTER' or 'REQUEST_LONGER'
@@ -241,6 +175,7 @@ function handleIframeMessage(event) {
       console.log(`EngageIQ: Suggestion accepted - Text: ${event.data.text}`);
 
       // Use the activeCommentBox reference
+      const activeCommentBox = getActiveCommentBox();
       if (activeCommentBox) {
         console.log('EngageIQ: Using stored active comment box reference');
         // Find the contenteditable div or textarea for the comment
@@ -326,11 +261,8 @@ function handleIframeMessage(event) {
       }
 
       // Hide the iframe and reset the active comment box reference
-      if (engageIQIframe) {
-        engageIQIframe.style.display = 'none';
-        // Reset the active comment box reference
-        activeCommentBox = null;
-      }
+      hideIframe();
+      resetActiveCommentBox();
       break;
     }
 
@@ -339,28 +271,6 @@ function handleIframeMessage(event) {
         `EngageIQ: Unhandled iframe message type: ${event.data.type}`
       );
   }
-}
-
-/**
- * Sends a message to the popup iframe, queuing it if the popup isn't ready yet
- * @param {Object} message - The message to send to the iframe
- */
-function sendMessageToIframe(message) {
-  if (!engageIQIframe) {
-    console.warn('EngageIQ: Cannot send message - iframe does not exist');
-    return;
-  }
-
-  // If popup isn't ready, queue the message for later
-  if (!popupReady) {
-    console.log('EngageIQ: Popup not ready, queuing message:', message.type);
-    pendingIframeMessages.push(message);
-    return;
-  }
-
-  // Send the message
-  console.log('EngageIQ: Sending message to iframe:', message.type);
-  engageIQIframe.contentWindow.postMessage(message, '*');
 }
 
 /**
@@ -376,17 +286,17 @@ function handleEngageIQButtonClick(event) {
   console.log('EngageIQ: Button clicked.');
 
   // Store the active comment box reference
-  activeCommentBox = event.currentTarget.closest(
+  const commentBox = event.currentTarget.closest(
     '[data-engageiq-button-injected="true"]'
   );
+  setActiveCommentBox(commentBox);
 
   // Get or create the iframe
   const iframe = getOrCreateIframe();
 
   // Toggle iframe visibility
   if (iframe.style.display === 'none' || iframe.style.display === '') {
-    iframe.style.display = 'block';
-    iframe.classList.add('visible'); // Add animation class
+    showIframe();
 
     // Get the clicked button element
     const clickedButton = event.currentTarget;
@@ -478,17 +388,14 @@ function handleEngageIQButtonClick(event) {
       'EngageIQ: Sent GENERATE_COMMENTS message to background script'
     );
   } else {
-    console.log('EngageIQ: Hiding popup iframe.');
-    iframe.classList.remove('visible'); // Remove animation class
-    // Add a small delay before hiding to allow animation to complete
-    setTimeout(() => {
-      iframe.style.display = 'none';
-    }, 200); // 200ms delay for animation to complete
-    return;
+    hideIframe();
   }
 }
+
+// --- Initialize the iframe manager with custom message handler ---
+initializeIframeManager(handleCustomIframeMessages);
 
 // --- Initialize the button injection with the button click handler ---
 initializeButtonInjection(handleEngageIQButtonClick);
 
-// --- Phase 2: Button Injection Logic (Now handled by button-injector.js) ---
+// --- Phase 3: Iframe Management (Now handled by iframe-manager.js) ---
