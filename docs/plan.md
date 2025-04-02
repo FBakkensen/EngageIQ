@@ -502,14 +502,14 @@
 *   **Prerequisites:** Phases 0-8 completed.
 
 *   **Step 9.1: Code Review and Cleanup**
-    *   [ ] **Sub-step 9.1.1:** Review all JS files.
-    *   [ ] **Sub-step 9.1.2:** Remove/comment out debug `console.log` statements.
+    *   [x] **Sub-step 9.1.1:** Review all JS files.
+    *   [x] **Sub-step 9.1.2:** Remove/comment out debug `console.log` statements.
         *   *Verification:* Codebase search shows only essential logs remain.
-    *   [ ] **Sub-step 9.1.3:** Add comments explaining complex logic (DOM traversal, API calls, `postMessage`).
+    *   [x] **Sub-step 9.1.3:** Add comments explaining complex logic (DOM traversal, API calls, `postMessage`).
         *   *Verification:* Complex sections are commented.
-    *   [ ] **Sub-step 9.1.4:** Run `npm run lint` and `npm run format`. Fix issues.
+    *   [x] **Sub-step 9.1.4:** Run `npm run lint` and `npm run format`. Fix issues.
         *   *Verification:* Tools report no errors/changes.
-    *   [ ] **Sub-step 9.1.5:** Ensure clear variable/function names. Refactor if needed.
+    *   [x] **Sub-step 9.1.5:** Ensure clear variable/function names. Refactor if needed.
         *   *Verification:* Code reviewed for readability.
 
 *   **Step 9.2: UI Refinement**
