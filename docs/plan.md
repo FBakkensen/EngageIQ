@@ -431,9 +431,9 @@
         *   *Verification:* Success handler extracts `regeneratedComment`, sends success response. Error handling exists.
 
 *   **Step 7.2: Update Content Script (`js/content_script.js`) to Handle Regeneration Response**
-    *   [ ] **Sub-step 7.2.1:** Open `js/content_script.js`.
-    *   [ ] **Sub-step 7.2.2:** (Refinement): Ensure iframe message listener (`window.addEventListener('message', ...)`) is robust.
-    *   [ ] **Sub-step 7.2.3:** Inside iframe message listener: Handle `REQUEST_LONGER`/`REQUEST_SHORTER` messages. Relay message to background using `chrome.runtime.sendMessage`. Implement callback: handle `REGENERATION_SUCCESS` (send `UPDATE_SINGLE_SUGGESTION` to iframe), handle `REGENERATION_ERROR` (send `SHOW_ERROR` or similar to iframe). Handle `chrome.runtime.lastError`. Update `ACCEPT_SUGGESTION` handler to correctly hide iframe.
+    *   [x] **Sub-step 7.2.1:** Open `js/content_script.js`.
+    *   [x] **Sub-step 7.2.2:** (Refinement): Ensure iframe message listener (`window.addEventListener('message', ...)`) is robust.
+    *   [x] **Sub-step 7.2.3:** Inside iframe message listener: Handle `REQUEST_LONGER`/`REQUEST_SHORTER` messages. Relay message to background using `chrome.runtime.sendMessage`. Implement callback: handle `REGENERATION_SUCCESS` (send `UPDATE_SINGLE_SUGGESTION` to iframe), handle `REGENERATION_ERROR` (send `SHOW_ERROR` or similar to iframe). Handle `chrome.runtime.lastError`. Update `ACCEPT_SUGGESTION` handler to correctly hide iframe.
         *   *Verification:* Listener relays requests to background, handles callback, relays success/error back to iframe. Accept logic hides iframe.
 
 *   **Step 7.3: Update Popup Script (`js/popup.js`) to Handle UI Updates**

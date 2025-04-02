@@ -203,16 +203,68 @@ function handleIframeMessage(event) {
             break;
         
         case 'REQUEST_SHORTER':
-            console.log(`EngageIQ: Received request for shorter suggestion - Type: ${event.data.reactionType}`);
-            // Will be implemented in Phase 7
-            // TODO: Send message to background script to request a shorter suggestion
+        case 'REQUEST_LONGER': { 
+            const requestType = event.data.type; // 'REQUEST_SHORTER' or 'REQUEST_LONGER'
+            const payload = event.data; // Should contain reactionType, originalText
+            console.log(`EngageIQ: Relaying ${requestType} message to background script for reaction type: ${payload?.reactionType}`);
+
+            // Ensure payload is valid before sending
+            if (!payload || !payload.reactionType || !payload.originalText) {
+                console.error("EngageIQ: Invalid payload received from iframe for regeneration request:", payload);
+                sendMessageToIframe({
+                    type: 'SHOW_ERROR',
+                    error: 'Internal Error',
+                    details: 'Invalid data received from popup for regeneration request.',
+                    payload: { reactionType: payload?.reactionType } // Pass reactionType for context
+                });
+                break; // Exit the case
+            }
+
+            // Step 7.2.3: Relay message to background
+            chrome.runtime.sendMessage(
+                {
+                    type: requestType, // Forward the type
+                    payload: payload   // Forward the payload containing originalText, reactionType etc.
+                },
+                response => {
+                    // Step 7.2.3: Implement callback
+                    if (chrome.runtime.lastError) {
+                        console.error(`EngageIQ: Error sending ${requestType} message to background:`, chrome.runtime.lastError);
+                        // Send error back to iframe
+                        sendMessageToIframe({
+                            type: 'SHOW_ERROR',
+                            error: 'Communication Error',
+                            details: `Failed to contact background script: ${chrome.runtime.lastError.message}`,
+                            payload: { reactionType: payload?.reactionType } // Pass reactionType for context
+                        });
+                        return;
+                    }
+
+                    console.log(`EngageIQ: Received response from background for ${requestType}:`, response);
+
+                    // Handle background response
+                    if (response && response.success && response.type === 'REGENERATION_SUCCESS') {
+                        // Step 7.2.3: Handle REGENERATION_SUCCESS
+                        sendMessageToIframe({
+                            type: 'UPDATE_SINGLE_SUGGESTION',
+                            payload: response.payload // Contains newText, reactionType
+                        });
+                        console.log(`EngageIQ: Sent UPDATE_SINGLE_SUGGESTION to iframe for reaction type: ${response.payload?.reactionType}`);
+                    } else {
+                        // Step 7.2.3: Handle REGENERATION_ERROR
+                        console.error(`EngageIQ: Regeneration failed for ${requestType}. Error:`, response?.error, response?.details);
+                        sendMessageToIframe({
+                            type: 'SHOW_ERROR',
+                            error: response?.error || 'Regeneration Failed',
+                            details: response?.details || 'An unknown error occurred during regeneration.',
+                            payload: { reactionType: payload?.reactionType || response?.payload?.reactionType } // Pass reactionType for context
+                        });
+                        console.log(`EngageIQ: Sent SHOW_ERROR to iframe for reaction type: ${payload?.reactionType || response?.payload?.reactionType}`);
+                    }
+                }
+            );
             break;
-            
-        case 'REQUEST_LONGER':
-            console.log(`EngageIQ: Received request for longer suggestion - Type: ${event.data.reactionType}`);
-            // Will be implemented in Phase 7
-            // TODO: Send message to background script to request a longer suggestion
-            break;
+        }
             
         case 'ACCEPT_SUGGESTION':
             console.log(`EngageIQ: Suggestion accepted - Type: ${event.data.reactionType}`);
