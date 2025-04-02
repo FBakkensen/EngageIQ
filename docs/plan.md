@@ -535,19 +535,19 @@
         *   *Verification:* Inspect elements; ARIA attributes present.
 
 *   **Step 9.5: Comprehensive End-to-End Testing**
-    *   [ ] **Sub-step 9.5.1:** Test installation.
+    *   [x] **Sub-step 9.5.1:** Test installation.
         *   *Verification:* Installs correctly.
-    *   [ ] **Sub-step 9.5.2:** Test Options Page (save/load/clear key).
+    *   [x] **Sub-step 9.5.2:** Test Options Page (save/load/clear key).
         *   *Verification:* Works as expected.
-    *   [ ] **Sub-step 9.5.3:** Test Button Injection (Feed, Single Post, scroll, duplicates).
+    *   [x] **Sub-step 9.5.3:** Test Button Injection (Feed, Single Post, scroll, duplicates).
         *   *Verification:* Buttons appear correctly.
-    *   [ ] **Sub-step 9.5.4:** Test Popup Display (show/hide).
+    *   [x] **Sub-step 9.5.4:** Test Popup Display (show/hide).
         *   *Verification:* Toggles reliably.
-    *   [ ] **Sub-step 9.5.5:** Test Suggestion Generation (Success) on various post types.
+    *   [x] **Sub-step 9.5.5:** Test Suggestion Generation (Success) on various post types.
         *   *Verification:* Relevant suggestions generated based on extracted content.
-    *   [ ] **Sub-step 9.5.6:** Test Accordion Interaction (expand/collapse).
+    *   [x] **Sub-step 9.5.6:** Test Accordion Interaction (expand/collapse).
         *   *Verification:* Works smoothly.
-    *   [ ] **Sub-step 9.5.7:** Test Length Adjustment (+/- buttons).
+    *   [x] **Sub-step 9.5.7:** Test Length Adjustment (+/- buttons).
         *   *Verification:* Text updates correctly.
     *   [ ] **Sub-step 9.5.8:** Test Accept Suggestion.
         *   *Verification:* Text inserted into comment field, popup closes.
