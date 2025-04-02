@@ -1,8 +1,14 @@
 /**
  * EngageIQ Chrome Extension
  * Message Service Module - Handles communications between content script, iframe, and background script
+ *
+ * This module is part of the message service architecture that handles:
+ * - Communication between the content script and background script
+ * - Processing suggestion acceptances and regeneration requests
+ * - Managing comment insertion into the LinkedIn interface
  */
 
+// Log module load confirmation
 console.log('EngageIQ: Message Service Module Loaded');
 
 /**
@@ -269,9 +275,34 @@ function generateCommentSuggestions(postContent, sendMessageToIframe) {
   });
 }
 
-// Function to find all comment boxes with the injected flag
+/**
+ * Find all comment boxes with the injected flag
+ * @returns {NodeList} Collection of comment box elements
+ */
 function findAllCommentBoxes() {
   return document.querySelectorAll('[data-engageiq-button-injected="true"]');
+}
+
+/**
+ * Sends a message to the iframe
+ * Helper function to standardize iframe messaging
+ * @param {Object} message - The message to send
+ */
+function sendMessageToIframe(message) {
+  if (!message || !message.type) {
+    console.warn('EngageIQ: Cannot send invalid message to iframe:', message);
+    return;
+  }
+  
+  // Find the iframe
+  const iframe = document.getElementById('engageiq-iframe');
+  if (!iframe || !iframe.contentWindow) {
+    console.warn('EngageIQ: Cannot find iframe to send message');
+    return;
+  }
+  
+  console.log(`EngageIQ: Sending message to iframe: ${message.type}`);
+  iframe.contentWindow.postMessage(message, '*');
 }
 
 // Export the module functions
@@ -279,5 +310,6 @@ export {
   handleRegenerationRequest,
   handleAcceptedSuggestion,
   generateCommentSuggestions,
-  findAllCommentBoxes
+  findAllCommentBoxes,
+  sendMessageToIframe
 };

@@ -9,9 +9,17 @@
  */
 
 // Import the UI modules
-import { initSuggestionRenderer, displaySuggestions } from '../js/ui/suggestion-renderer.js';
-import { initErrorHandler, displayError } from '../js/ui/error-handler.js';
+import { initSuggestionRenderer } from '../js/ui/suggestion-renderer.js';
+import { initErrorHandler } from '../js/ui/error-handler.js';
 import { initAccordion } from '../js/ui/accordion-controller.js';
+
+// Import message service module
+import { 
+  initPopupMessageService, 
+  sendMessageToContentScript, 
+  notifyPopupReady,
+  processQueuedMessages 
+} from '../js/services/popup-message-service.js';
 
 // Log script load confirmation - Compliant with user preference MEMORY[e17fa962-c53a-4d19-ae3a-66c3cbc4dce7]
 console.log('EngageIQ: Popup Script Loaded');
@@ -21,9 +29,6 @@ let loadingState;
 let errorState;
 let errorMessage;
 let suggestionsAccordion;
-
-// Queue to store messages received before DOM is loaded
-const messageQueue = [];
 
 /**
  * Shows a specific state element and hides the others
@@ -57,76 +62,67 @@ function showState(stateToShow) {
       suggestionsAccordion.style.display = 'block';
       break;
     default:
-      console.warn(`EngageIQ: Unknown state requested: ${stateToShow}`);
+      console.warn(`EngageIQ: Unknown state: ${stateToShow}`);
   }
 }
 
 /**
  * Updates the model indicator with the provided model name
- * Part of the model selection feature that displays the currently selected model in the popup UI.
- * This provides users with visual confirmation of which model is being used for their comment generation.
- * 
- * @param {string} modelName - The name of the model to display (e.g., 'gemini-2.0-flash')
+ * @param {string} modelName - The name of the model to display
  */
 function updateModelIndicator(modelName) {
   const modelIndicator = document.getElementById('modelIndicator');
   if (!modelIndicator) {
-    console.warn('EngageIQ: Model indicator element not found');
+    console.warn('EngageIQ: Cannot update model indicator - element not found');
     return;
   }
 
-  // Format model name for display (e.g., "Gemini 2.0 Flash")
-  const displayName = modelName
-    .replace(/gemini-/i, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!modelName) {
+    modelIndicator.style.display = 'none';
+    return;
+  }
 
+  // Customize display name for better readability
+  let displayName = modelName;
+  if (modelName.includes('gemini')) {
+    displayName = modelName.split('-')[0].charAt(0).toUpperCase() + modelName.split('-')[0].slice(1);
+  }
+
+  console.log(`EngageIQ: Updating model indicator to ${displayName}`);
   modelIndicator.textContent = displayName;
-  console.log(`EngageIQ: Updated model indicator to: ${displayName}`);
+  modelIndicator.style.display = 'inline-block';
 }
 
 /**
  * Retrieves and displays the current Gemini model in the model indicator
- * This function is part of the model selection feature and ensures that users
- * can see which model is currently being used for comment generation.
- * 
- * The function performs the following steps:
- * 1. Retrieves the model preference from Chrome storage
- * 2. Falls back to DEFAULT_GEMINI_MODEL if no preference is found
- * 3. Updates the UI to display the model name
- * 
- * This provides transparency to users about which model is processing their requests,
- * which is especially important when different models have different rate limits and capabilities.
  */
 function displayCurrentModel() {
-  console.log('EngageIQ: Retrieving current model for display');
-  
+  // Default model if none is selected
+  const DEFAULT_GEMINI_MODEL = 'gemini-1.5-pro';
+
+  console.log('EngageIQ: Retrieving current model setting');
+
+  // Get stored model preference using chrome.storage.sync
   chrome.storage.sync.get(['geminiModel'], (result) => {
-    const currentModel = result.geminiModel || 'gemini-2.0-flash'; // Default model
+    let currentModel = DEFAULT_GEMINI_MODEL;
+
+    if (chrome.runtime.lastError) {
+      console.warn(
+        'EngageIQ: Error retrieving model preference:',
+        chrome.runtime.lastError
+      );
+    } else if (result.geminiModel) {
+      currentModel = result.geminiModel;
+      console.log(`EngageIQ: Retrieved model preference: ${currentModel}`);
+    } else {
+      console.log(
+        `EngageIQ: No model preference found, using default: ${currentModel}`
+      );
+    }
+
+    // Update the UI
     updateModelIndicator(currentModel);
   });
-}
-
-/**
- * Sends a message to the parent content script
- * (Currently unused in Phase 4, will be used in later phases for user interactions)
- * @param {Object} message - The message to send
- */
-function sendMessageToContentScript(message) {
-  // Check if we're in an iframe
-  if (window !== window.parent) {
-    console.log(`EngageIQ: Sending message to content script: ${message.type}`);
-    window.parent.postMessage(message, '*');
-  } else {
-    console.warn('EngageIQ: Not in iframe, cannot send message to parent');
-  }
-}
-
-/**
- * Tell the content script that the popup is ready
- */
-function notifyPopupReady() {
-  sendMessageToContentScript({ type: 'POPUP_READY' });
 }
 
 // Initialize DOM element references when DOM is ready
@@ -154,6 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showStateFunction: showState
   });
 
+  // Initialize the message service
+  initPopupMessageService({
+    showStateFunction: showState,
+    updateModelIndicatorFunction: updateModelIndicator
+  });
+
   // Show initial loading state
   showState('loading');
 
@@ -161,93 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
   displayCurrentModel();
 
   // Process any messages that were received before DOM was loaded
-  if (messageQueue.length > 0) {
-    console.log(
-      `EngageIQ: Processing ${messageQueue.length} queued messages from before DOM loaded`
-    );
-    messageQueue.forEach((data) => processMessage(data));
-    messageQueue.length = 0; // Clear the queue
-  }
+  processQueuedMessages();
 
   // Tell the content script we're ready
   notifyPopupReady();
 });
-
-// Listen for messages from the content script via window.postMessage
-window.addEventListener('message', (event) => {
-  // Only process messages from our parent
-  if (event.source !== window.parent) {
-    return;
-  }
-
-  const data = event.data;
-  if (!data || !data.type) {
-    console.warn('EngageIQ: Received invalid message:', data);
-    return;
-  }
-
-  console.log(`EngageIQ: Received message: ${data.type}`);
-
-  // If DOM is not loaded yet, queue message for later processing
-  if (
-    !document.body ||
-    !loadingState ||
-    !errorState ||
-    !suggestionsAccordion
-  ) {
-    console.log(
-      `EngageIQ: DOM not loaded yet, queueing message: ${data.type}`
-    );
-    messageQueue.push(data);
-    return;
-  }
-
-  // Process the message
-  processMessage(data);
-});
-
-/**
- * Process a message from the content script
- * @param {Object} data - Message data object
- */
-function processMessage(data) {
-  console.log(`EngageIQ: Processing message: ${data.type}`);
-
-  switch (data.type) {
-    case 'SHOW_LOADING':
-      showState('loading');
-      break;
-
-    case 'SHOW_ERROR':
-      displayError(data.message, data.details, data.actionData);
-      break;
-
-    case 'SHOW_SUGGESTIONS':
-      if (!data.suggestions || !Array.isArray(data.suggestions)) {
-        console.error('EngageIQ: Invalid suggestions data:', data);
-        displayError('Invalid suggestions data received');
-        return;
-      }
-
-      // Use the imported displaySuggestions function
-      displaySuggestions(data.suggestions);
-      break;
-
-    case 'UPDATE_SUGGESTION':
-      // This is handled by updating the entire suggestions list
-      // for simplicity in this phase, but could be optimized later
-      if (data.suggestions && Array.isArray(data.suggestions)) {
-        displaySuggestions(data.suggestions);
-      }
-      break;
-
-    case 'UPDATE_MODEL':
-      if (data.model) {
-        updateModelIndicator(data.model);
-      }
-      break;
-
-    default:
-      console.warn(`EngageIQ: Unknown message type: ${data.type}`);
-  }
-}
