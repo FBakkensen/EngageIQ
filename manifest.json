@@ -34,28 +34,15 @@
     {
       "resources": [
         "html/popup.html",
-        "html/manifest_check.html",
         "js/popup.js",
-        "js/manifest_check.js",
-        "js/models/gemini-model.js",
-        "js/services/api-service.js",
-        "js/services/comment-generation.js",
-        "js/services/regeneration-service.js",
-        "js/services/post-extractor.js",
-        "js/services/message-service.js",
-        "js/ui/button-injector.js",
-        "js/ui/iframe-manager.js",
-        "js/ui/suggestion-renderer.js",
-        "js/ui/error-handler.js",
-        "js/ui/accordion-controller.js",
-        "js/utils/storage-utils.js",
-        "css/popup.css",
-        "css/options.css",
-        "assets/css/bootstrap.min.css",
-        "assets/js/bootstrap.bundle.min.js",
-        "icons/icon16.png",
-        "icons/icon48.png",
-        "icons/icon128.png"
+        "js/models/*.js",
+        "js/services/*.js",
+        "js/ui/*.js",
+        "js/utils/*.js",
+        "css/*.css",
+        "assets/css/*.css",
+        "assets/js/*.js",
+        "icons/*.png"
       ],
       "matches": ["*://*.linkedin.com/*"]
     }

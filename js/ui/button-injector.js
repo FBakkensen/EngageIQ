@@ -10,6 +10,8 @@ console.log('EngageIQ: Button Injector Module Loaded');
 const COMMENT_BOX_SELECTORS = [
   '.feed-shared-update-v2 .comments-comment-box__form', // Standard feed post comment form
   'div[aria-label="Write a comment"]', // Common label for comment input areas
+  '.comments-comment-box', // Additional LinkedIn comment box selector
+  '.comments-comment-texteditor__container', // Another potential comment box container
   // Add more selectors here if needed
 ].join(', '); // Combine selectors for a single query
 
@@ -18,8 +20,10 @@ const COMMENT_BOX_SELECTORS = [
  * @returns {NodeList} A NodeList containing the found comment box elements.
  */
 function findCommentBoxes() {
-  // console.log(`EngageIQ: Searching for comment boxes with selectors: ${COMMENT_BOX_SELECTORS}`);
-  return document.querySelectorAll(COMMENT_BOX_SELECTORS);
+  console.log(`EngageIQ: Searching for comment boxes with selectors: ${COMMENT_BOX_SELECTORS}`);
+  const boxes = document.querySelectorAll(COMMENT_BOX_SELECTORS);
+  console.log(`EngageIQ: Found ${boxes.length} potential comment boxes on initial search`);
+  return boxes;
 }
 
 /**

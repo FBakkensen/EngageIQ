@@ -6,30 +6,39 @@
  * handles initialization of the extension's content script functionality.
  */
 
-import { initializeButtonInjection } from './ui/button-injector.js';
-import { 
-  getOrCreateIframe,
-  sendMessageToIframe,
-  showIframe,
-  hideIframe,
-  setActiveCommentBox,
-  getActiveCommentBox,
-  resetActiveCommentBox,
-  initializeIframeManager
-} from './ui/iframe-manager.js';
-import {
-  extractPostContent,
-  validatePostContent,
-  preparePostContent
-} from './services/post-extractor.js';
-import {
-  handleRegenerationRequest,
-  handleAcceptedSuggestion,
-  generateCommentSuggestions,
-  findAllCommentBoxes
-} from './services/message-service.js';
+// Use chrome.runtime.getURL to get absolute paths to modules
+const buttonInjectorUrl = chrome.runtime.getURL('js/ui/button-injector.js');
+const iframeManagerUrl = chrome.runtime.getURL('js/ui/iframe-manager.js');
+const postExtractorUrl = chrome.runtime.getURL('js/services/post-extractor.js');
+const messageServiceUrl = chrome.runtime.getURL('js/services/message-service.js');
 
-console.log('EngageIQ: Content Script Loaded');
+// Load modules dynamically to ensure proper Chrome extension context
+let modules = {};
+
+console.log('EngageIQ: Content Script Loaded - Loading modules...');
+
+// Initialize modules and start the application after all modules are loaded
+Promise.all([
+  import(buttonInjectorUrl),
+  import(iframeManagerUrl),
+  import(postExtractorUrl),
+  import(messageServiceUrl)
+])
+.then(([buttonInjector, iframeManager, postExtractor, messageService]) => {
+  // Store modules for easier access
+  modules.buttonInjector = buttonInjector;
+  modules.iframeManager = iframeManager;
+  modules.postExtractor = postExtractor;
+  modules.messageService = messageService;
+  
+  console.log('EngageIQ: All modules loaded successfully');
+  
+  // Start the application with loaded modules
+  initializeApp();
+})
+.catch(error => {
+  console.error('EngageIQ: Error loading modules:', error);
+});
 
 /**
  * Custom message handler for iframe messages
@@ -40,20 +49,24 @@ function handleCustomIframeMessages(event) {
     case 'REQUEST_SHORTER':
     case 'REQUEST_LONGER':
       // Handle regeneration requests using the message service
-      handleRegenerationRequest(event.data.type, event.data, sendMessageToIframe)
-        .catch(error => {
-          console.error('EngageIQ: Error handling regeneration request:', error);
-        });
+      modules.messageService.handleRegenerationRequest(
+        event.data.type, 
+        event.data, 
+        modules.iframeManager.sendMessageToIframe
+      )
+      .catch(error => {
+        console.error('EngageIQ: Error handling regeneration request:', error);
+      });
       break;
 
     case 'ACCEPT_SUGGESTION':
       // Handle accepted suggestion using the message service
-      handleAcceptedSuggestion(
+      modules.messageService.handleAcceptedSuggestion(
         event.data,
-        getActiveCommentBox(),
-        findAllCommentBoxes,
-        hideIframe,
-        resetActiveCommentBox
+        modules.iframeManager.getActiveCommentBox(),
+        modules.messageService.findAllCommentBoxes,
+        modules.iframeManager.hideIframe,
+        modules.iframeManager.resetActiveCommentBox
       );
       break;
 
@@ -76,25 +89,25 @@ function handleEngageIQButtonClick(event) {
 
   // Store the active comment box reference
   const commentBox = event.currentTarget.closest('[data-engageiq-button-injected="true"]');
-  setActiveCommentBox(commentBox);
+  modules.iframeManager.setActiveCommentBox(commentBox);
 
   // Get or create the iframe
-  const iframe = getOrCreateIframe();
+  const iframe = modules.iframeManager.getOrCreateIframe();
 
   // Toggle iframe visibility
   if (iframe.style.display === 'none' || iframe.style.display === '') {
-    showIframe();
+    modules.iframeManager.showIframe();
 
     // Get the clicked button element
     const clickedButton = event.currentTarget;
     
     // Extract and validate post content
-    const extractedText = extractPostContent(clickedButton);
-    const validationResult = validatePostContent(extractedText);
+    const extractedText = modules.postExtractor.extractPostContent(clickedButton);
+    const validationResult = modules.postExtractor.validatePostContent(extractedText);
     
     if (!validationResult.isValid) {
       console.error(`EngageIQ: ${validationResult.errorMessage}`);
-      sendMessageToIframe({
+      modules.iframeManager.sendMessageToIframe({
         type: 'SHOW_ERROR',
         error: 'Extraction Failed',
         details: validationResult.errorMessage,
@@ -103,24 +116,46 @@ function handleEngageIQButtonClick(event) {
     }
 
     // Content is valid, prepare it for the background script
-    const postContent = preparePostContent(extractedText);
+    const postContent = modules.postExtractor.preparePostContent(extractedText);
     
     // Generate comment suggestions using the message service
-    generateCommentSuggestions(postContent, sendMessageToIframe)
-      .catch(error => {
-        console.error('EngageIQ: Error generating comment suggestions:', error);
-      });
+    modules.messageService.generateCommentSuggestions(
+      postContent, 
+      modules.iframeManager.sendMessageToIframe
+    )
+    .catch(error => {
+      console.error('EngageIQ: Error generating comment suggestions:', error);
+    });
   } else {
-    hideIframe();
+    modules.iframeManager.hideIframe();
   }
 }
 
-// --- Initialize modules ---
+/**
+ * Initializes the application after all modules are loaded
+ */
+function initializeApp() {
+  console.log('EngageIQ: Initializing application...');
+  
+  // Initialize the iframe manager with custom message handler
+  modules.iframeManager.initializeIframeManager(handleCustomIframeMessages);
 
-// Initialize the iframe manager with custom message handler
-initializeIframeManager(handleCustomIframeMessages);
+  // Initialize the button injection with the button click handler
+  console.log('EngageIQ: Initializing button injection process');
 
-// Initialize the button injection with the button click handler
-initializeButtonInjection(handleEngageIQButtonClick);
+  // First, perform an immediate check for any comment boxes already on the page
+  const initialCommentBoxes = modules.buttonInjector.findCommentBoxes();
+  console.log(`EngageIQ: Initial scan found ${initialCommentBoxes.length} comment boxes`);
+
+  // Process any comment boxes found during initial scan
+  if (initialCommentBoxes.length > 0) {
+    modules.buttonInjector.processCommentBoxes(handleEngageIQButtonClick);
+  }
+
+  // Then initialize the observer to watch for future comment boxes
+  modules.buttonInjector.initializeButtonInjection(handleEngageIQButtonClick);
+  
+  console.log('EngageIQ: Application initialization complete');
+}
 
 // --- End of content_script.js ---
