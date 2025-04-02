@@ -8,9 +8,9 @@
  * - Managing the message queue for messages received before DOM is ready
  */
 
-import { displaySuggestions } from '../ui/suggestion-renderer.js';
-import { displayError } from '../ui/error-handler.js';
-import { updateModelIndicator } from '../ui/model-indicator.js';
+import { displaySuggestions, updateSingleSuggestion } from '/js/ui/suggestion-renderer.js';
+import { displayError } from '/js/ui/error-handler.js';
+import { updateModelIndicator } from '/js/ui/model-indicator.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Popup Message Service Module Loaded');
@@ -144,11 +144,25 @@ export function processMessage(data) {
       break;
 
     case 'UPDATE_SUGGESTION':
-    case 'UPDATE_SINGLE_SUGGESTION':
-      // This is handled by updating the entire suggestions list
-      // for simplicity in this phase, but could be optimized later
+      // Backward compatibility: update the entire suggestions list
       if (data.suggestions && Array.isArray(data.suggestions)) {
         if (displaySuggestions) displaySuggestions(data.suggestions);
+      }
+      break;
+      
+    case 'UPDATE_SINGLE_SUGGESTION':
+      // Update a single suggestion without re-rendering everything
+      if (data.suggestion && data.suggestion.id) {
+        if (updateSingleSuggestion) {
+          updateSingleSuggestion(data.suggestion);
+        } else {
+          console.error('EngageIQ: Cannot update single suggestion - updateSingleSuggestion function not available');
+        }
+      } else if (data.suggestions && Array.isArray(data.suggestions)) {
+        // Fallback to old method if suggestion is not provided but suggestions array is
+        if (displaySuggestions) displaySuggestions(data.suggestions);
+      } else {
+        console.error('EngageIQ: Invalid single suggestion data:', data);
       }
       break;
 

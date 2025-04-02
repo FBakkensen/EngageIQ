@@ -84,14 +84,20 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
           response.success &&
           response.type === 'REGENERATION_SUCCESS'
         ) {
+          // Format the suggestion object for updateSingleSuggestion
+          const suggestion = {
+            id: response.payload?.reactionType || payload.reactionType,
+            text: response.payload?.newText || ''
+          };
+          
           // Handle REGENERATION_SUCCESS
           sendMessageToIframe({
             type: 'UPDATE_SINGLE_SUGGESTION',
-            payload: response.payload, // Contains newText, reactionType
+            suggestion: suggestion // Send properly formatted suggestion object
           });
           
           console.log(
-            `EngageIQ: Sent UPDATE_SINGLE_SUGGESTION to iframe for reaction type: ${response.payload?.reactionType}`
+            `EngageIQ: Sent UPDATE_SINGLE_SUGGESTION to iframe for reaction type: ${suggestion.id}`
           );
           
           resolve(response);

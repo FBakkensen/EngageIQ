@@ -45,7 +45,17 @@ export function updateModelIndicator(modelName) {
   // Customize display name for better readability
   let displayName = modelName;
   if (modelName.includes('gemini')) {
-    displayName = modelName.split('-')[0].charAt(0).toUpperCase() + modelName.split('-')[0].slice(1);
+    // Format as "Gemini 1.5 Pro" from "gemini-1.5-pro"
+    const parts = modelName.split('-');
+    // Capitalize first letter of model name
+    const modelBase = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    
+    // Add version and variant if available
+    if (parts.length > 1) {
+      displayName = `${modelBase} ${parts.slice(1).join(' ')}`;
+    } else {
+      displayName = modelBase;
+    }
   }
 
   console.log(`EngageIQ: Updating model indicator to ${displayName}`);

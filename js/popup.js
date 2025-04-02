@@ -14,11 +14,11 @@
  */
 
 // Import UI modules
-import { initSuggestionRenderer } from './ui/suggestion-renderer.js';
-import { initErrorHandler } from './ui/error-handler.js';
-import { initAccordion } from './ui/accordion-controller.js';
-import { initStateController, showState } from './ui/state-controller.js';
-import { initModelIndicator, displayCurrentModel } from './ui/model-indicator.js';
+import { initSuggestionRenderer } from '/js/ui/suggestion-renderer.js';
+import { initErrorHandler } from '/js/ui/error-handler.js';
+import { initAccordion } from '/js/ui/accordion-controller.js';
+import { initStateController, showState } from '/js/ui/state-controller.js';
+import { initModelIndicator, displayCurrentModel } from '/js/ui/model-indicator.js';
 
 // Import message service module
 import { 
@@ -26,7 +26,7 @@ import {
   notifyPopupReady,
   processQueuedMessages,
   sendMessageToContentScript
-} from './services/popup-message-service.js';
+} from '/js/services/popup-message-service.js';
 
 // Log script load confirmation - Compliant with user preference for prefixing logs
 console.log('EngageIQ: Popup Script Loaded');

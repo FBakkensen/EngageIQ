@@ -9,7 +9,7 @@
  */
 
 // Import accordion controller
-import { initAccordion } from './accordion-controller.js';
+import { initAccordion } from '/js/ui/accordion-controller.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Suggestion Renderer Module Loaded');
@@ -333,5 +333,47 @@ function handleAccordionButtonClick(event) {
 
     default:
       console.warn(`EngageIQ: Unknown button action: ${action}`);
+  }
+}
+
+/**
+ * Updates a single suggestion in the accordion without re-rendering everything
+ * @param {Object} suggestion - The updated suggestion object
+ */
+export function updateSingleSuggestion(suggestion) {
+  // Safety check if DOM references aren't initialized yet
+  if (!suggestionsAccordion) {
+    console.warn(
+      'EngageIQ: Cannot update suggestion - Suggestion Renderer not initialized'
+    );
+    return;
+  }
+
+  if (!suggestion || !suggestion.id) {
+    console.warn('EngageIQ: Cannot update suggestion - Invalid suggestion object');
+    return;
+  }
+
+  const reactionType = suggestion.id.toLowerCase();
+  console.log(`EngageIQ: Updating single suggestion for ${reactionType}`);
+
+  // Find the text element for this reaction type
+  const textElement = document.getElementById(`suggestion-text-${reactionType}`);
+
+  if (!textElement) {
+    console.warn(
+      `EngageIQ: Could not find text element for reaction type: ${reactionType}`
+    );
+    return;
+  }
+
+  // Update the text content
+  textElement.textContent = suggestion.text || 'No suggestion text available';
+  console.log(`EngageIQ: Updated suggestion text for ${reactionType}`);
+
+  // No need to update the whole accordion or change state
+  // Just ensure the suggestion state is showing
+  if (showStateFn) {
+    showStateFn('suggestions');
   }
 }
