@@ -437,9 +437,9 @@
         *   *Verification:* Listener relays requests to background, handles callback, relays success/error back to iframe. Accept logic hides iframe.
 
 *   **Step 7.3: Update Popup Script (`js/popup.js`) to Handle UI Updates**
-    *   [ ] **Sub-step 7.3.1:** Open `js/popup.js`.
-    *   [ ] **Sub-step 7.3.2:** Add case `UPDATE_SINGLE_SUGGESTION` to message listener `switch`.
-    *   [ ] **Sub-step 7.3.3:** Inside case: Get `reactionType`, `newText` from payload. Find suggestion text element (`#suggestion-text-${reactionType}`). Update its `textContent` with `newText`. Log success/error.
+    *   [x] **Sub-step 7.3.1:** Open `js/popup.js`.
+    *   [x] **Sub-step 7.3.2:** Add case `UPDATE_SINGLE_SUGGESTION` to message listener `switch`.
+    *   [x] **Sub-step 7.3.3:** Inside case: Get `reactionType`, `newText` from payload. Find suggestion text element (`#suggestion-text-${reactionType}`). Update its `textContent` with `newText`. Log success/error.
         *   *Verification:* Listener handles update message, finds correct element, updates text content.
 
 *   **Step 7.4: Verify End-to-End Length Adjustment**

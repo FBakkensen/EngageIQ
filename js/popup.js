@@ -386,7 +386,7 @@ function handleAccordionButtonClick(event) {
  * @param {Object} data - Message data object
  */
 function processMessage(data) {
-    const { type, error, details, suggestions } = data;
+    const { type, error, details, suggestions, payload } = data;
 
     if (!type) {
         console.warn('EngageIQ: Received message without a type:', data);
@@ -417,29 +417,30 @@ function processMessage(data) {
             }
             break;
             
+        case 'UPDATE_SINGLE_SUGGESTION':
+            console.log('EngageIQ: Handling UPDATE_SINGLE_SUGGESTION');
+            if (payload && payload.reactionType && payload.newText) {
+                const { reactionType, newText } = payload;
+                const textElementId = `suggestion-text-${reactionType}`;
+                const textElement = document.getElementById(textElementId);
+                
+                if (textElement) {
+                    console.log(`EngageIQ: Updating text for ${reactionType} with: ${newText.substring(0, 50)}...`);
+                    textElement.textContent = newText;
+                } else {
+                    console.error(`EngageIQ: Could not find text element with ID: ${textElementId} to update.`);
+                    // Optionally show an error in the UI if this happens
+                }
+            } else {
+                console.error('EngageIQ: Received UPDATE_SINGLE_SUGGESTION with invalid payload:', payload);
+                // Optionally show an error in the UI
+            }
+            break;
+            
         default:
             console.log('EngageIQ: Received unhandled message type:', type);
     }
 }
-
-/**
- * Listen for messages from the parent window (content script).
- */
-window.addEventListener('message', (event) => {
-    // Log all received messages for debugging
-    console.log('EngageIQ: Message received in popup from origin:', event.origin);
-    console.log('EngageIQ: Message data:', event.data);
-    
-    // If DOM is not yet loaded, queue the message for later processing
-    if (!loadingState) {
-        console.log('EngageIQ: DOM not ready, queuing message for later processing');
-        messageQueue.push(event.data);
-        return;
-    }
-    
-    // Process the message
-    processMessage(event.data);
-});
 
 /**
  * Sends a message to the parent content script
@@ -489,4 +490,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Notify the content script that the popup is ready
         notifyPopupReady();
     }
+});
+
+/**
+ * Listen for messages from the parent window (content script).
+ */
+window.addEventListener('message', (event) => {
+    // Log all received messages for debugging
+    console.log('EngageIQ: Message received in popup from origin:', event.origin);
+    console.log('EngageIQ: Message data:', event.data);
+    
+    // If DOM is not yet loaded, queue the message for later processing
+    if (!loadingState) {
+        console.log('EngageIQ: DOM not ready, queuing message for later processing');
+        messageQueue.push(event.data);
+        return;
+    }
+    
+    // Process the message
+    processMessage(event.data);
 });
