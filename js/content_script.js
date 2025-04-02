@@ -14,58 +14,13 @@ import {
   resetActiveCommentBox,
   initializeIframeManager
 } from './ui/iframe-manager.js';
+import {
+  extractPostContent,
+  validatePostContent,
+  preparePostContent
+} from './services/post-extractor.js';
 
 console.log('EngageIQ: Content Script Loaded');
-
-// --- Function to Extract Post Content (Step 8.2) ---
-
-/**
- * Extracts the main text content from the LinkedIn post associated with the clicked button.
- * Follows the MVP strategy: grabs currently visible text only.
- * @param {HTMLElement} clickedButtonElement - The EngageIQ button element that was clicked.
- * @returns {string|null} The extracted post text, an empty string if text is empty/not found in a valid structure, or null if the post structure cannot be identified.
- */
-function extractPostContent(clickedButtonElement) {
-  console.log('EngageIQ: Attempting to extract post content.');
-
-  // Sub-step 8.2.2: Find the common ancestor post element
-  const postAncestorSelector = '.feed-shared-update-v2'; // From Step 8.1.2
-  const postElement = clickedButtonElement.closest(postAncestorSelector);
-
-  if (!postElement) {
-    console.error(
-      `EngageIQ: Could not find post ancestor element using selector: ${postAncestorSelector}`
-    );
-    return null; // Indicate failure to find the post structure
-  }
-  console.log('EngageIQ: Found post ancestor element:', postElement);
-
-  // Sub-step 8.2.3: Find the text content element within the ancestor
-  const textContentSelector = '.update-components-text span[dir="ltr"]'; // From Step 8.1.3
-  // We query *from* the found postElement
-  const textElement = postElement.querySelector(textContentSelector);
-
-  if (!textElement) {
-    console.warn(
-      `EngageIQ: Could not find text content element using selector: ${textContentSelector} within ancestor. The post might have no text or a different structure.`
-    );
-    // Decide if this is an error or just a post without text.
-    // For MVP, let's return empty string assuming it might be a valid post without text.
-    // A more robust solution might differentiate.
-    return '';
-  }
-  console.log('EngageIQ: Found text content element:', textElement);
-
-  // Sub-step 8.2.4: Extract, trim, and return text content
-  const rawText = textElement.textContent || '';
-  const trimmedText = rawText.trim();
-
-  // console.log("EngageIQ: Raw extracted text:", rawText); // Commented out for privacy/cleanliness
-  // console.log("EngageIQ: Trimmed extracted text:", trimmedText); // Commented out for privacy/cleanliness
-
-  // Return trimmed text (even if empty, as per 8.2.4 handling)
-  return trimmedText;
-}
 
 /**
  * Custom message handler for iframe messages
@@ -300,30 +255,24 @@ function handleEngageIQButtonClick(event) {
 
     // Get the clicked button element
     const clickedButton = event.currentTarget;
-    // Step 8.3.2: Extract real post content
+    // Extract post content using the service
     const extractedText = extractPostContent(clickedButton);
 
-    // Step 8.3.3: Check if content is valid
-    if (extractedText === null || extractedText.trim() === '') {
-      const errorMessage =
-        extractedText === null
-          ? 'Could not find post structure.'
-          : 'Post text appears empty or could not be extracted.';
-      console.error(`EngageIQ: ${errorMessage}`);
+    // Validate the extracted content
+    const validationResult = validatePostContent(extractedText);
+    if (!validationResult.isValid) {
+      console.error(`EngageIQ: ${validationResult.errorMessage}`);
       sendMessageToIframe({
         type: 'SHOW_ERROR',
         error: 'Extraction Failed',
-        details: errorMessage,
+        details: validationResult.errorMessage,
       });
       // Keep iframe open but show error, do not proceed to background
       return;
     }
 
     // Content is valid, prepare it for the background script
-    const postContent = {
-      text: extractedText,
-      // Add other fields like author/timestamp later if needed/possible
-    };
+    const postContent = preparePostContent(extractedText);
     // console.log("EngageIQ: Extracted post content:", postContent); // Commented out for privacy/cleanliness
 
     // Send SHOW_LOADING message to iframe
@@ -399,3 +348,4 @@ initializeIframeManager(handleCustomIframeMessages);
 initializeButtonInjection(handleEngageIQButtonClick);
 
 // --- Phase 3: Iframe Management (Now handled by iframe-manager.js) ---
+// --- Phase 3: Post Extraction (Now handled by post-extractor.js) ---
