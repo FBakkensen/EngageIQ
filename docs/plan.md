@@ -471,13 +471,13 @@
         *   *Verification:* MVP strategy confirmed.
 
 *   **Step 8.2: Implement Post Content Extraction Function (`js/content_script.js`)**
-    *   [ ] **Sub-step 8.2.1:** Create function `extractPostContent(clickedButtonElement)`.
+    *   [x] **Sub-step 8.2.1:** Create function `extractPostContent(clickedButtonElement)`.
         *   *Verification:* Function exists.
-    *   [ ] **Sub-step 8.2.2:** Inside function: Use `closest()` with ancestor selector (from 8.1.2) starting from `clickedButtonElement`. Handle not found error (return null).
+    *   [x] **Sub-step 8.2.2:** Inside function: Use `closest()` with ancestor selector (from 8.1.2) starting from `clickedButtonElement`. Handle not found error (return null).
         *   *Verification:* Ancestor finding logic exists with error handling.
-    *   [ ] **Sub-step 8.2.3:** From ancestor: Use `querySelector()` with text content selector(s) (from 8.1.3). Handle not found error (return null).
+    *   [x] **Sub-step 8.2.3:** From ancestor: Use `querySelector()` with text content selector(s) (from 8.1.3). Handle not found error (return null).
         *   *Verification:* Text element finding logic exists with error handling.
-    *   [ ] **Sub-step 8.2.4:** Extract text using `textContent`/`innerText`. Trim whitespace. Handle empty text case (return ""). Log raw extracted text for debugging. Return text/empty string/null.
+    *   [x] **Sub-step 8.2.4:** Extract text using `textContent`/`innerText`. Trim whitespace. Handle empty text case (return ""). Log raw extracted text for debugging. Return text/empty string/null.
         *   *Verification:* Text extraction logic exists, handles empty, logs, returns value.
 
 *   **Step 8.3: Integrate Extraction into Button Click Handler (`js/content_script.js`)**
