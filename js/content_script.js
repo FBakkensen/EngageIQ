@@ -206,7 +206,11 @@ function handleIframeMessage(event) {
         case 'REQUEST_LONGER': { 
             const requestType = event.data.type; // 'REQUEST_SHORTER' or 'REQUEST_LONGER'
             const payload = event.data; // Should contain reactionType, originalText
-            console.log(`EngageIQ: Relaying ${requestType} message to background script for reaction type: ${payload?.reactionType}`);
+            
+            // Map popup request type to background request type
+            const backgroundRequestType = requestType === 'REQUEST_LONGER' ? 'REGENERATE_LONGER' : 'REGENERATE_SHORTER';
+
+            console.log(`EngageIQ: Relaying ${backgroundRequestType} message to background script for reaction type: ${payload?.reactionType}`);
 
             // Ensure payload is valid before sending
             if (!payload || !payload.reactionType || !payload.originalText) {
@@ -223,13 +227,13 @@ function handleIframeMessage(event) {
             // Step 7.2.3: Relay message to background
             chrome.runtime.sendMessage(
                 {
-                    type: requestType, // Forward the type
+                    type: backgroundRequestType, // Use the mapped type
                     payload: payload   // Forward the payload containing originalText, reactionType etc.
                 },
                 response => {
                     // Step 7.2.3: Implement callback
                     if (chrome.runtime.lastError) {
-                        console.error(`EngageIQ: Error sending ${requestType} message to background:`, chrome.runtime.lastError);
+                        console.error(`EngageIQ: Error sending ${backgroundRequestType} message to background:`, chrome.runtime.lastError);
                         // Send error back to iframe
                         sendMessageToIframe({
                             type: 'SHOW_ERROR',
@@ -240,7 +244,7 @@ function handleIframeMessage(event) {
                         return;
                     }
 
-                    console.log(`EngageIQ: Received response from background for ${requestType}:`, response);
+                    console.log(`EngageIQ: Received response from background for ${backgroundRequestType}:`, response);
 
                     // Handle background response
                     if (response && response.success && response.type === 'REGENERATION_SUCCESS') {
@@ -252,7 +256,7 @@ function handleIframeMessage(event) {
                         console.log(`EngageIQ: Sent UPDATE_SINGLE_SUGGESTION to iframe for reaction type: ${response.payload?.reactionType}`);
                     } else {
                         // Step 7.2.3: Handle REGENERATION_ERROR
-                        console.error(`EngageIQ: Regeneration failed for ${requestType}. Error:`, response?.error, response?.details);
+                        console.error(`EngageIQ: Regeneration failed for ${backgroundRequestType}. Error:`, response?.error, response?.details);
                         sendMessageToIframe({
                             type: 'SHOW_ERROR',
                             error: response?.error || 'Regeneration Failed',

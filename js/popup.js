@@ -354,7 +354,7 @@ function handleAccordionButtonClick(event) {
             sendMessageToContentScript({
                 type: 'REQUEST_SHORTER',
                 reactionType: reactionType,
-                currentText: currentText
+                originalText: currentText
             });
             break;
             
@@ -363,7 +363,7 @@ function handleAccordionButtonClick(event) {
             sendMessageToContentScript({
                 type: 'REQUEST_LONGER',
                 reactionType: reactionType,
-                currentText: currentText
+                originalText: currentText
             });
             break;
             

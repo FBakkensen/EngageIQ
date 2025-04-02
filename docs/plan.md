@@ -443,14 +443,14 @@
         *   *Verification:* Listener handles update message, finds correct element, updates text content.
 
 *   **Step 7.4: Verify End-to-End Length Adjustment**
-    *   [ ] **Sub-step 7.4.1:** Ensure valid API key saved. Reload extension.
-    *   [ ] **Sub-step 7.4.2:** Go to LinkedIn, generate suggestions.
-    *   [ ] **Sub-step 7.4.3:** Expand an item.
-    *   [ ] **Sub-step 7.4.4:** Click '+' button.
+    *   [x] **Sub-step 7.4.1:** Ensure valid API key saved. Reload extension.
+    *   [x] **Sub-step 7.4.2:** Go to LinkedIn, generate suggestions.
+    *   [x] **Sub-step 7.4.3:** Expand an item.
+    *   [x] **Sub-step 7.4.4:** Click '+' button.
         *   *Verification:* Background logs show successful regeneration. Popup suggestion text updates to longer version.
-    *   [ ] **Sub-step 7.4.5:** Click '-' button.
+    *   [x] **Sub-step 7.4.5:** Click '-' button.
         *   *Verification:* Background logs show successful regeneration. Popup suggestion text updates to shorter version.
-    *   [ ] **Sub-step 7.4.6:** Test error handling during regeneration (invalid key, network error).
+    *   [x] **Sub-step 7.4.6:** Test error handling during regeneration (invalid key, network error).
         *   *Verification:* Popup shows relevant error message. Text does not change.
 
 ---
