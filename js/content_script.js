@@ -372,14 +372,40 @@ function handleEngageIQButtonClick(event) {
             iframe.style.display = 'block';
             console.log("EngageIQ: Showing iframe.");
             
-            // Step 4.1.2: Add dummy postContent extraction log
-            // In a future implementation, this will extract actual post content
-            const dummyPostContent = {
-                text: "This is a dummy LinkedIn post content for testing purposes. It simulates what would be extracted from a real LinkedIn post.",
-                author: "LinkedIn User",
-                timestamp: new Date().toISOString()
+            // Step 8.3.2: Extract real post content
+            const clickedButton = event.target.closest('button'); // Get the actual button clicked
+            if (!clickedButton) {
+                console.error("EngageIQ: Could not find the clicked button element.");
+                 sendMessageToIframe({
+                    type: 'SHOW_ERROR',
+                    error: 'Internal Error',
+                    details: 'Could not identify the source button.'
+                 });
+                return;
+            }
+            const extractedText = extractPostContent(clickedButton);
+
+            // Step 8.3.3: Check if content is valid
+            if (extractedText === null || extractedText.trim() === '') {
+                const errorMessage = extractedText === null 
+                    ? 'Could not find post structure.' 
+                    : 'Post text appears empty or could not be extracted.';
+                console.error(`EngageIQ: ${errorMessage}`);
+                sendMessageToIframe({
+                    type: 'SHOW_ERROR',
+                    error: 'Extraction Failed',
+                    details: errorMessage
+                });
+                // Keep iframe open but show error, do not proceed to background
+                return; 
+            }
+
+            // Content is valid, prepare it for the background script
+            const postContent = {
+                text: extractedText,
+                // Add other fields like author/timestamp later if needed/possible
             };
-            console.log("EngageIQ: Extracted post content (dummy):", dummyPostContent);
+            console.log("EngageIQ: Extracted post content:", postContent);
             
             // Send SHOW_LOADING message to iframe
             sendMessageToIframe({ 
@@ -391,7 +417,7 @@ function handleEngageIQButtonClick(event) {
             // Send GENERATE_COMMENTS message to background script
             chrome.runtime.sendMessage({
                 type: 'GENERATE_COMMENTS',
-                postContent: dummyPostContent
+                postContent: postContent // Use the real extracted content
             }, response => {
                 // Handle chrome.runtime.lastError first
                 if (chrome.runtime.lastError) {

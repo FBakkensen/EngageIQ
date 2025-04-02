@@ -481,10 +481,10 @@
         *   *Verification:* Text extraction logic exists, handles empty, logs, returns value.
 
 *   **Step 8.3: Integrate Extraction into Button Click Handler (`js/content_script.js`)**
-    *   [ ] **Sub-step 8.3.1:** Modify `handleEngageIQButtonClick(event)`.
-    *   [ ] **Sub-step 8.3.2:** Replace dummy content line with call to `extractPostContent(event.target.closest('button'))`.
+    *   [x] **Sub-step 8.3.1:** Modify `handleEngageIQButtonClick(event)`.
+    *   [x] **Sub-step 8.3.2:** Replace dummy content line with call to `extractPostContent(event.target.closest('button'))`.
         *   *Verification:* Call replaces dummy assignment.
-    *   [ ] **Sub-step 8.3.3:** Check if `postContent` is null or empty. If so, show error in popup (send `SHOW_ERROR` message) and `return` (do not call background script). If valid, proceed with `SHOW_LOADING` and `chrome.runtime.sendMessage` using the *real* `postContent`.
+    *   [x] **Sub-step 8.3.3:** Check if `postContent` is null or empty. If so, show error in popup (send `SHOW_ERROR` message) and `return` (do not call background script). If valid, proceed with `SHOW_LOADING` and `chrome.runtime.sendMessage` using the *real* `postContent`.
         *   *Verification:* Check exists. Error shown and background call skipped on failure. Real content sent on success.
 
 *   **Step 8.4: Verify Real Content Extraction and Error Handling**
