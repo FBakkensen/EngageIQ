@@ -1,14 +1,27 @@
 /* Reset default body margin/padding that might be inherited within the iframe */
 body {
-    margin: 0;
-    padding: 0; /* Ensure no padding either */
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; /* Match Bootstrap's default */
-    font-size: 0.875rem; /* Slightly smaller base size for the compact popup */
-    min-width: 350px; /* Prevent the popup from becoming too narrow */
+  margin: 0;
+  padding: 0; /* Ensure no padding either */
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    'Noto Sans',
+    'Liberation Sans',
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji'; /* Match Bootstrap's default */
+  font-size: 0.875rem; /* Slightly smaller base size for the compact popup */
+  min-width: 350px; /* Prevent the popup from becoming too narrow */
 }
 
 /* Ensure container inside popup doesn't add extra horizontal padding */
 .container {
-    padding-left: 10px;
-    padding-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 }

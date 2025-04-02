@@ -1,33 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Options</title>
     <!-- Bootstrap CSS -->
-    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Link to custom CSS -->
-    <link rel="stylesheet" href="../css/options.css">
-</head>
-<body>
+    <link rel="stylesheet" href="../css/options.css" />
+  </head>
+  <body>
     <div class="container mt-5">
-        <h1>EngageIQ Settings</h1>
-        <p>Configure your settings here.</p>
+      <h1>EngageIQ Settings</h1>
+      <p>Configure your settings here.</p>
 
-        <form id="settingsForm">
-            <div class="mb-3">
-                <label for="apiKey" class="form-label">Gemini API Key</label>
-                <input type="password" class="form-control" id="apiKey" placeholder="Enter your API key">
-            </div>
-            <button type="submit" class="btn btn-primary" id="saveButton">Save Key</button>
-        </form>
+      <form id="settingsForm">
+        <div class="mb-3">
+          <label for="apiKey" class="form-label">Gemini API Key</label>
+          <input
+            type="password"
+            class="form-control"
+            id="apiKey"
+            placeholder="Enter your API key"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary" id="saveButton">
+          Save Key
+        </button>
+      </form>
 
-        <div id="statusMessage" class="mt-3"></div>
+      <div id="statusMessage" class="mt-3"></div>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <!-- Link to options JavaScript -->
     <script src="../js/options.js"></script>
-</body>
+  </body>
 </html>
