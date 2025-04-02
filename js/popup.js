@@ -8,8 +8,9 @@
  *  - Managing the UI elements within the popup (accordion, buttons, etc.).
  */
 
-// Import the suggestion renderer module
+// Import the UI modules
 import { initSuggestionRenderer, displaySuggestions } from '../js/ui/suggestion-renderer.js';
+import { initErrorHandler, displayError } from '../js/ui/error-handler.js';
 
 // Log script load confirmation - Compliant with user preference MEMORY[e17fa962-c53a-4d19-ae3a-66c3cbc4dce7]
 console.log('EngageIQ: Popup Script Loaded');
@@ -57,93 +58,6 @@ function showState(stateToShow) {
     default:
       console.warn(`EngageIQ: Unknown state requested: ${stateToShow}`);
   }
-}
-
-/**
- * Displays error message in the error state element with improved user experience
- * @param {string} message - The error message to display
- * @param {string} [details] - Optional error details
- * @param {Object} [actionData] - Optional action guidance { text: string }
- */
-function displayError(message, details, actionData) {
-  // Safety check if DOM references aren't initialized yet
-  if (!errorMessage) {
-    console.warn(
-      'EngageIQ: Cannot display error - DOM references not initialized'
-    );
-    return;
-  }
-
-  console.log(`EngageIQ: Displaying error: ${message}`);
-
-  // Get error action elements
-  const errorAction = document.getElementById('errorAction');
-  const errorActionText = document.getElementById('errorActionText');
-
-  // Display the main error message
-  errorMessage.textContent =
-    getUserFriendlyErrorMessage(message) || 'Unknown error';
-
-  // Display action guidance if provided
-  if (errorAction && errorActionText && actionData && actionData.text) {
-    errorActionText.textContent = actionData.text;
-    errorAction.style.display = 'block';
-  } else if (errorAction) {
-    errorAction.style.display = 'none';
-  }
-
-  // Log additional details if provided
-  if (details) {
-    console.log(`EngageIQ: Error details: ${details}`);
-  }
-
-  showState('error');
-}
-
-/**
- * Converts technical error messages to user-friendly messages
- * @param {string} technicalMessage - The original error message
- * @returns {string} A user-friendly error message
- */
-function getUserFriendlyErrorMessage(technicalMessage) {
-  if (!technicalMessage) return 'An unknown error occurred';
-
-  // Map of technical error messages to user-friendly messages
-  const errorMessageMap = {
-    'API key not found':
-      'No API key has been set. Please go to the extension options to set your API key.',
-    'Invalid API key':
-      'The API key you provided appears to be invalid. Please check your API key in the extension options.',
-    'Network error':
-      'Could not connect to the AI service. Please check your internet connection and try again.',
-    'Rate limit exceeded':
-      'You have made too many requests. Please wait a few minutes and try again.',
-    'Content extraction failed':
-      "We couldn't analyze the post content. Please try again or use a different post.",
-    'No suggestions available':
-      "We couldn't generate suggestions for this post. The content may be too short or not appropriate for comments.",
-    'Content policy violation':
-      "We couldn't generate suggestions because the content may violate our content policy.",
-    'Generation failed':
-      'We encountered an issue while generating suggestions. Please try again.',
-    SAFETY:
-      "We couldn't generate suggestions because the content may contain sensitive topics.",
-  };
-
-  // Check for exact matches in our map
-  if (errorMessageMap[technicalMessage]) {
-    return errorMessageMap[technicalMessage];
-  }
-
-  // Check for partial matches
-  for (const key in errorMessageMap) {
-    if (technicalMessage.includes(key)) {
-      return errorMessageMap[key];
-    }
-  }
-
-  // Return the original message if no mapping found
-  return technicalMessage;
 }
 
 /**
@@ -224,11 +138,16 @@ document.addEventListener('DOMContentLoaded', () => {
   errorMessage = document.getElementById('errorMessage');
   suggestionsAccordion = document.getElementById('suggestionsAccordion');
 
-  // Initialize the suggestion renderer module with the required references
+  // Initialize UI modules with the required references
   initSuggestionRenderer({
     accordionElement: suggestionsAccordion,
     showStateFunction: showState,
     sendMessageFunction: sendMessageToContentScript
+  });
+  
+  initErrorHandler({
+    errorMessageElement: errorMessage,
+    showStateFunction: showState
   });
 
   // Show initial loading state
