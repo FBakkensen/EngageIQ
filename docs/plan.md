@@ -528,10 +528,10 @@
         *   *Verification:* Test error scenarios; loading states are removed.
 
 *   **Step 9.4: Basic Accessibility Checks**
-    *   [ ] **Sub-step 9.4.1:** Verify icon button has `title` attribute.
-    *   [ ] **Sub-step 9.4.2:** Check keyboard navigation (Tab) within popup iframe. Check focus outlines.
+    *   [x] **Sub-step 9.4.1:** Verify icon button has `title` attribute.
+    *   [x] **Sub-step 9.4.2:** Check keyboard navigation (Tab) within popup iframe. Check focus outlines.
         *   *Verification:* Basic keyboard navigation works. Focus visible.
-    *   [ ] **Sub-step 9.4.3:** Check for ARIA attributes in accordion (Bootstrap default).
+    *   [x] **Sub-step 9.4.3:** Check for ARIA attributes in accordion (Bootstrap default).
         *   *Verification:* Inspect elements; ARIA attributes present.
 
 *   **Step 9.5: Comprehensive End-to-End Testing**
