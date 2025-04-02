@@ -1,6 +1,3 @@
-Always read the feature\RefactorLongJS\RefactoringApproach.md file before starting a task.
-Always read the feature\RefactorLongJS\ImplementationPlan.md file before starting a task.
-
 Do not refactor any code without approval.
 Only make edits to the code that are directly related to the current task.
 Do not add new features or functionality without approval.
