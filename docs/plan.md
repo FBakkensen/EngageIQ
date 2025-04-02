@@ -488,11 +488,11 @@
         *   *Verification:* Check exists. Error shown and background call skipped on failure. Real content sent on success.
 
 *   **Step 8.4: Verify Real Content Extraction and Error Handling**
-    *   [ ] **Sub-step 8.4.1:** Reload extension. Clear console.
-    *   [ ] **Sub-step 8.4.2:** Test on various LinkedIn post types (text, image+text, video+text, share, "see more").
-    *   [ ] **Sub-step 8.4.3:** For each type, click EngageIQ button.
+    *   [x] **Sub-step 8.4.1:** Reload extension. Clear console.
+    *   [x] **Sub-step 8.4.2:** Test on various LinkedIn post types (text, image+text, video+text, share, "see more").
+    *   [x] **Sub-step 8.4.3:** For each type, click EngageIQ button.
         *   *Verification:* Check console logs for accurately extracted text. If success, popup generates suggestions based on *real* content. If failure (common initially), popup shows "Could not extract post content" error.
-    *   [ ] **Sub-step 8.4.4:** **Iterate:** If extraction fails for common types, refine selectors/logic (Step 8.1/8.2), reload, re-verify. Repeat until reasonably robust for MVP target posts.
+    *   [x] **Sub-step 8.4.4:** **Iterate:** If extraction fails for common types, refine selectors/logic (Step 8.1/8.2), reload, re-verify. Repeat until reasonably robust for MVP target posts.
 
 ---
 
