@@ -620,33 +620,69 @@ function notifyPopupReady() {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('EngageIQ: Popup DOM Loaded');
 
-  // Get references to UI elements
+  // Initialize global element references
   loadingState = document.getElementById('loadingState');
   errorState = document.getElementById('errorState');
   errorMessage = document.getElementById('errorMessage');
   suggestionsAccordion = document.getElementById('suggestionsAccordion');
+  
+  // Initialize model indicator element reference
+  const modelIndicator = document.getElementById('modelIndicator');
 
-  console.log('EngageIQ: UI element references initialized');
-
-  // Verify elements were found
-  if (!loadingState || !errorState || !errorMessage || !suggestionsAccordion) {
-    console.error('EngageIQ: One or more UI elements not found in DOM');
-  } else {
-    // Process any queued messages now that the DOM is ready
-    console.log(`EngageIQ: Processing ${messageQueue.length} queued messages`);
-    while (messageQueue.length > 0) {
-      processMessage(messageQueue.shift());
-    }
-
-    // Set initial state to loading as fallback if no messages were received
-    if (messageQueue.length === 0) {
-      showState('loading');
-    }
-
-    // Notify the content script that the popup is ready
-    notifyPopupReady();
+  // Process any messages that were received before DOM was ready
+  while (messageQueue.length > 0) {
+    const message = messageQueue.shift();
+    processMessage(message);
   }
+
+  // Set up event delegation for accordion buttons
+  addAccordionButtonListeners();
+
+  // Display the current Gemini model in the indicator
+  displayCurrentModel();
+
+  // Notify the content script that the popup is ready
+  notifyPopupReady();
 });
+
+/**
+ * Retrieves and displays the current Gemini model in the model indicator
+ */
+function displayCurrentModel() {
+  const modelIndicator = document.getElementById('modelIndicator');
+  if (!modelIndicator) {
+    console.warn('EngageIQ: Cannot display model - modelIndicator element not found');
+    return;
+  }
+
+  // Default model value (matches the default in background.js)
+  const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+
+  // Get the current model from Chrome storage
+  chrome.storage.sync.get(['geminiModel'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('EngageIQ: Error retrieving model from storage:', chrome.runtime.lastError);
+      displayModelValue(DEFAULT_GEMINI_MODEL);
+      return;
+    }
+    
+    // Get the model from storage or use default
+    const model = result.geminiModel || DEFAULT_GEMINI_MODEL;
+    displayModelValue(model);
+  });
+
+  /**
+   * Displays the model value in the UI
+   * @param {string} modelValue - The model value to display
+   */
+  function displayModelValue(modelValue) {
+    console.log(`EngageIQ: Displaying model: ${modelValue}`);
+    modelIndicator.innerHTML = `
+      <span class="model-indicator-label">Model:</span>
+      <span class="model-indicator-value">${modelValue}</span>
+    `;
+  }
+}
 
 /**
  * Listen for messages from the parent window (content script).
