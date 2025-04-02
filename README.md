@@ -75,6 +75,39 @@ You can change your model selection at any time through the extension options pa
 
 EngageIQ only accesses LinkedIn post content when you explicitly click the generation button. The extension sends this content to the Gemini API (using your API key) to generate comment suggestions. No data is stored on any servers, and all processing happens through your browser and the Gemini API. Your API key is stored securely in your browser's local storage and is never shared with any third parties.
 
+## Code Structure
+
+EngageIQ follows a modular architecture that adheres to a 200-line limit per file for improved maintainability and readability:
+
+### Main Files
+- **background.js**: Core background functionality and message routing
+- **content_script.js**: LinkedIn page integration and DOM interaction
+- **popup.js**: Extension popup interface management
+- **options.js**: Settings page functionality
+
+### Models
+- **models/gemini-model.js**: Gemini API model selection and configuration
+
+### Services
+- **services/api-service.js**: API request and response handling
+- **services/comment-generation.js**: Comment generation logic and schemas
+- **services/message-service.js**: Message handling between extension components
+- **services/popup-message-service.js**: Popup-specific message handling
+- **services/post-extractor.js**: LinkedIn post content extraction
+- **services/regeneration-service.js**: Comment regeneration and length adjustment
+
+### UI Components
+- **ui/accordion-controller.js**: Accordion interface interactions
+- **ui/button-injector.js**: LinkedIn integration buttons
+- **ui/error-handler.js**: Error display and handling
+- **ui/iframe-manager.js**: Iframe creation and management
+- **ui/model-indicator.js**: Model selection display
+- **ui/state-controller.js**: UI state management
+- **ui/suggestion-renderer.js**: Comment suggestion rendering
+
+### Utilities
+- **utils/storage-utils.js**: Browser storage operations
+
 ## Known Issues/Limitations
 
 - The extension currently works best on LinkedIn feed and single post pages.
