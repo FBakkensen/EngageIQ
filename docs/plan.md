@@ -557,18 +557,18 @@
         *   *Verification:* Functionality persists.
 
 *   **Step 9.6: Prepare Basic Documentation (README)**
-    *   [ ] **Sub-step 9.6.1:** Create `README.md` file.
+    *   [x] **Sub-step 9.6.1:** Create `README.md` file.
         *   *Verification:* File exists.
-    *   [ ] **Sub-step 9.6.2:** Add content: Name, Description, Features, Install Instructions, Usage, API Key Requirement (link), Privacy Note, Known Issues/Limitations.
+    *   [x] **Sub-step 9.6.2:** Add content: Name, Description, Features, Install Instructions, Usage, API Key Requirement (link), Privacy Note, Known Issues/Limitations.
         *   *Verification:* README contains required sections.
-    *   [ ] **Sub-step 9.6.3:** Add MIT License.
+    *   [x] **Sub-step 9.6.3:** Add MIT License.
         *   *Verification:* License file reference in README.
 
 *   **Step 9.7: Final Asset and Manifest Check**
-    *   [ ] **Sub-step 9.7.1:** Double-check icon paths/sizes in `manifest.json`.
-    *   [ ] **Sub-step 9.7.2:** Confirm final `version` number (e.g., "1.0.0").
-    *   [ ] **Sub-step 9.7.3:** Confirm `web_accessible_resources` lists all needed files.
-    *   [ ] **Sub-step 9.7.4:** Confirm `permissions` and `host_permissions` are minimal required.
+    *   [x] **Sub-step 9.7.1:** Double-check icon paths/sizes in `manifest.json`.
+    *   [x] **Sub-step 9.7.2:** Confirm final `version` number (e.g., "1.0.0").
+    *   [x] **Sub-step 9.7.3:** Confirm `web_accessible_resources` lists all needed files.
+    *   [x] **Sub-step 9.7.4:** Confirm `permissions` and `host_permissions` are minimal required.
         *   *Verification:* `manifest.json` is reviewed and finalized.
 
 ---
