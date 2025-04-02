@@ -10,6 +10,7 @@
 
 import { displaySuggestions } from '../ui/suggestion-renderer.js';
 import { displayError } from '../ui/error-handler.js';
+import { updateModelIndicator } from '../ui/model-indicator.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Popup Message Service Module Loaded');
@@ -19,17 +20,14 @@ let messageQueue = [];
 
 // References to state elements (to be initialized)
 let showStateFn;
-let updateModelIndicatorFn;
 
 /**
  * Initializes the message service with required functions
  * @param {Object} config - Configuration object
  * @param {Function} config.showStateFunction - Function to switch UI states
- * @param {Function} config.updateModelIndicatorFunction - Function to update model indicator
  */
 export function initPopupMessageService(config) {
   showStateFn = config.showStateFunction;
-  updateModelIndicatorFn = config.updateModelIndicatorFunction;
   
   console.log('EngageIQ: Popup Message Service initialized');
   
@@ -155,8 +153,8 @@ export function processMessage(data) {
       break;
 
     case 'UPDATE_MODEL':
-      if (data.model && updateModelIndicatorFn) {
-        updateModelIndicatorFn(data.model);
+      if (data.model && updateModelIndicator) {
+        updateModelIndicator(data.model);
       }
       break;
 
