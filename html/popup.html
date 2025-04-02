@@ -10,11 +10,11 @@
     <link href="../css/popup.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="container pt-2 pb-2">
+    <div class="container pt-2 pb-2" role="main" aria-label="EngageIQ Suggestions">
       <h5 class="mb-3">EngageIQ</h5>
 
       <!-- Loading State -->
-      <div id="loadingState" class="text-center" style="display: none">
+      <div id="loadingState" class="text-center" style="display: none" aria-live="polite" aria-atomic="true">
         <div class="spinner-border spinner-border-sm" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -27,6 +27,8 @@
         class="alert alert-danger"
         role="alert"
         style="display: none"
+        aria-live="assertive"
+        aria-atomic="true"
       >
         <h6 class="alert-heading">Something went wrong</h6>
         <p class="mb-1" id="errorMessage"></p>
@@ -36,7 +38,7 @@
       </div>
 
       <!-- Suggestions Accordion -->
-      <div class="accordion" id="suggestionsAccordion">
+      <div class="accordion" id="suggestionsAccordion" aria-label="Comment suggestions">
         <!-- Accordion items will be injected here by popup.js -->
       </div>
     </div>

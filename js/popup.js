@@ -186,6 +186,8 @@ function displaySuggestions(suggestions) {
     // Create accordion item
     const accordionItem = document.createElement('div');
     accordionItem.className = 'accordion-item';
+    // Add role for accessibility
+    accordionItem.setAttribute('role', 'region');
 
     // Create header
     const accordionHeader = document.createElement('h2');
@@ -200,6 +202,8 @@ function displaySuggestions(suggestions) {
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-controls', `collapse-${itemId}`);
     button.setAttribute('data-reaction-type', reactionType); // Store reaction type for manual toggle
+    // Add additional aria attributes for improved accessibility
+    button.setAttribute('aria-describedby', `suggestion-text-${reactionType}`);
 
     // Capitalize first letter of reaction type for display
     const displayType =
@@ -217,6 +221,8 @@ function displaySuggestions(suggestions) {
     collapseDiv.className = 'accordion-collapse collapse';
     collapseDiv.setAttribute('aria-labelledby', `heading-${itemId}`);
     collapseDiv.setAttribute('data-bs-parent', '#suggestionsAccordion');
+    // Add role for accessibility
+    collapseDiv.setAttribute('role', 'region');
 
     const accordionBody = document.createElement('div');
     accordionBody.className = 'accordion-body';
@@ -227,6 +233,8 @@ function displaySuggestions(suggestions) {
     textParagraph.className = 'suggestion-text mb-2';
     textParagraph.textContent =
       suggestion.text || 'No suggestion text available';
+    // Add tabindex for keyboard accessibility
+    textParagraph.setAttribute('tabindex', '0');
     accordionBody.appendChild(textParagraph);
 
     // Add button group for controls
@@ -243,6 +251,9 @@ function displaySuggestions(suggestions) {
     decreaseBtn.setAttribute('data-reaction', reactionType);
     decreaseBtn.setAttribute('data-action', 'decrease');
     decreaseBtn.title = 'Make suggestion shorter';
+    // Add ARIA attributes for screen readers
+    decreaseBtn.setAttribute('aria-label', `Make ${displayType} suggestion shorter`);
+
     buttonGroup.appendChild(decreaseBtn);
 
     // Add increase length button
@@ -253,6 +264,9 @@ function displaySuggestions(suggestions) {
     increaseBtn.setAttribute('data-reaction', reactionType);
     increaseBtn.setAttribute('data-action', 'increase');
     increaseBtn.title = 'Make suggestion longer';
+    // Add ARIA attributes for screen readers
+    increaseBtn.setAttribute('aria-label', `Make ${displayType} suggestion longer`);
+
     buttonGroup.appendChild(increaseBtn);
 
     // Add accept button
@@ -263,6 +277,9 @@ function displaySuggestions(suggestions) {
     acceptBtn.setAttribute('data-reaction', reactionType);
     acceptBtn.setAttribute('data-action', 'accept');
     acceptBtn.title = 'Use this suggestion';
+    // Add ARIA attributes for screen readers
+    acceptBtn.setAttribute('aria-label', `Use ${displayType} suggestion`);
+
     buttonGroup.appendChild(acceptBtn);
 
     // Add button group to accordion body
