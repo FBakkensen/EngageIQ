@@ -521,10 +521,10 @@
         *   *Verification:* Icon button looks good, tooltip works.
 
 *   **Step 9.3: Error Handling Refinement**
-    *   [ ] **Sub-step 9.3.1:** Review all user-facing error messages (in popup).
-    *   [ ] **Sub-step 9.3.2:** Ensure messages are user-friendly and actionable where possible.
+    *   [x] **Sub-step 9.3.1:** Review all user-facing error messages (in popup).
+    *   [x] **Sub-step 9.3.2:** Ensure messages are user-friendly and actionable where possible.
         *   *Verification:* Error messages are clear.
-    *   [ ] **Sub-step 9.3.3:** Verify loading indicators are hidden when errors occur.
+    *   [x] **Sub-step 9.3.3:** Verify loading indicators are hidden when errors occur.
         *   *Verification:* Test error scenarios; loading states are removed.
 
 *   **Step 9.4: Basic Accessibility Checks**
