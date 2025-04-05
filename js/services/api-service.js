@@ -8,13 +8,244 @@
 
 // Import models and storage utilities
 import { 
-  GENERATION_SCHEMA, 
-  REGENERATION_SCHEMA, 
   DIRECTION_ANALYSIS_SCHEMA,
   DIRECTION_COMMENT_SCHEMA,
   getGenerateContentEndpoint 
 } from '../models/gemini-model.js';
 import { getApiKey } from '../utils/storage-utils.js';
+
+// Constants for API settings
+const API_SETTINGS = {
+  MAX_RETRIES: 2,       // Maximum number of retries on failure
+  RETRY_DELAY_MS: 1000, // Base delay between retries (will be multiplied by retry count)
+  TIMEOUT_MS: 20000,    // Timeout for the API request in milliseconds
+};
+
+// Standardized error types
+const ERROR_TYPES = {
+  NETWORK: 'network_error',          // General network issue
+  API_KEY: 'api_key_error',          // Invalid or missing API key
+  BAD_REQUEST: 'bad_request_error',    // 400 Bad Request
+  AUTH: 'auth_error',                // 401/403 Authentication/Authorization
+  NOT_FOUND: 'not_found_error',        // 404 Not Found (e.g., model)
+  RATE_LIMIT: 'rate_limit_error',    // 429 Rate Limit Exceeded
+  SERVER: 'server_error',            // 5xx Server Error
+  TIMEOUT: 'timeout_error',          // Request timed out
+  CONTENT_FILTER: 'content_filter_error', // Response blocked due to content filters
+  PARSING: 'parsing_error',          // Failed to parse API response
+  UNKNOWN: 'unknown_error',          // Other unexpected errors
+  MISSING_API_KEY: 'missing_api_key_error', // API Key not found
+};
+
+/**
+ * Creates a standardized API error object.
+ * 
+ * @param {string} type - One of the ERROR_TYPES keys
+ * @param {string} message - Primary error message
+ * @param {number|null} status - HTTP status code, if applicable
+ * @param {string|Object|null} details - Additional error details (e.g., raw response text or parsed error object)
+ * @returns {Error} An Error object with additional properties (isApiError, errorType, status, details)
+ */
+function createApiError(type, message, status = null, details = null) {
+  const error = new Error(message);
+  error.isApiError = true; // Flag to identify these specific errors
+  error.errorType = type;
+  error.status = status;
+  error.details = details;
+  console.error(`EngageIQ: API Error Created - Type: ${type}, Status: ${status}, Message: ${message}`, { details });
+  return error;
+}
+
+/**
+ * Makes a call to the Gemini API with retry and timeout logic.
+ * 
+ * @param {Object} requestBody - The payload for the API request.
+ * @param {string} operationName - A descriptive name for the operation (for logging).
+ * @returns {Promise<Object>} - The JSON response from the API.
+ * @throws {ApiError} - Throws an ApiError if the request fails after retries or times out.
+ */
+async function callGeminiAPI(requestBody, operationName = 'API Call') {
+  let retries = 0;
+  console.log(`EngageIQ: [${operationName}] Starting API request.`);
+  
+  // Get API Key internally
+  const apiKey = await getApiKey();
+  if (!apiKey) {
+    console.error(`EngageIQ: [${operationName}] API Key not found.`);
+    throw createApiError(ERROR_TYPES.MISSING_API_KEY, 'API Key not found. Please configure it in the extension options.', 401); // Use 401 Unauthorized conceptually
+  }
+
+  const endpoint = await getGenerateContentEndpoint();
+
+  const fullApiUrl = `${endpoint}?key=${apiKey}`;
+  
+  // Prepare fetch options with timeout controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_SETTINGS.TIMEOUT_MS);
+
+  while (retries <= API_SETTINGS.MAX_RETRIES) {
+    try {
+      if (retries > 0) {
+        const delay = API_SETTINGS.RETRY_DELAY_MS * retries;
+        console.log(`EngageIQ: [${operationName}] Retry attempt ${retries} after ${delay}ms delay.`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      console.debug(`EngageIQ: [${operationName}] Sending payload (attempt ${retries + 1}):`, JSON.stringify(requestBody).substring(0, 300) + '...'); // Log truncated payload
+
+      const response = await fetch(fullApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal // Link fetch to AbortController
+      });
+
+      clearTimeout(timeoutId); // Clear the timeout if fetch completes
+
+      // --- Handle HTTP errors ---
+      if (!response.ok) {
+        let errorType = ERROR_TYPES.UNKNOWN;
+        let errorMessage = `API call failed with status ${response.status}`;
+        let errorDetails = null;
+        try {
+          // Attempt to get detailed error message from response body
+          const errorText = await response.text();
+          console.warn(`EngageIQ: [${operationName}] API Error Response Text:`, errorText);
+          try {
+             errorDetails = JSON.parse(errorText); // Try parsing as JSON
+             // Check for specific Gemini error structures if applicable
+             if (errorDetails.error && errorDetails.error.message) {
+               errorMessage = `API Error: ${errorDetails.error.message}`;
+             }
+          } catch (parseError) {
+             errorDetails = errorText; // Use raw text if not JSON
+             errorMessage = `API call failed with status ${response.status}. Unable to parse error details.`;
+          }
+        } catch (textError) {
+          console.error(`EngageIQ: [${operationName}] Could not read error response body.`, textError);
+          errorMessage = `API call failed with status ${response.status}. Could not read error details.`;
+        }
+
+        // Map status codes to specific error types
+        switch (response.status) {
+          case 400:
+            errorType = ERROR_TYPES.BAD_REQUEST;
+            break;
+          case 401:
+          case 403:
+            errorType = ERROR_TYPES.AUTH;
+            errorMessage = 'Authentication Error: Invalid or expired API key.';
+            break;
+          case 404:
+            errorType = ERROR_TYPES.NOT_FOUND;
+            errorMessage = 'API Endpoint/Model Not Found.';
+            break;
+          case 429:
+            errorType = ERROR_TYPES.RATE_LIMIT;
+            errorMessage = 'Rate Limit Exceeded: Too many requests.';
+            break;
+          case 500:
+          case 501:
+          case 502:
+          case 503:
+          case 504:
+            errorType = ERROR_TYPES.SERVER;
+            errorMessage = 'Gemini API Server Error: Service unavailable.';
+            break;
+        }
+
+        // Throw a structured error
+        throw createApiError(errorType, errorMessage, response.status, errorDetails);
+      }
+
+      // --- Handle Successful Response ---
+      const responseData = await response.json();
+      console.log(`EngageIQ: [${operationName}] API request successful.`);
+
+      // --- Check for Content Filtering --- 
+      // Gemini indicates blocking via `promptFeedback.blockReason`
+      if (responseData.promptFeedback && responseData.promptFeedback.blockReason) {
+          const reason = responseData.promptFeedback.blockReason;
+          const safetyRatings = responseData.promptFeedback.safetyRatings || [];
+          console.warn(`EngageIQ: [${operationName}] Response blocked due to content filter: ${reason}`, { safetyRatings });
+          throw createApiError(
+              ERROR_TYPES.CONTENT_FILTER,
+              `Request blocked due to content filtering: ${reason}. Check safety ratings for details.`, 
+              null,
+              responseData.promptFeedback // Include feedback as details
+          );
+      }
+      // Also check if candidates array is missing or empty (another sign of blocking without explicit reason sometimes)
+      if (!responseData.candidates || responseData.candidates.length === 0) {
+         console.warn(`EngageIQ: [${operationName}] API response missing candidates array, potentially due to filtering or other issue.`);
+         // Check for finishReason if available
+         const finishReason = responseData.candidates?.[0]?.finishReason;
+         if (finishReason && finishReason !== 'STOP') {
+            throw createApiError(
+               ERROR_TYPES.CONTENT_FILTER, // Assume filter or safety issue
+               `API response generation stopped unexpectedly. Reason: ${finishReason}`,
+               null,
+               responseData // Include full response as details
+            );
+         } else {
+             // Throw a more general parsing/content error if no specific reason found
+            throw createApiError(
+               ERROR_TYPES.PARSING, 
+               'API response received successfully but contained no valid candidates or content.',
+               response.status, 
+               responseData
+            );
+         } 
+      }
+
+      return responseData; // Success!
+
+    } catch (error) {
+      console.error(`EngageIQ: [${operationName}] Error during API request (attempt ${retries + 1}):`, error);
+
+      // --- Handle specific error types for retry logic ---
+      // Handle Fetch Abort (Timeout)
+      if (error.name === 'AbortError') {
+        console.warn(`EngageIQ: [${operationName}] Request timed out.`);
+        const timeoutError = createApiError(ERROR_TYPES.TIMEOUT, 'Request timed out', null, { timeoutMs: API_SETTINGS.TIMEOUT_MS });
+        if (retries >= API_SETTINGS.MAX_RETRIES) throw timeoutError; // Throw if max retries reached
+        retries++;
+        continue; // Retry on timeout
+      }
+
+      // Handle our structured API errors
+      if (error.isApiError) {
+        // Retry on rate limit or server errors if retries remain
+        if ((error.errorType === ERROR_TYPES.RATE_LIMIT || error.errorType === ERROR_TYPES.SERVER) && retries < API_SETTINGS.MAX_RETRIES) {
+          console.warn(`EngageIQ: [${operationName}] Retrying after API error: ${error.errorType}`);
+          retries++;
+          continue;
+        }
+        // Otherwise, throw the structured API error (non-retryable or max retries)
+        throw error;
+      }
+
+      // Handle general network errors (TypeError often indicates network issues)
+      if (error instanceof TypeError) {
+         console.warn(`EngageIQ: [${operationName}] Encountered potential network error: ${error.message}`);
+         const networkError = createApiError(ERROR_TYPES.NETWORK, `Network error: ${error.message}`, null, error);
+         if (retries >= API_SETTINGS.MAX_RETRIES) throw networkError; // Throw if max retries reached
+         retries++;
+         continue; // Retry on network errors
+      }
+      
+      // If it's an unknown error or we've exhausted retries, wrap and throw
+      console.error(`EngageIQ: [${operationName}] Unhandled or non-retryable error after ${retries + 1} attempts.`);
+      throw createApiError(ERROR_TYPES.UNKNOWN, `An unexpected error occurred during the API call: ${error.message}`, null, error);
+    }
+  }
+  // Should not be reached if loop logic is correct, but as a safeguard:
+  throw createApiError(ERROR_TYPES.UNKNOWN, 'Max retries reached without success or specific error.', null, null);
+}
+
+export { callGeminiAPI, ERROR_TYPES, createApiError };
 
 /**
  * Generates comment suggestions using the Gemini API.
@@ -78,11 +309,31 @@ async function generateComments(postContent, sendResponse) {
     `;
 
     // Create request body for Gemini API
-    const requestBody = createGenerationRequestBody(prompt);
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      safety_settings: [ 
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+      ],
+    };
     console.log('EngageIQ: Gemini API request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody, apiKey);
+    const response = await callGeminiAPI(requestBody);
     console.log('EngageIQ: Processing Gemini API response');
 
     // Process the response from the API
@@ -127,6 +378,12 @@ async function generateComments(postContent, sendResponse) {
         emoji: '😄',
       },
     ];
+
+    // Log the successfully processed suggestions
+    console.log('EngageIQ: [api-service] Processed suggestions:', suggestions);
+
+    // Log the final formatted suggestions before sending the response
+    console.log('EngageIQ: [api-service] Final formattedSuggestions before sendResponse:', formattedSuggestions);
 
     // Get current model to return with response
     const endpoint = await getGenerateContentEndpoint();
@@ -196,29 +453,52 @@ async function regenerateComment(requestType, payload, sendResponse) {
 
     // Construct regeneration prompt
     const lengthInstruction = requestType === 'REGENERATE_LONGER' ? 'longer' : 'shorter';
-    const prompt = `
-      You are an AI assistant helping refine a comment for a LinkedIn post.
-      The original comment provided is for the '${reactionType}' reaction.
-      Original comment: "${originalText}"
-
-      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).
-      Maintain the original tone, language, and professional style suitable for LinkedIn.
-      Focus solely on adjusting the length based on the original comment's content and intent.
-      Output the single regenerated comment using the provided function tool.
-    `;
+    const prompt = `\n      You are an AI assistant helping refine a comment for a LinkedIn post.\n      The original comment provided is for the '${reactionType}' reaction.\n      Original comment: "${originalText}"\n\n      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).\n      Maintain the original tone, language, and professional style suitable for LinkedIn.\n      Use paragraph breaks (double line breaks: \n\n) where appropriate to improve readability.\n      Focus solely on adjusting the length based on the original comment's content and intent.\n      Output *only* the regenerated comment text, nothing else.\n    `;
     console.log('EngageIQ: Constructed regeneration prompt.');
 
-    // Create request body for regeneration
-    const requestBody = createRegenerationRequestBody(prompt);
-    console.log('EngageIQ: Created regeneration request body.');
+    // Create request body for regeneration - WITHOUT function calling
+    const requestBody = { // New way - standard text generation
+      contents: [{ parts: [{ text: prompt }] }],
+      // No tools or tool_config needed
+       safety_settings: [ 
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+      ],
+    };
+    console.log('EngageIQ: Created standard regeneration request body.');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody, apiKey);
+    const response = await callGeminiAPI(requestBody);
     console.log('EngageIQ: Processing regeneration API response');
 
-    // Process the regeneration response
-    const newText = processRegenerationResponse(response);
+    // Process the regeneration response directly - WITHOUT function call parsing
+    let newText = '';
+    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      newText = response.candidates[0].content.parts[0].text.trim();
+      console.log('EngageIQ: [api-service RAW RESPONSE] Text extracted:', JSON.stringify(newText)); 
+    } else {
+      console.error('EngageIQ: Failed to extract text from regeneration response:', response);
+      throw new Error('Invalid response format or missing text content.');
+    }
+    
     console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
+
+    // Log the successfully processed regenerated comment
+    console.log('EngageIQ: [api-service] Processed regenerated comment:', newText);
 
     // Send success response
     sendResponse({
@@ -330,12 +610,15 @@ async function analyzeDirections(postContent, sendResponse) {
     console.log('EngageIQ: Direction analysis request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody, apiKey);
+    const response = await callGeminiAPI(requestBody);
     console.log('EngageIQ: Processing direction analysis response');
 
     // Process the response from the API
     const directions = processDirectionAnalysisResponse(response);
     
+    // Log the successfully processed directions
+    console.log('EngageIQ: [api-service] Processed directions:', directions);
+
     // Send the response
     sendResponse({
       success: true,
@@ -407,9 +690,9 @@ async function generateDirectionComments(payload, sendResponse) {
       The comments should focus on the selected direction: "${selectedDirection.title} - ${selectedDirection.description}"
       
       Create three distinct comments with different lengths and perspectives:
-      1. Short (1 sentence)
-      2. Medium (2-3 sentences)
-      3. Detailed (4-5 sentences)
+      1. Short (1 sentence) - Give this a descriptive title (e.g., 'Quick Reply')
+      2. Medium (2-3 sentences) - Give this a descriptive title (e.g., 'Balanced View')
+      3. Detailed (4-5 sentences) - Give this a descriptive title (e.g., 'In-depth Comment')
       
       Each comment should be:
       - Professional and appropriate for LinkedIn
@@ -418,7 +701,7 @@ async function generateDirectionComments(payload, sendResponse) {
       - Natural sounding (as if written by a human)
       - Free of excessive emoji use
       
-      Return your suggestions using the provided function call format with a 'comments' array. Do not include any additional text.
+      Return your suggestions using the provided function call format with a 'comments' array. Each comment object in the array must have 'type' (short, medium, detailed), 'text' (the comment itself), and 'title' (the descriptive title). Do not include any additional text.
     `;
 
     // Create request body with higher temperature for more diverse comments
@@ -452,20 +735,27 @@ async function generateDirectionComments(payload, sendResponse) {
     console.log('EngageIQ: Direction-based comment generation request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody, apiKey);
+    const response = await callGeminiAPI(requestBody);
     console.log('EngageIQ: Processing direction-based comment generation response');
 
     // Process the response from the API
     const comments = processDirectionCommentsResponse(response);
     
+    // Log the successfully processed comments
+    console.log('EngageIQ: [api-service] Processed comments:', comments);
+
     // Format the comments for UI presentation
     const formattedComments = comments.map(comment => ({
       id: comment.type,
       text: comment.text,
       type: comment.type,
-      direction: selectedDirection.title
+      direction: selectedDirection.title,
+      title: comment.title
     }));
     
+    // Log the final formatted comments before sending the response
+    console.log('EngageIQ: [api-service] Final formattedComments before sendResponse:', formattedComments);
+
     // Send the response
     sendResponse({
       success: true,
@@ -482,170 +772,6 @@ async function generateDirectionComments(payload, sendResponse) {
       details: error.message || 'An unexpected error occurred while generating comments',
     });
   }
-}
-
-/**
- * Creates a request body for the comment generation API call.
- * 
- * @param {string} prompt - The prompt text for the API
- * @returns {Object} Request body object
- */
-function createGenerationRequestBody(prompt) {
-  return {
-    contents: [{ parts: [{ text: prompt }] }],
-    tools: [
-      {
-        function_declarations: [
-          {
-            name: 'generateLinkedInComments',
-            description: 'Generate LinkedIn comment suggestions for different reaction types',
-            parameters: GENERATION_SCHEMA,
-          },
-        ],
-      },
-    ],
-    tool_config: {
-      function_calling_config: {
-        mode: 'ANY',
-        allowed_function_names: ['generateLinkedInComments'],
-      },
-    },
-    safety_settings: [
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-    ],
-  };
-}
-
-/**
- * Creates a request body for the comment regeneration API call.
- * 
- * @param {string} prompt - The prompt text for the API
- * @returns {Object} Request body object
- */
-function createRegenerationRequestBody(prompt) {
-  return {
-    contents: [{ parts: [{ text: prompt }] }],
-    tools: [
-      {
-        function_declarations: [
-          {
-            name: 'regenerateComment',
-            description: 'Regenerate the provided LinkedIn comment',
-            parameters: REGENERATION_SCHEMA,
-          },
-        ],
-      },
-    ],
-    tool_config: {
-      function_calling_config: {
-        mode: 'ANY',
-        allowed_function_names: ['regenerateComment'],
-      },
-    },
-    safety_settings: [
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-    ],
-  };
-}
-
-/**
- * Makes a call to the Gemini API.
- * 
- * @param {Object} requestBody - The request body to send
- * @param {string} apiKey - The API key to use for the request
- * @returns {Object} The parsed JSON response
- * @throws {Error} If the API call fails
- */
-async function callGeminiAPI(requestBody, apiKey) {
-  // Get the API endpoint URL
-  const apiUrl = await getGenerateContentEndpoint();
-  const fullApiUrl = `${apiUrl}?key=${apiKey}`;
-  
-  console.log('EngageIQ: Executing API call to Gemini');
-  
-  // Execute the fetch call
-  const response = await fetch(fullApiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-  
-  // Handle error responses
-  if (!response.ok) {
-    console.error(`EngageIQ: API call failed with status ${response.status}`);
-    
-    // Handle specific error status codes
-    let errorMessage;
-    switch (response.status) {
-      case 400:
-        errorMessage = 'Bad Request: The API request was malformed or invalid';
-        break;
-      case 401:
-      case 403:
-        errorMessage = 'Authentication Error: Invalid or expired API key';
-        break;
-      case 404:
-        errorMessage = 'Model Not Found: The selected Gemini model may not exist or be deprecated';
-        break;
-      case 429:
-        errorMessage = 'Rate Limit Exceeded: Too many requests to the Gemini API';
-        break;
-      case 500:
-      case 501:
-      case 502:
-      case 503:
-      case 504:
-        errorMessage = 'Gemini API Server Error: The service is currently unavailable';
-        break;
-      default:
-        errorMessage = `Unexpected Error: HTTP status ${response.status}`;
-    }
-    
-    // Get more details from response text if available
-    try {
-      const errorText = await response.text();
-      console.error(`EngageIQ: API error details: ${errorText}`);
-      throw new Error(`${errorMessage}. Details: ${errorText}`);
-    } catch (textError) {
-      // If we can't get the response text, just throw with the status message
-      throw new Error(errorMessage);
-    }
-  }
-  
-  // Parse and return JSON response
-  return await response.json();
 }
 
 /**
@@ -668,12 +794,6 @@ function processGenerationResponse(data) {
   if (candidate.finishReason && candidate.finishReason !== 'STOP') {
     console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
     throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
   }
   
   // Extract function call
@@ -722,73 +842,10 @@ function processGenerationResponse(data) {
     throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
   }
   
-  return comments;
-}
+  // Log the successfully processed comments
+  console.log('EngageIQ: [api-service] Processed comments:', comments);
 
-/**
- * Processes the API response from a comment regeneration request.
- * 
- * @param {Object} data - The API response data
- * @returns {string} The regenerated comment text
- * @throws {Error} If the response format is invalid
- */
-function processRegenerationResponse(data) {
-  // Check for candidate data
-  if (!data || !data.candidates || data.candidates.length === 0) {
-    console.error('EngageIQ: Invalid regeneration response format - no candidates found');
-    throw new Error('Invalid response format: No candidates found');
-  }
-  
-  const candidate = data.candidates[0];
-  
-  // Check finish reason
-  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-    console.error(`EngageIQ: Regeneration stopped due to ${candidate.finishReason}`);
-    throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-  
-  // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
-      !candidate.content.parts[0].functionCall) {
-    console.error('EngageIQ: Invalid regeneration response format - functionCall not found');
-    throw new Error('Invalid response format: Function call data not found');
-  }
-  
-  const functionCall = candidate.content.parts[0].functionCall;
-  
-  // Verify function name
-  if (functionCall.name !== 'regenerateComment') {
-    console.error(`EngageIQ: Unexpected regeneration function name: ${functionCall.name}`);
-    throw new Error(`Unexpected function name: ${functionCall.name}`);
-  }
-  
-  // Extract and parse arguments
-  let args = functionCall.args;
-  
-  // Parse args if it's a string
-  if (typeof args === 'string') {
-    try {
-      args = JSON.parse(args);
-    } catch (error) {
-      console.error('EngageIQ: Failed to parse regeneration args string:', error);
-      throw new Error('Failed to parse response data');
-    }
-  }
-  
-  // Validate structure
-  if (!args || !args.regeneratedComment) {
-    console.error('EngageIQ: Missing regeneratedComment in response');
-    throw new Error('Invalid response format: Missing regeneratedComment');
-  }
-  
-  return args.regeneratedComment;
+  return comments;
 }
 
 /**
@@ -848,7 +905,16 @@ function processDirectionAnalysisResponse(data) {
     throw new Error('Invalid response format: Missing directions array');
   }
   
-  return args.directions;
+  // Ensure each direction maintains its original language context
+  const directions = args.directions.map(direction => ({
+    ...direction,
+    headerText: direction.headerText || `Choose a commenting approach` // Fallback
+  }));
+  
+  // Log the successfully processed directions
+  console.log('EngageIQ: [api-service] Processed directions:', directions);
+
+  return directions;
 }
 
 /**
@@ -908,17 +974,20 @@ function processDirectionCommentsResponse(data) {
     throw new Error('Invalid response format: Missing comments array');
   }
   
-  // Validate that we have all required comment types
+  // Validate that we have all required comment types and titles
   const requiredTypes = ['short', 'medium', 'detailed'];
   const missingTypes = requiredTypes.filter(type => 
-    !args.comments.some(comment => comment.type === type)
+    !args.comments.some(comment => comment.type === type && comment.title)
   );
   
   if (missingTypes.length > 0) {
-    console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
-    throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
+    console.error(`EngageIQ: Missing comment types or titles in response: ${missingTypes.join(', ')}`);
+    throw new Error(`Missing comment data: ${missingTypes.join(', ')}`);
   }
   
+  // Log the successfully processed comments
+  console.log('EngageIQ: [api-service] Processed comments:', args.comments);
+
   return args.comments;
 }
 
@@ -927,6 +996,5 @@ export {
   generateComments,
   regenerateComment,
   analyzeDirections,
-  generateDirectionComments,
-  callGeminiAPI
+  generateDirectionComments
 };

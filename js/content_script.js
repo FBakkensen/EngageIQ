@@ -98,7 +98,6 @@ function handleCustomIframeMessages(event) {
         break; // Stop processing if post content is missing
       }
 
-      console.log('EngageIQ: [content_script] Retrieved postContent:', postContent);
       // Call the direction service to handle the selection, passing the post content
       modules.directionService.handleDirectionSelection(
         event.data.direction,
@@ -120,7 +119,6 @@ function handleCustomIframeMessages(event) {
       
     case 'BACK_TO_DIRECTIONS':
       // Handle navigation back to directions screen
-      console.log('EngageIQ: Navigating back to directions');
       
       // Show previously generated directions
       modules.directionService.handleBackToDirections(
@@ -131,7 +129,6 @@ function handleCustomIframeMessages(event) {
 
     case 'RETRY_REQUEST': {
       // Handle retry request from the popup
-      console.log('EngageIQ: Retry request received');
       
       // Check for stored post content
       const storedPostContent = modules.statePersistence.getPostContent();
@@ -143,8 +140,6 @@ function handleCustomIframeMessages(event) {
       
       // If we have post content, retry the direction analysis
       if (appState.currentPostContent) {
-        console.log('EngageIQ: Retrying direction analysis with stored post content');
-        
         // Show loading message
         modules.iframeManager.sendMessageToIframe({
           type: 'SHOW_LOADING',
@@ -191,8 +186,6 @@ function handleEngageIQButtonClick(event) {
   // Prevent default button behavior and event propagation
   event.preventDefault();
   event.stopPropagation();
-
-  console.log('EngageIQ: Button clicked.');
 
   // Store the active comment box reference
   const commentBox = event.currentTarget.closest('[data-engageiq-button-injected="true"]');

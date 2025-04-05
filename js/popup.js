@@ -107,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wrapper function to ensure processMessage is called from the current context
   function handleMessageFromContentScript(eventData) {
-    console.log('EngageIQ: [popup message handler] Forwarding message:', eventData);
     if (eventData && eventData.type) {
       processMessage(eventData); // Call the imported function
     } else {
@@ -134,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeButton = document.getElementById('closeButton');
   if (closeButton) {
     closeButton.addEventListener('click', () => {
-      console.log('EngageIQ: Close button clicked');
       sendMessageToContentScript({ type: 'CLOSE_POPUP' });
     });
   }

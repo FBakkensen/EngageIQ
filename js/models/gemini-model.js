@@ -7,48 +7,11 @@
  */
 
 // Import storage utility to get model preferences
-import { DEFAULT_GEMINI_MODEL, getCurrentModel } from '../utils/storage-utils.js';
+import { getCurrentModel } from '../utils/storage-utils.js';
 
 // API Configuration Constants
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-// JSON Schema for Gemini API function calling - defines the expected structure of the response
-const GENERATION_SCHEMA = {
-  type: 'object',
-  properties: {
-    comments: {
-      type: 'object',
-      properties: {
-        like: {
-          type: 'string',
-          description: "Comment suggestion for 'Like' reaction.",
-        },
-        celebrate: {
-          type: 'string',
-          description: "Comment suggestion for 'Celebrate' reaction.",
-        },
-        support: {
-          type: 'string',
-          description: "Comment suggestion for 'Support' reaction.",
-        },
-        love: {
-          type: 'string',
-          description: "Comment suggestion for 'Love' reaction.",
-        },
-        insightful: {
-          type: 'string',
-          description: "Comment suggestion for 'Insightful' reaction.",
-        },
-        funny: {
-          type: 'string',
-          description: "Comment suggestion for 'Funny' reaction.",
-        },
-      },
-      required: ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'],
-    },
-  },
-  required: ['comments'],
-};
+export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-pro';
 
 // Schema for comment regeneration requests
 const REGENERATION_SCHEMA = {
@@ -60,6 +23,18 @@ const REGENERATION_SCHEMA = {
     },
   },
   required: ['regeneratedComment'],
+};
+
+// Unified schema for providing a single comment (used for both generation and regeneration)
+const UNIFIED_COMMENT_SCHEMA = {
+  type: 'object',
+  properties: {
+    commentText: { // Unified argument name
+      type: 'string',
+      description: 'The generated or regenerated comment text.',
+    },
+  },
+  required: ['commentText'],
 };
 
 // Schema for Smart Suggestions direction analysis
@@ -111,8 +86,12 @@ const DIRECTION_COMMENT_SCHEMA = {
             description: 'The length type of the comment (short, medium, detailed).',
             enum: ['short', 'medium', 'detailed'],
           },
+          title: {
+            type: 'string',
+            description: 'A short, descriptive title for the comment (e.g., \'Quick Reply\').',
+          },
         },
-        required: ['text', 'type'],
+        required: ['text', 'type', 'title'],
       },
       minItems: 3,
       maxItems: 3,
@@ -230,8 +209,8 @@ function getModelSpecs(modelName) {
 // Export all constants and functions
 export {
   GEMINI_API_BASE_URL,
-  GENERATION_SCHEMA,
   REGENERATION_SCHEMA,
+  UNIFIED_COMMENT_SCHEMA,
   DIRECTION_ANALYSIS_SCHEMA,
   DIRECTION_COMMENT_SCHEMA,
   getGenerateContentEndpoint,

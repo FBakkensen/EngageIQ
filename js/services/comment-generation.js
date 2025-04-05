@@ -8,40 +8,7 @@
 
 // Import required dependencies
 import { callGeminiAPI } from './api-service.js';
-import { GENERATION_SCHEMA, REGENERATION_SCHEMA } from '../models/gemini-model.js';
-
-/**
- * Creates the prompt for generating LinkedIn comment suggestions based on post content.
- * 
- * @param {string} postText - The LinkedIn post text to generate comments for
- * @returns {string} - The formatted prompt for the AI model
- */
-function createCommentGenerationPrompt(postText) {
-  return `
-    You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
-    
-    Here is the LinkedIn post content to analyze:
-    "${postText}"
-    
-    Please generate 6 different comment suggestions, each corresponding to one of LinkedIn's standard reaction types:
-    1. Like - A general positive comment about the post content
-    2. Celebrate - A comment celebrating an achievement or milestone mentioned
-    3. Support - A comment showing support or encouragement
-    4. Love - A comment expressing enthusiasm or appreciation
-    5. Insightful - A comment that adds depth or perspective
-    6. Funny - A lighthearted or humorous comment (but still professional)
-    
-    Each comment should be:
-    - Professional and appropriate for a business network
-    - Contextually relevant to the post content
-    - Between 1-3 sentences (not too long)
-    - Natural sounding (as if written by a human)
-    - Free of excessive emoji use (minimal emoji is ok)
-    - Varying in length and style across the different suggestions
-    
-    Return your suggestions using the provided function call format. Do not include any additional text.
-  `;
-}
+import { UNIFIED_COMMENT_SCHEMA } from '../models/gemini-model.js';
 
 /**
  * Creates the prompt for regenerating a LinkedIn comment with adjusted length.
@@ -61,39 +28,11 @@ function createCommentRegenerationPrompt(originalText, reactionType, makeLonger)
 
     Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).
     Maintain the original tone, language, and professional style suitable for LinkedIn.
+    Use paragraph breaks (double line breaks: \n\n) where appropriate to improve readability.
     Focus solely on adjusting the length based on the original comment's content and intent.
-    Output the single regenerated comment using the provided function tool.
+    Ensure the regenerated comment is in the **same language** as the original comment.
+    When calling the 'provideComment' function, ensure the 'commentText' argument contains the complete regenerated text, including the necessary \n\n line breaks for readability. Do not add any other text outside the function call.
   `;
-}
-
-/**
- * Creates a request body for the comment generation API call.
- * 
- * @param {string} prompt - The prompt text for the API
- * @returns {Object} Request body object
- */
-function createGenerationRequestBody(prompt) {
-  return {
-    contents: [{ parts: [{ text: prompt }] }],
-    tools: [
-      {
-        function_declarations: [
-          {
-            name: 'generateLinkedInComments',
-            description: 'Generate LinkedIn comment suggestions for different reaction types',
-            parameters: GENERATION_SCHEMA,
-          },
-        ],
-      },
-    ],
-    tool_config: {
-      function_calling_config: {
-        mode: 'ANY',
-        allowed_function_names: ['generateLinkedInComments'],
-      },
-    },
-    safety_settings: getSafetySettings(),
-  };
 }
 
 /**
@@ -101,6 +40,7 @@ function createGenerationRequestBody(prompt) {
  * 
  * @param {string} prompt - The prompt text for the API
  * @returns {Object} Request body object
+ * @private
  */
 function createRegenerationRequestBody(prompt) {
   return {
@@ -109,9 +49,9 @@ function createRegenerationRequestBody(prompt) {
       {
         function_declarations: [
           {
-            name: 'regenerateComment',
-            description: 'Regenerate the provided LinkedIn comment',
-            parameters: REGENERATION_SCHEMA,
+            name: 'provideComment',
+            description: 'Provide the regenerated LinkedIn comment.',
+            parameters: UNIFIED_COMMENT_SCHEMA,
           },
         ],
       },
@@ -119,10 +59,27 @@ function createRegenerationRequestBody(prompt) {
     tool_config: {
       function_calling_config: {
         mode: 'ANY',
-        allowed_function_names: ['regenerateComment'],
+        allowed_function_names: ['provideComment'],
       },
     },
-    safety_settings: getSafetySettings(),
+    safety_settings: [
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+    ],
   };
 }
 
@@ -153,181 +110,79 @@ function getSafetySettings() {
 }
 
 /**
- * Processes the API response from a comment generation request.
+ * Extracts the comment text from a Gemini API response using function calling for REGENERATION.
+ * Assumes the response uses the 'provideComment' function with a 'commentText' argument.
  * 
- * @param {Object} data - The API response data
- * @returns {Object} The extracted comments object
- * @throws {Error} If the response format is invalid
+ * @param {Object} data - The raw API response data.
+ * @param {string} operationName - A name for the operation (e.g., 'Regeneration') for logging.
+ * @returns {string} The extracted comment text.
+ * @throws {Error} If the response format is invalid, text is missing, or blocked by safety settings.
  */
-function processGenerationResponse(data) {
-  // Check for candidate data
-  if (!data || !data.candidates || data.candidates.length === 0) {
-    console.error('EngageIQ: Invalid response format - no candidates found');
-    throw new Error('Invalid response format: No candidates found');
-  }
-  
-  const candidate = data.candidates[0];
-  
-  // Check finish reason
-  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-    console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
-    throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-  
-  // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
-      !candidate.content.parts[0].functionCall) {
-    console.error('EngageIQ: Invalid response format - functionCall not found');
-    throw new Error('Invalid response format: Function call data not found');
-  }
-  
-  const functionCall = candidate.content.parts[0].functionCall;
-  
-  // Verify function name
-  if (functionCall.name !== 'generateLinkedInComments') {
-    console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
-    throw new Error(`Unexpected function name: ${functionCall.name}`);
-  }
-  
-  // Extract and parse arguments
-  let args = functionCall.args;
-  
-  // Parse args if it's a string
-  if (typeof args === 'string') {
-    try {
-      args = JSON.parse(args);
-    } catch (error) {
-      console.error('EngageIQ: Failed to parse args string:', error);
-      throw new Error('Failed to parse response data');
+function extractCommentFromFunctionCall(data, operationName = 'Comment Processing') {
+  console.log(`EngageIQ: [${operationName}] Processing API response:`, JSON.stringify(data, null, 2));
+
+  try {
+    // Basic validation
+    if (!data || !data.candidates || !data.candidates.length) {
+      throw new Error('Invalid response structure: Missing candidates.');
     }
-  }
-  
-  // Validate structure
-  if (!args || !args.comments) {
-    console.error('EngageIQ: Missing comments object in response');
-    throw new Error('Invalid response format: Missing comments object');
-  }
-  
-  const comments = args.comments;
-  
-  // Validate all required reaction types
-  const requiredTypes = ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'];
-  const missingTypes = requiredTypes.filter(type => !comments[type]);
-  
-  if (missingTypes.length > 0) {
-    console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
-    throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
-  }
-  
-  return comments;
-}
 
-/**
- * Processes the API response from a comment regeneration request.
- * 
- * @param {Object} data - The API response data
- * @returns {string} The regenerated comment text
- * @throws {Error} If the response format is invalid
- */
-function processRegenerationResponse(data) {
-  // Check for candidate data
-  if (!data || !data.candidates || data.candidates.length === 0) {
-    console.error('EngageIQ: Invalid regeneration response format - no candidates found');
-    throw new Error('Invalid response format: No candidates found');
-  }
-  
-  const candidate = data.candidates[0];
-  
-  // Check finish reason
-  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-    console.error(`EngageIQ: Regeneration stopped due to ${candidate.finishReason}`);
-    throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-  
-  // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
-      !candidate.content.parts[0].functionCall) {
-    console.error('EngageIQ: Invalid regeneration response format - functionCall not found');
-    throw new Error('Invalid response format: Function call data not found');
-  }
-  
-  const functionCall = candidate.content.parts[0].functionCall;
-  
-  // Verify function name
-  if (functionCall.name !== 'regenerateComment') {
-    console.error(`EngageIQ: Unexpected regeneration function name: ${functionCall.name}`);
-    throw new Error(`Unexpected function name: ${functionCall.name}`);
-  }
-  
-  // Extract and parse arguments
-  let args = functionCall.args;
-  
-  // Parse args if it's a string
-  if (typeof args === 'string') {
-    try {
-      args = JSON.parse(args);
-    } catch (error) {
-      console.error('EngageIQ: Failed to parse regeneration args string:', error);
-      throw new Error('Failed to parse response data');
+    const candidate = data.candidates[0];
+
+    // Check for safety blocks first
+    if (candidate.finishReason === 'SAFETY' || (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE')) {
+      const reason = candidate?.finishReason || data?.promptFeedback?.blockReason || 'Unknown Safety Reason';
+      console.error(`EngageIQ: [${operationName}] Prompt blocked due to safety settings: ${reason}`);
+      throw new Error(`Prompt blocked by safety settings: ${reason}`);
     }
+    
+    // Check for other non-STOP finish reasons
+    if (candidate.finishReason && candidate.finishReason !== 'STOP' && candidate.finishReason !== 'FUNCTION_CALL') {
+        console.error(`EngageIQ: [${operationName}] Stopped due to ${candidate.finishReason}`);
+        throw new Error(`${operationName} stopped unexpectedly: ${candidate.finishReason}`);
+    }
+
+    // Extract from function call
+    const functionCall = candidate?.content?.parts?.[0]?.functionCall;
+    if (functionCall && functionCall.name === 'provideComment' && functionCall.args?.commentText) {
+      const commentText = functionCall.args.commentText.trim();
+       console.log(`EngageIQ: [${operationName}] Extracted text from functionCall.args.commentText:`, JSON.stringify(commentText));
+      if (!commentText) {
+         throw new Error('Extracted comment text is empty.');
+      }
+      return commentText;
+    }
+
+    // Fallback: Check if text is directly available (shouldn't happen with function calling mode 'ANY' and correct prompt)
+     if (candidate?.content?.parts?.[0]?.text) {
+       const commentText = candidate.content.parts[0].text.trim();
+       console.warn(`EngageIQ: [${operationName}] Extracted text from direct text path (unexpected):`, JSON.stringify(commentText));
+       if (!commentText) {
+         throw new Error('Extracted direct text is empty.');
+       }
+       return commentText; // Return direct text if found as a fallback
+     }
+
+    // If no text found in expected places
+    throw new Error('Invalid response format: Could not find commentText in function call arguments or direct text.');
+
+  } catch (error) {
+    console.error(`EngageIQ: Error processing ${operationName} response:`, error);
+    // Re-throw the error to be handled by the calling function
+    throw error; 
   }
-  
-  // Validate structure
-  if (!args || !args.regeneratedComment) {
-    console.error('EngageIQ: Missing regeneratedComment in response');
-    throw new Error('Invalid response format: Missing regeneratedComment');
-  }
-  
-  return args.regeneratedComment;
 }
 
 /**
- * Generates comment suggestions for a LinkedIn post.
- * 
- * @param {string} postText - The LinkedIn post text to generate comments for
- * @param {string} apiKey - The Gemini API key
- * @returns {Promise<Object>} - Promise resolving to an object containing comment suggestions
- */
-async function generateCommentSuggestions(postText, apiKey) {
-  console.log('EngageIQ: Generating comment suggestions');
-  
-  // Create the prompt for generation
-  const prompt = createCommentGenerationPrompt(postText);
-  
-  // Create request body
-  const requestBody = createGenerationRequestBody(prompt);
-  
-  // Make the API call
-  const response = await callGeminiAPI(requestBody, apiKey);
-  
-  // Process the response
-  return processGenerationResponse(response);
-}
-
-/**
- * Regenerates a comment with adjusted length.
+ * Regenerates a comment with a specified length adjustment (longer or shorter).
+ * This function handles prompt creation, API call, and response processing.
  * 
  * @param {string} originalText - The original comment text
  * @param {string} reactionType - The LinkedIn reaction type (like, celebrate, etc.)
  * @param {boolean} makeLonger - True to make comment longer, false to make it shorter
- * @param {string} apiKey - The Gemini API key
  * @returns {Promise<string>} - Promise resolving to the regenerated comment text
  */
-async function regenerateCommentWithLength(originalText, reactionType, makeLonger, apiKey) {
+async function regenerateCommentWithLength(originalText, reactionType, makeLonger) {
   console.log(`EngageIQ: Regenerating comment to make it ${makeLonger ? 'longer' : 'shorter'}`);
   
   // Create the prompt for regeneration
@@ -337,10 +192,10 @@ async function regenerateCommentWithLength(originalText, reactionType, makeLonge
   const requestBody = createRegenerationRequestBody(prompt);
   
   // Make the API call
-  const response = await callGeminiAPI(requestBody, apiKey);
+  const response = await callGeminiAPI(requestBody);
   
-  // Process the response
-  return processRegenerationResponse(response);
+  // Process the response using the unified function
+  return extractCommentFromFunctionCall(response, 'Regeneration');
 }
 
 /**
@@ -392,13 +247,9 @@ function formatCommentSuggestions(comments) {
 
 // Export functions for use by other modules
 export {
-  generateCommentSuggestions,
   regenerateCommentWithLength,
+  extractCommentFromFunctionCall,
   formatCommentSuggestions,
-  processGenerationResponse,
-  processRegenerationResponse,
-  createGenerationRequestBody,
   createRegenerationRequestBody,
-  createCommentRegenerationPrompt,
-  createCommentGenerationPrompt
+  createCommentRegenerationPrompt
 };

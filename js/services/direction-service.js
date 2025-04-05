@@ -120,6 +120,9 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
           // Extract model information if available
           const modelInfo = response.modelInfo || null;
 
+          // Log suggestions just before sending
+          console.log('EngageIQ: [direction-service] Sending suggestions to iframe:', response.suggestions);
+
           // Send suggestions to iframe
           sendMessageToIframe({
             type: 'SHOW_SUGGESTIONS',
