@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.runtime.lastError.message
       );
       statusMessage.textContent = 'Error loading settings.';
-      statusMessage.style.color = 'red';
+      statusMessage.classList.remove('alert-success'); // Ensure success class is not present
+      statusMessage.classList.add('alert-danger'); // Add Bootstrap error class
     } else {
       // Load API key if it exists
       if (result.apiKey) {
@@ -96,15 +97,18 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.runtime.lastError.message
           );
           statusMessage.textContent = 'Error saving settings.';
-          statusMessage.style.color = 'red';
+          statusMessage.classList.remove('alert-success'); // Ensure success class is not present
+          statusMessage.classList.add('alert-danger'); // Add Bootstrap error class
         } else {
           console.log('EngageIQ: Settings saved successfully.');
           statusMessage.textContent = 'Settings saved successfully!';
-          statusMessage.style.color = 'green';
+          statusMessage.classList.remove('alert-danger'); // Ensure error class is not present
+          statusMessage.classList.add('alert-success'); // Add Bootstrap success class
 
           // Clear the message after a few seconds
           setTimeout(function () {
             statusMessage.textContent = '';
+            statusMessage.classList.remove('alert-success', 'alert-danger'); // Remove Bootstrap classes
           }, 3000); // 3 seconds
         }
       }

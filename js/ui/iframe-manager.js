@@ -11,6 +11,7 @@ let pendingIframeMessages = []; // Store messages that need to be sent to the if
 let popupReady = false; // Track if the popup has reported it's ready to receive messages
 let activeCommentBox = null; // Track the active comment box that was clicked
 let messageHandler = null; // External message handler callback
+let escKeyHandler = null; // Reference to the ESC key handler
 
 /**
  * Gets the existing iframe or creates it if it doesn't exist.
@@ -22,12 +23,22 @@ function getOrCreateIframe() {
     console.log('EngageIQ: Creating popup iframe.');
     engageIQIframe = document.createElement('iframe');
     engageIQIframe.id = 'engageiq-popup-iframe'; // ID matches css/content_style.css
+
+    // Apply Bootstrap utility classes
+    engageIQIframe.classList.add(
+      'position-fixed',
+      'border-0',
+      'bg-white',
+      'shadow-lg',
+      'overflow-hidden',
+      'd-none' // Bootstrap class for display: none
+    );
+
     // Use chrome.runtime.getURL to access extension resources
     try {
       engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
       engageIQIframe.allow = 'clipboard-write'; // Grant clipboard permission to the iframe
       console.log('EngageIQ: Iframe src set to:', engageIQIframe.src);
-      engageIQIframe.style.display = 'none'; // Start hidden
       document.body.appendChild(engageIQIframe);
       console.log('EngageIQ: Iframe appended to body.');
 
@@ -86,6 +97,11 @@ function handleIframeMessage(event) {
       }
       break;
 
+    case 'CLOSE_POPUP':
+      console.log('EngageIQ: Received close popup request from iframe');
+      hideIframe();
+      break;
+
     default:
       // Handle any other message type through the provided message handler
       if (messageHandler && typeof messageHandler === 'function') {
@@ -129,8 +145,17 @@ function sendMessageToIframe(message) {
  */
 function showIframe() {
   const iframe = getOrCreateIframe();
-  iframe.style.display = 'block';
+  // Use Bootstrap classes instead of direct style manipulation
+  iframe.classList.remove('d-none');
   iframe.classList.add('visible'); // Add animation class
+  
+  // Add ESC key handler
+  escKeyHandler = (event) => {
+    if (event.key === 'Escape') {
+      hideIframe();
+    }
+  };
+  document.addEventListener('keydown', escKeyHandler);
 }
 
 /**
@@ -145,11 +170,14 @@ function hideIframe(animated = true) {
     engageIQIframe.classList.remove('visible'); // Remove animation class
     // Add a small delay before hiding to allow animation to complete
     setTimeout(() => {
-      engageIQIframe.style.display = 'none';
+      engageIQIframe.classList.add('d-none');
     }, 200); // 200ms delay for animation to complete
   } else {
-    engageIQIframe.style.display = 'none';
+    engageIQIframe.classList.add('d-none');
   }
+  
+  // Remove ESC key handler
+  document.removeEventListener('keydown', escKeyHandler);
 }
 
 /**

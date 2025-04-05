@@ -3,81 +3,44 @@
  * Content Style - Applied to LinkedIn pages where content script runs
  */
 
-/* Bootstrap-like button styles */
-.engageiq-btn {
-  display: inline-block;
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  user-select: none;
-  border: 1px solid transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
-  transition:
-    color 0.15s ease-in-out,
-    background-color 0.15s ease-in-out,
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
+/* Removed .engageiq-btn styles as they are now covered by Bootstrap .btn */
+
+/* Custom overrides for EngageIQ Icon Button */
+.engageiq-custom-icon-btn {
+  width: 36px;           /* Retained custom size */
+  height: 36px;          /* Retained custom size */
+  transition: all 0.2s ease; /* Retained custom transition */
+  /* Ensure Bootstrap focus styles don't add unwanted outlines */
+  box-shadow: none !important;
 }
 
-.engageiq-btn:hover {
-  text-decoration: none;
+.engageiq-custom-icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08); /* Retained custom hover background */
+  transform: scale(1.05);               /* Retained custom hover transform */
 }
 
-.engageiq-btn:focus {
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+.engageiq-custom-icon-btn:active {
+  transform: scale(0.95);               /* Retained custom active transform */
 }
 
-/* Icon button variant */
-.engageiq-btn-icon {
-  padding: 0.25rem;
-  line-height: 1;
-  border-radius: 50%;
-  background-color: transparent;
-  margin: 0 4px;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.engageiq-btn-icon:hover {
-  background-color: rgba(0, 0, 0, 0.08);
-  transform: scale(1.05);
-}
-
-.engageiq-btn-icon:active {
-  transform: scale(0.95);
-}
-
-.engageiq-btn-icon img {
-  display: block;
+/* Style for the icon image within the custom button */
+.engageiq-custom-icon-btn img {
+  /* display: block; */ /* Maybe not needed with flex alignment + img-fluid */
   max-width: 100%;
   height: auto;
 }
 
 /* Style for the EngageIQ popup iframe */
 #engageiq-popup-iframe {
-  position: fixed;
-  top: 15%;
+  /* Kept custom positioning, dimensions, z-index, and border-radius */
+  top: 25%;  
   right: 5%;
   width: 380px;
-  height: 480px;
+  height: 380px; /* Reduced from 480px to 380px to better fit content */
   z-index: 9999;
-  border: none;
   border-radius: 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-  background-color: #ffffff;
-  display: none; /* Initially hidden */
-  opacity: 1;
-  transition: all 0.3s ease;
-  overflow: hidden; /* Prevents content from overflowing */
+  /* Removed properties now handled by Bootstrap classes: */
+  /* position, border, background-color, box-shadow, display, opacity, transition, overflow */
 }
 
 /* Add a subtle animation when the iframe appears */
