@@ -14,11 +14,12 @@ console.log('EngageIQ: Message Service Module Loaded');
 /**
  * Handles message requests for shorter or longer comments
  * @param {string} requestType - The request type ('REQUEST_SHORTER' or 'REQUEST_LONGER')
- * @param {Object} payload - The message payload (contains reactionType, originalText)
+ * @param {Object} iframePayload - The message payload from the iframe (contains reactionType, originalText)
+ * @param {string} languageCode - The detected language code.
  * @param {Function} sendMessageToIframe - Function to send messages to the iframe
  * @returns {Promise<Object>} The response from the background script
  */
-function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
+function handleRegenerationRequest(requestType, iframePayload, languageCode, sendMessageToIframe) {
   return new Promise((resolve, reject) => {
     // Map popup request type to background request type
     const backgroundRequestType =
@@ -27,28 +28,34 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
         : 'REGENERATE_SHORTER';
 
     // Ensure payload is valid before sending
-    if (!payload || !payload.reactionType || !payload.originalText) {
+    if (!iframePayload || !iframePayload.reactionType || !iframePayload.originalText) {
       console.error(
         'EngageIQ: Invalid payload received for regeneration request:',
-        payload
+        iframePayload
       );
       
       sendMessageToIframe({
         type: 'SHOW_ERROR',
         error: 'Internal Error',
         details: 'Invalid data received for regeneration request.',
-        payload: { reactionType: payload?.reactionType }, // Pass reactionType for context
+        payload: { reactionType: iframePayload?.reactionType }, // Pass reactionType for context
       });
       
       reject(new Error('Invalid payload for regeneration request'));
       return;
     }
 
+    // Construct the final payload for the background script
+    const backgroundPayload = {
+      ...iframePayload, // Spread existing payload (reactionType, originalText)
+      languageCode: languageCode // Add the language code
+    };
+
     // Relay message to background
     chrome.runtime.sendMessage(
       {
         type: backgroundRequestType, // Use the mapped type
-        payload: payload, // Forward the payload containing originalText, reactionType etc.
+        payload: backgroundPayload, // Send the combined payload
       },
       (response) => {
         // Implement callback
@@ -63,7 +70,7 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
             type: 'SHOW_ERROR',
             error: 'Communication Error',
             details: `Failed to contact background script: ${chrome.runtime.lastError.message}`,
-            payload: { reactionType: payload?.reactionType }, // Pass reactionType for context
+            payload: { reactionType: iframePayload?.reactionType }, // Pass reactionType for context
           });
           
           reject(chrome.runtime.lastError);
@@ -74,7 +81,7 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
         if (response && response.success) {
           // Format the suggestion object for updateSingleSuggestion
           const suggestion = {
-            id: response.payload.reactionType || payload.reactionType, // Use reactionType from payload if available
+            id: response.payload.reactionType || iframePayload.reactionType, // Use reactionType from payload if available
             text: response.payload.newText || '' // Use newText from payload
           };
           
@@ -98,7 +105,7 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
             error: response?.error || 'Regeneration Failed',
             details: response?.details || 'An unknown error occurred during regeneration.',
             payload: {
-              reactionType: payload?.reactionType || response?.payload?.reactionType,
+              reactionType: iframePayload?.reactionType || response?.payload?.reactionType,
             }, // Pass reactionType for context
           });
           
@@ -122,60 +129,18 @@ function handleAcceptedSuggestion(data, activeCommentBox, findAllCommentBoxes, h
 
   // Use the activeCommentBox reference
   if (activeCommentBox) {
-    console.log('EngageIQ: Using stored active comment box reference');
-    // Find the contenteditable div or textarea for the comment
-    const commentInput =
-      activeCommentBox.querySelector('div[contenteditable="true"]') ||
-      activeCommentBox.querySelector('textarea');
-
-    if (commentInput) {
-      // Insert text into the comment input
-      if (commentInput.tagName.toLowerCase() === 'div') {
-        // For contenteditable div
-        commentInput.textContent = data.text;
-        // Trigger input event to notify LinkedIn the field has changed
-        commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-        console.log('EngageIQ: Text inserted into contenteditable comment box');
-      } else {
-        // For textarea
-        commentInput.value = data.text;
-        // Trigger input event
-        commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-        console.log('EngageIQ: Text inserted into textarea comment box');
-      }
-    } else {
-      console.warn('EngageIQ: Could not find comment input element in the active comment box');
-      // Fallback to clipboard only
-      alert('Could not insert text directly. The text has been copied to your clipboard.');
-    }
+    insertTextIntoCommentBox(activeCommentBox, data.text);
   } else {
     console.warn('EngageIQ: No active comment box reference found');
     // Fallback: Try to find the most recently interacted comment box
     const commentBoxes = findAllCommentBoxes();
-    console.log(`EngageIQ: Found ${commentBoxes.length} comment boxes as fallback`);
-
-    if (commentBoxes.length > 0) {
-      // Attempt to use the last comment box as a fallback
-      const lastCommentBox = commentBoxes[commentBoxes.length - 1];
-      console.log('EngageIQ: Attempting to use last comment box as fallback');
-      const commentInput =
-        lastCommentBox.querySelector('div[contenteditable="true"]') ||
-        lastCommentBox.querySelector('textarea');
-
-      if (commentInput) {
-        // Insert text using the same logic as above
-        if (commentInput.tagName.toLowerCase() === 'div') {
-          commentInput.textContent = data.text;
-          commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-          console.log('EngageIQ: Text inserted into contenteditable comment box (fallback method)');
-        } else {
-          commentInput.value = data.text;
-          commentInput.dispatchEvent(new Event('input', { bubbles: true }));
-          console.log('EngageIQ: Text inserted into textarea comment box (fallback method)');
-        }
-      } else {
-        console.warn('EngageIQ: Could not find comment input element in fallback comment box');
-        alert('Could not insert text directly. The text has been copied to your clipboard.');
+    let targetBox;
+    
+    if (commentBoxes && commentBoxes.length > 0) {
+      // Fallback: Try the last comment box found
+      targetBox = commentBoxes[commentBoxes.length - 1]; 
+      if(targetBox) {
+        insertTextIntoCommentBox(targetBox, data.text);
       }
     } else {
       console.warn('EngageIQ: No comment boxes found as fallback');
@@ -186,6 +151,49 @@ function handleAcceptedSuggestion(data, activeCommentBox, findAllCommentBoxes, h
   // Hide the iframe and reset the active comment box reference
   hideIframe();
   resetActiveCommentBox();
+}
+
+/**
+ * Inserts text into the comment box
+ * @param {HTMLElement} commentBox - The comment box element
+ * @param {string} text - The text to insert
+ */
+function insertTextIntoCommentBox(commentBox, text) {
+  const inputElement = findCommentInputElement(commentBox);
+  if (inputElement) {
+    if (inputElement.isContentEditable) {
+      // Insert text into contenteditable div
+      inputElement.focus();
+      inputElement.textContent = text; // Replace content
+      // Trigger input event to simulate typing
+      inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    } else if (inputElement.tagName === 'TEXTAREA') {
+      // Insert text into textarea
+      inputElement.focus();
+      inputElement.value = text; // Replace content
+      // Trigger input event for potential listeners
+      inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    }
+  } else {
+    console.warn('EngageIQ: Could not find comment input element in the active comment box');
+    // Optionally, provide feedback to the user, e.g., copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Could not insert text directly. It has been copied to your clipboard.');
+    }).catch(err => {
+      console.error('EngageIQ: Failed to copy text to clipboard:', err);
+      alert('Could not insert text directly and failed to copy to clipboard.');
+    });
+  }
+}
+
+/**
+ * Finds the actual input element (contenteditable div or textarea) within a comment box container.
+ * @param {HTMLElement} commentBox - The comment box container element.
+ * @returns {HTMLElement|null} The input element or null if not found.
+ */
+function findCommentInputElement(commentBox) {
+  if (!commentBox) return null;
+  return commentBox.querySelector('div[contenteditable="true"], textarea');
 }
 
 /**

@@ -10,7 +10,6 @@
 
 // Import required modules
 import {
-  DIRECTION_ANALYSIS_SCHEMA,
   getModelTemperature,
 } from '../models/gemini-model.js';
 import { getCurrentModel } from '../utils/storage-utils.js';
@@ -38,9 +37,10 @@ const ERROR_TYPES = {
  * Analyzes post content to generate direction suggestions
  * 
  * @param {Object} postContent - The LinkedIn post content to analyze
+ * @param {string} languageCode - The detected language code (e.g., 'en', 'es').
  * @returns {Promise<Object>} - Object containing an array of direction suggestions
  */
-export async function analyzePostDirections(postContent) {
+export async function analyzePostDirections(postContent, languageCode) {
   console.log('EngageIQ: Analyzing post for direction suggestions');
   
   try {
@@ -56,6 +56,10 @@ export async function analyzePostDirections(postContent) {
       );
     }
     
+    // Validate or default language code
+    const targetLanguageCode = languageCode && typeof languageCode === 'string' && languageCode.length === 2 ? languageCode : 'en';
+    console.log(`EngageIQ: [api-service] Generating directions in language: ${targetLanguageCode}`);
+
     // Process post text to extract meaningful content
     const processedText = cleanPostContent(postContent.text);
     
@@ -65,58 +69,67 @@ export async function analyzePostDirections(postContent) {
         {
           parts: [
             {
-              text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Keep the response in the same language as the post. Post content: "${processedText}"
-
-Generate an array of direction objects where each has:
-- A short, catchy title (2-5 words). **This title MUST be in the same language as the post content.**
-- A brief description explaining the approach (15-25 words). **This description MUST be in the same language as the post content.**
-- A relevant emoji that fits with the direction
-
-Make sure the directions are diverse and appropriate for professional networking on LinkedIn.`
+              text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Post content: "${processedText}"\n\n**CRITICAL: Generate the response ENTIRELY in the language with ISO code: ${targetLanguageCode}.**\n\nFor each approach, provide:\n1.  A short, catchy TITLE (2-5 words). **THIS TITLE MUST BE IN ${targetLanguageCode.toUpperCase()}.**\n2.  A brief DESCRIPTION (15-25 words) in ${targetLanguageCode}.\n3.  A single relevant EMOJI.\n\nFormat each suggestion like this, using "---" as a separator between suggestions:\nTITLE: [**Title MUST be in ${targetLanguageCode}**]\nDESCRIPTION: [Description in ${targetLanguageCode}]\nEMOJI: [Emoji]\n---\nTITLE: [**Title MUST be in ${targetLanguageCode}**]\nDESCRIPTION: [Description in ${targetLanguageCode}]\nEMOJI: [Emoji]\n---\n(Include 3-5 suggestions total)\n\n**REMINDER: ALL text, especially the TITLES, MUST be in the language: ${targetLanguageCode}.**`
             }
           ]
         }
       ],
       generationConfig: {
         temperature: temperature,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 1024, // Adjust as needed for text response
       },
-      toolConfig: {
-        functionCallingConfig: {
-          mode: 'ANY',
-          allowedFunctionNames: ["generateDirections"]
-        }
-      },
-      tools: [
-        {
-          functionDeclarations: [
-            {
-              name: "generateDirections",
-              description: "Generate directional suggestions for commenting on a LinkedIn post",
-              parameters: DIRECTION_ANALYSIS_SCHEMA
-            }
-          ]
-        }
-      ]
+      // Removed toolConfig and tools for plain text generation
     };
     
     // Make the API request with retry logic
     const response = await callGeminiAPI(payload, 'Analyze Post Directions');
     
-    // Extract the function call result from the response
-    const directionsFunctionCall = extractFunctionCall(response, "generateDirections");
-    
-    if (!directionsFunctionCall) {
-      throw createBaseApiError(
-        ERROR_TYPES.PARSING,
-        'Failed to extract direction suggestions from API response',
-        'Try again or use a different post'
-      );
+    // --- New Logic: Parse plain text response ---
+    let rawTextResponse;
+    let parsedDirections = [];
+    try {
+      if (!response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.error('EngageIQ: Missing text content in API response for directions.', response);
+        throw new Error('Missing text content in API response for directions.');
+      }
+      rawTextResponse = response.candidates[0].content.parts[0].text.trim();
+      
+      // Split into individual suggestion blocks
+      const suggestionBlocks = rawTextResponse.split('---').map(block => block.trim()).filter(Boolean);
+
+      for (const block of suggestionBlocks) {
+        const titleMatch = block.match(/^TITLE:\s*(.*)/im);
+        const descriptionMatch = block.match(/^DESCRIPTION:\s*(.*)/im);
+        const emojiMatch = block.match(/^EMOJI:\s*(.*)/im);
+
+        if (titleMatch && descriptionMatch && emojiMatch) {
+          parsedDirections.push({
+            title: titleMatch[1].trim(),
+            description: descriptionMatch[1].trim(),
+            emoji: emojiMatch[1].trim(),
+          });
+        } else {
+          console.warn('EngageIQ: Could not parse block:', block); // Log malformed blocks
+        }
+      }
+
+      if (parsedDirections.length === 0) {
+         throw new Error('Could not parse any valid directions from the text response.');
+      }
+
+    } catch (parseError) {
+       console.error('EngageIQ: Failed to parse plain text response for directions:', parseError);
+       console.error('EngageIQ: Raw text received:', rawTextResponse); // Log the text that failed parsing
+       throw createBaseApiError(
+         ERROR_TYPES.PARSING,
+         `Failed to parse direction suggestions from text response. Details: ${parseError.message}`,
+         'Try again or use a different post'
+       );
     }
+    // --- End New Logic ---
     
-    // Format and validate the direction suggestions
-    // Correctly access the directions array within the 'args' property
-    const directions = formatDirections(directionsFunctionCall.args.directions);
+    // Format the parsed directions using the existing formatter
+    const directions = formatDirections(parsedDirections); 
     
     console.log(`EngageIQ: Successfully generated ${directions.length} direction suggestions`);
     
@@ -140,11 +153,10 @@ Make sure the directions are diverse and appropriate for professional networking
  * 
  * @param {Object} direction - The selected direction object
  * @param {Object} postContent - The original LinkedIn post content
+ * @param {string | null} languageCode - The desired language for the comments (e.g., 'en', 'es')
  * @returns {Promise<Object>} - Object containing an array of suggested comments
  */
-export async function generateDirectionComments(direction, postContent) {
-  console.log('EngageIQ: [api-service] generateDirectionComments called with:', { directionTitle: direction?.title, hasPostContent: !!postContent?.text });
-  console.log(`EngageIQ: Generating comments for direction: ${direction.title}`);
+export async function generateDirectionComments(direction, postContent, languageCode) {
   
   try {
     // Prepare request data
@@ -167,6 +179,10 @@ export async function generateDirectionComments(direction, postContent) {
       );
     }
     
+    // Validate or default language code
+    const targetLanguageCode = languageCode && typeof languageCode === 'string' && languageCode.length === 2 ? languageCode : 'en';
+    console.log(`EngageIQ: [api-service] Generating comments for direction: ${direction?.title} in language: ${targetLanguageCode}`);
+    
     // Process post text to extract meaningful content
     const processedText = cleanPostContent(postContent.text);
     
@@ -176,7 +192,7 @@ export async function generateDirectionComments(direction, postContent) {
         {
           parts: [
             {
-              text: createPromptText(direction.title, processedText)
+              text: createPromptText(direction.title, processedText, targetLanguageCode) // Pass language code
             }
           ]
         }
@@ -191,8 +207,6 @@ export async function generateDirectionComments(direction, postContent) {
     // Make the API request with retry logic
     const response = await callGeminiAPI(payload, `Generate Direction Comments (${direction.title})`);
     
-    console.log('EngageIQ: [api-service] Raw API response for comments:', response);
-    
     // --- New Logic: Parse raw text response ---
     let rawTextResponse;
     let commentsArray;
@@ -202,16 +216,13 @@ export async function generateDirectionComments(direction, postContent) {
         throw new Error('Missing text content in API response.');
       }
       rawTextResponse = response.candidates[0].content.parts[0].text.trim();
-      console.log('EngageIQ: [api-service] Raw text extracted for comments:', JSON.stringify(rawTextResponse));
       
       // Clean potential markdown code fences
       let cleanedText = rawTextResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-      console.log('EngageIQ: [api-service] Cleaned text for JSON parsing:', JSON.stringify(cleanedText));
       
       // Attempt to parse the raw text as JSON
       commentsArray = JSON.parse(cleanedText);
-      console.log('EngageIQ: [api-service] Parsed comments array from text:', commentsArray);
-
+      
       // Basic validation
       if (!Array.isArray(commentsArray)) {
          throw new Error('Parsed response is not an array.');
@@ -231,9 +242,6 @@ export async function generateDirectionComments(direction, postContent) {
     // Format and validate the comment suggestions using the parsed array
     const suggestions = formatSuggestions(commentsArray);
     
-    // Log the suggestions after formatting to confirm titles are included
-    console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
-
     // Get current model info (using existing declarations from earlier in the function)
     const modelMatch = model.match(/models\/([^:]+):/);
     const modelInfo = modelMatch ? { name: modelMatch[1] } : null;
@@ -251,48 +259,6 @@ export async function generateDirectionComments(direction, postContent) {
     console.error('EngageIQ: [api-service] Error in generateDirectionComments:', error);
     console.error('EngageIQ: Error generating direction comments:', error);
     return handleApiError(error, 'comment generation');
-  }
-}
-
-/**
- * Extracts the function call result from the API response
- * 
- * @param {Object} response - The API response object
- * @param {string} functionName - The expected function name
- * @returns {Object|null} - The function call result or null if not found
- * @private
- */
-function extractFunctionCall(response, functionName) {
-  console.log(`EngageIQ: [api-service] Attempting to extract function call '${functionName}'`, { response: JSON.stringify(response).substring(0, 200) + '...' }); // Log truncated response
-  try {
-    // Check if response has the expected structure
-    if (!response || !response.candidates || !response.candidates[0] ||
-        !response.candidates[0].content || !response.candidates[0].content.parts) {
-      console.error('EngageIQ: Invalid API response structure', response);
-      return null;
-    }
-    
-    // Look for the function call in the parts
-    const parts = response.candidates[0].content.parts;
-    
-    for (const part of parts) {
-      if (part.functionCall && part.functionCall.name === functionName) {
-        try {
-          // Return the entire functionCall object, not just the args
-          return part.functionCall; 
-        } catch (error) { // Keep catch block for unexpected issues
-          console.error('EngageIQ: Error processing function call:', error);
-          return null;
-        }
-      }
-    }
-    
-    console.error(`EngageIQ: Function call '${functionName}' not found in response`);
-    return null;
-    
-  } catch (error) {
-    console.error('EngageIQ: Error extracting function call:', error);
-    return null;
   }
 }
 
@@ -354,7 +320,7 @@ function handleApiError(error, operation) {
 }
 
 /**
- * Cleans and processes post content for API requests
+ * Extracts meaningful content from post text
  * 
  * @param {string} text - The raw post text
  * @returns {string} - The processed text
@@ -449,24 +415,32 @@ function formatSuggestions(comments) {
  * Helper function to create the prompt text requesting JSON output with escaped strings.
  * @param {string} directionTitle - The title of the selected direction
  * @param {string} processedText - The processed post content (or empty string)
+ * @param {string} targetLanguageCode - The target language code (e.g., 'en', 'es')
  * @returns {string} The constructed prompt text.
  */
-function createPromptText(directionTitle, processedText) {
+function createPromptText(directionTitle, processedText, targetLanguageCode) {
+  // Determine the language instruction based on the code
+  const languageInstruction = targetLanguageCode === 'en'
+    ? 'Generate the comments and titles in English.'
+    : `Generate the comments AND TITLES in the language identified by the code: ${targetLanguageCode}.`;
+
   // Context text to include if post content is available
   const contextText = processedText
-    ? `\n\nKeep the response in the same language as the original post if provided.\nOriginal post content for context: "${processedText}"`
+    ? `\n\nOriginal post content for context: "${processedText}"`
     : '';
 
   // Construct the prompt
-  return `Generate an array containing exactly 3 comment suggestion objects based on the direction "${directionTitle}".
+  return `You are an AI assistant generating comment suggestions for a LinkedIn post based on a chosen direction.
+The user chose the direction: "${directionTitle}".
+${languageInstruction}
+Generate 3 diverse comment suggestions following this direction.
+Format the response STRICTLY as a JSON array of objects, with each object containing:
+- text: The comment text itself (in ${targetLanguageCode}). Use paragraph breaks (double line breaks: \\n\\n) where appropriate for readability, especially for medium and detailed comments.
+- type: A string indicating the comment length (e.g., "short", "medium", "detailed").
+- title: A unique and descriptive title (3-6 words) that accurately summarizes the specific comment's content and tone. **THIS TITLE MUST ALSO BE IN ${targetLanguageCode.toUpperCase()}.** Do NOT use generic titles like "Short Comment" or "Suggestion 1".
 
- Each object in the array must have the following properties:
-   - text: The comment text itself. Use paragraph breaks (double line breaks: \\n\\n) where appropriate for readability, especially for medium and detailed comments.
-   - **Crucially, subtly include 1-2 relevant and professionally appropriate emojis within the comment text to add a human touch.** Avoid overuse or unprofessional emojis.
-   - type: A string indicating the comment length (e.g., "short", "medium", "detailed").
-   - title: A unique and descriptive title (3-6 words) that accurately summarizes the specific comment's content and tone. Do NOT use generic titles like "Short Comment" or "Suggestion 1".
-
- The output MUST be ONLY the JSON array, enclosed in \`\`\`json ... \`\`\` markers. Do NOT include any other text or explanations.
- Each "text" value in the JSON objects must be a valid JSON string, meaning any special characters within the comment text itself (like newlines, quotes, backslashes) MUST be properly escaped (e.g., newlines should be represented as \\n, quotes as ", backslashes as \\).${contextText}
-   `;
+JSON Output requirements:
+- Output ONLY the JSON array.
+- Do NOT include any introductory text like "Here are the suggestions:".
+- Ensure all strings within the JSON are properly escaped (e.g., use \\" for quotes inside the comment strings).${contextText}`;
 }

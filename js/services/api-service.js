@@ -66,7 +66,6 @@ function createApiError(type, message, status = null, details = null) {
  */
 async function callGeminiAPI(requestBody, operationName = 'API Call') {
   let retries = 0;
-  console.log(`EngageIQ: [${operationName}] Starting API request.`);
   
   // Get API Key internally
   const apiKey = await getApiKey();

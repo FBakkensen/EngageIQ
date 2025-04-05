@@ -18,6 +18,7 @@ const statePersistenceUrl = chrome.runtime.getURL('js/services/state-persistence
 let appState = {
   currentPostContent: null,
   currentDirections: null,
+  currentLanguageCode: null, // Added to store detected language
   isTwoStepProcess: true // Enable the two-step process by default
 };
 
@@ -60,17 +61,34 @@ Promise.all([
 function handleCustomIframeMessages(event) {
   switch (event.data.type) {
     case 'REQUEST_SHORTER':
-    case 'REQUEST_LONGER':
+    case 'REQUEST_LONGER': {
       // Handle regeneration requests using the message service
+      const iframePayload = event.data; // Contains reactionType, originalText
+      const languageCode = appState.currentLanguageCode; // Get language from state
+
+      // Basic check for languageCode
+      if (!languageCode) {
+          console.error('EngageIQ: Missing language code in appState for regeneration request.');
+          modules.iframeManager.sendMessageToIframe({
+            type: 'SHOW_ERROR',
+            error: 'Internal Error',
+            details: 'Could not find the language code needed for regeneration.',
+            payload: { reactionType: iframePayload?.reactionType },
+          });
+          break; // Don't proceed without language code
+      }
+
       modules.messageService.handleRegenerationRequest(
-        event.data.type, 
-        event.data, 
+        iframePayload.type, 
+        iframePayload, // Pass the original iframe payload
+        languageCode,  // Pass the language code separately
         modules.iframeManager.sendMessageToIframe
       )
       .catch(error => {
         console.error('EngageIQ: Error handling regeneration request:', error);
       });
       break;
+    }
 
     case 'ACCEPT_SUGGESTION':
       // Handle accepted suggestion using the message service
@@ -84,8 +102,11 @@ function handleCustomIframeMessages(event) {
       break;
       
     case 'DIRECTION_SELECTED': {
-      // Retrieve the stored post content
-      const postContent = modules.statePersistence.getPostContent();
+      console.log('EngageIQ: [content] Handling DIRECTION_SELECTED message');
+      // Retrieve the stored post content and language code
+      const postContent = appState.currentPostContent;
+      const languageCode = appState.currentLanguageCode;
+      console.log(`EngageIQ: [content] Retrieved for direction selection - PostContent: ${!!postContent}, LanguageCode: ${languageCode}`);
 
       if (!postContent) {
         console.error('EngageIQ: Could not retrieve post content for direction selection.');
@@ -102,6 +123,7 @@ function handleCustomIframeMessages(event) {
       modules.directionService.handleDirectionSelection(
         event.data.direction,
         postContent, // Pass the retrieved post content here
+        languageCode, // Pass the retrieved language code here
         modules.iframeManager.sendMessageToIframe
       )
       .catch(error => {
@@ -235,14 +257,17 @@ function handleEngageIQButtonClick(event) {
       )
       .then(response => {
         // Store directions for possible back navigation
-        if (response && response.directions) {
+        if (response && response.success) { // Check for success before storing
           appState.currentDirections = response.directions;
+          appState.currentLanguageCode = response.languageCode; // Store language code
+          console.log(`EngageIQ: Stored language code in appState: ${appState.currentLanguageCode}`); // Log stored code
           // Save last state as 'directions'
           modules.statePersistence.saveLastState('directions');
-        }
+        } // No need for else here, error is handled by catch or background script response
       })
       .catch(error => {
         console.error('EngageIQ: Error analyzing directions:', error);
+        // Error should have already been sent to iframe by directionService
       });
     } else {
       // Use the original one-step process
