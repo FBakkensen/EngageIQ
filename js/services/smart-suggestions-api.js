@@ -11,7 +11,6 @@
 // Import required modules
 import {
   DIRECTION_ANALYSIS_SCHEMA,
-  DIRECTION_COMMENT_SCHEMA,
   getGenerateContentEndpoint,
   getModelTemperature
 } from '../models/gemini-model.js';
@@ -82,8 +81,8 @@ export async function analyzePostDirections(postContent) {
               text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Keep the response in the same language as the post. Post content: "${processedText}"
 
 Generate an array of direction objects where each has:
-- A short, catchy title (2-5 words)
-- A brief description explaining the approach (15-25 words)
+- A short, catchy title (2-5 words). **This title MUST be in the same language as the post content.**
+- A brief description explaining the approach (15-25 words). **This description MUST be in the same language as the post content.**
 - A relevant emoji that fits with the direction
 
 Make sure the directions are diverse and appropriate for professional networking on LinkedIn.`
@@ -205,13 +204,7 @@ export async function generateDirectionComments(direction, postContent) {
         {
           parts: [
             {
-              text: `Generate 3 comment suggestions (short, medium, detailed) based on the direction "${direction.title}". For each suggestion, provide:
-- The comment text itself.
-- The type (short, medium, or detailed).
-- A unique and descriptive title (3-6 words) that accurately summarizes the specific comment's content and tone. Do NOT use generic titles like "Short Comment" or "Suggestion 1".
-
-Keep the response in the same language as the original post if provided.
-Original post content for context: "${processedText}"`
+              text: createPromptText(direction.title, processedText)
             }
           ]
         }
@@ -220,23 +213,7 @@ Original post content for context: "${processedText}"`
         temperature: temperature,
         maxOutputTokens: 1024,
       },
-      toolConfig: {
-        functionCallingConfig: {
-          mode: 'ANY',
-          allowedFunctionNames: ["generateDirectionComments"]
-        }
-      },
-      tools: [
-        {
-          functionDeclarations: [
-            {
-              name: "generateDirectionComments",
-              description: "Generate comment suggestions based on a specific direction approach",
-              parameters: DIRECTION_COMMENT_SCHEMA
-            }
-          ]
-        }
-      ]
+      // Remove toolConfig and tools for standard text generation
     };
     
     // Make the API request with retry logic
@@ -249,26 +226,45 @@ Original post content for context: "${processedText}"`
     
     console.log('EngageIQ: [api-service] Raw API response for comments:', response);
     
-    // Extract the function call result from the response
-    const functionCall = extractFunctionCall(response, "generateDirectionComments");
-    
-    if (!functionCall) {
-      throw createApiError(
-        ERROR_TYPES.PARSING,
-        'Failed to extract comment suggestions from API response',
-        'Try again or select a different direction'
-      );
+    // --- New Logic: Parse raw text response ---
+    let rawTextResponse;
+    let commentsArray;
+    try {
+      if (!response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.error('EngageIQ: Missing text content in API response.', response);
+        throw new Error('Missing text content in API response.');
+      }
+      rawTextResponse = response.candidates[0].content.parts[0].text.trim();
+      console.log('EngageIQ: [api-service] Raw text extracted for comments:', JSON.stringify(rawTextResponse));
+      
+      // Clean potential markdown code fences
+      let cleanedText = rawTextResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+      console.log('EngageIQ: [api-service] Cleaned text for JSON parsing:', JSON.stringify(cleanedText));
+      
+      // Attempt to parse the raw text as JSON
+      commentsArray = JSON.parse(cleanedText);
+      console.log('EngageIQ: [api-service] Parsed comments array from text:', commentsArray);
+
+      // Basic validation
+      if (!Array.isArray(commentsArray)) {
+         throw new Error('Parsed response is not an array.');
+      }
+
+    } catch (parseError) {
+       console.error('EngageIQ: Failed to parse JSON from text response:', parseError);
+       console.error('EngageIQ: Raw text received:', rawTextResponse); // Log the text that failed parsing
+       throw createApiError(
+         ERROR_TYPES.PARSING,
+         `Failed to parse comment suggestions from API response. Details: ${parseError.message}`,
+         'Try again or select a different direction'
+       );
     }
+    // --- End New Logic ---
     
-    // Log the raw comments extracted from the function call before formatting
-    console.log('EngageIQ: [smart-suggestions-api] Raw comments extracted:', functionCall.args.comments);
-    
-    // Format and validate the comment suggestions
-    const suggestions = formatSuggestions(functionCall.args.comments);
+    // Format and validate the comment suggestions using the parsed array
+    const suggestions = formatSuggestions(commentsArray);
     
     // Log the suggestions after formatting to confirm titles are included
-    console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
-
     console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
 
     // Get current model info (using existing declarations from earlier in the function)
@@ -566,4 +562,30 @@ function formatSuggestions(comments) {
       title: comment.title || `Suggestion ${index + 1}` // Add title here, with a fallback
     };
   });
+}
+
+/**
+ * Helper function to create the prompt text requesting JSON output with escaped strings.
+ * @param {string} directionTitle - The title of the selected direction
+ * @param {string} processedText - The processed post content (or empty string)
+ * @returns {string} The constructed prompt text.
+ */
+function createPromptText(directionTitle, processedText) {
+  // Context text to include if post content is available
+  const contextText = processedText
+    ? `\n\nKeep the response in the same language as the original post if provided.\nOriginal post content for context: "${processedText}"`
+    : '';
+
+  // Construct the prompt
+  return `Generate an array containing exactly 3 comment suggestion objects based on the direction "${directionTitle}".
+
+ Each object in the array must have the following properties:
+   - text: The comment text itself. Use paragraph breaks (double line breaks: \\n\\n) where appropriate for readability, especially for medium and detailed comments.
+   - **Crucially, subtly include 1-2 relevant and professionally appropriate emojis within the comment text to add a human touch.** Avoid overuse or unprofessional emojis.
+   - type: A string indicating the comment length (e.g., "short", "medium", "detailed").
+   - title: A unique and descriptive title (3-6 words) that accurately summarizes the specific comment's content and tone. Do NOT use generic titles like "Short Comment" or "Suggestion 1".
+
+ The output MUST be ONLY the JSON array, enclosed in \`\`\`json ... \`\`\` markers. Do NOT include any other text or explanations.
+ Each "text" value in the JSON objects must be a valid JSON string, meaning any special characters within the comment text itself (like newlines, quotes, backslashes) MUST be properly escaped (e.g., newlines should be represented as \\n, quotes as ", backslashes as \\).${contextText}
+   `;
 }

@@ -61,8 +61,9 @@ function createCommentRegenerationPrompt(originalText, reactionType, makeLonger)
 
     Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).
     Maintain the original tone, language, and professional style suitable for LinkedIn.
+    Use paragraph breaks (double line breaks: \n\n) where appropriate to improve readability. 
     Focus solely on adjusting the length based on the original comment's content and intent.
-    Output the single regenerated comment using the provided function tool.
+    Output *only* the regenerated comment text, nothing else.
   `;
 }
 
@@ -105,23 +106,6 @@ function createGenerationRequestBody(prompt) {
 function createRegenerationRequestBody(prompt) {
   return {
     contents: [{ parts: [{ text: prompt }] }],
-    tools: [
-      {
-        function_declarations: [
-          {
-            name: 'regenerateComment',
-            description: 'Regenerate the provided LinkedIn comment',
-            parameters: REGENERATION_SCHEMA,
-          },
-        ],
-      },
-    ],
-    tool_config: {
-      function_calling_config: {
-        mode: 'ANY',
-        allowed_function_names: ['regenerateComment'],
-      },
-    },
     safety_settings: getSafetySettings(),
   };
 }
@@ -237,62 +221,29 @@ function processGenerationResponse(data) {
  * @throws {Error} If the response format is invalid
  */
 function processRegenerationResponse(data) {
-  // Check for candidate data
-  if (!data || !data.candidates || data.candidates.length === 0) {
-    console.error('EngageIQ: Invalid regeneration response format - no candidates found');
-    throw new Error('Invalid response format: No candidates found');
-  }
-  
-  const candidate = data.candidates[0];
-  
-  // Check finish reason
-  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-    console.error(`EngageIQ: Regeneration stopped due to ${candidate.finishReason}`);
-    throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-  
-  // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
-      !candidate.content.parts[0].functionCall) {
-    console.error('EngageIQ: Invalid regeneration response format - functionCall not found');
-    throw new Error('Invalid response format: Function call data not found');
-  }
-  
-  const functionCall = candidate.content.parts[0].functionCall;
-  
-  // Verify function name
-  if (functionCall.name !== 'regenerateComment') {
-    console.error(`EngageIQ: Unexpected regeneration function name: ${functionCall.name}`);
-    throw new Error(`Unexpected function name: ${functionCall.name}`);
-  }
-  
-  // Extract and parse arguments
-  let args = functionCall.args;
-  
-  // Parse args if it's a string
-  if (typeof args === 'string') {
-    try {
-      args = JSON.parse(args);
-    } catch (error) {
-      console.error('EngageIQ: Failed to parse regeneration args string:', error);
-      throw new Error('Failed to parse response data');
+  if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    const regeneratedText = data.candidates[0].content.parts[0].text.trim();
+    console.log('EngageIQ: [comment-generation RAW RESPONSE] Text extracted:', JSON.stringify(regeneratedText)); 
+    return regeneratedText;
+  } else {
+    // Handle potential errors or unexpected formats
+    console.error('EngageIQ: Failed to extract text from regeneration response:', data);
+    
+    // Check for safety blocks
+    if (data?.promptFeedback?.blockReason && data.promptFeedback.blockReason !== 'NONE') {
+      console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
+      throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
     }
+    
+    // Check finish reason if text is missing
+    const finishReason = data?.candidates?.[0]?.finishReason;
+    if (finishReason && finishReason !== 'STOP') {
+       console.error(`EngageIQ: Regeneration stopped due to ${finishReason}`);
+       throw new Error(`Generation stopped: ${finishReason}`);
+    }
+
+    throw new Error('Invalid regeneration response format or missing text content.');
   }
-  
-  // Validate structure
-  if (!args || !args.regeneratedComment) {
-    console.error('EngageIQ: Missing regeneratedComment in response');
-    throw new Error('Invalid response format: Missing regeneratedComment');
-  }
-  
-  return args.regeneratedComment;
 }
 
 /**

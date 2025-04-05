@@ -25,6 +25,17 @@ let sendMessageFn; // Function to send messages to content script
 let accordionController; // Reference to accordion controller instance
 
 /**
+ * Helper function to replace newline characters with <br> tags for HTML rendering.
+ * @param {string} text - The input text.
+ * @returns {string} Text with newlines replaced by <br> tags.
+ */
+function formatTextWithLineBreaks(text) {
+  if (!text) return '';
+  // Replace double newlines first, then single newlines
+  return text.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+}
+
+/**
  * Initializes the module with required DOM elements and functions
  * @param {Object} config - Configuration object with required references
  * @param {HTMLElement} config.accordionElement - The accordion container element
@@ -174,8 +185,10 @@ export function displaySuggestions(suggestions, selectedDirection) {
     const suggestionText = document.createElement('div');
     suggestionText.className = 'suggestion-content mb-2';
     suggestionText.id = `suggestion-text-${reactionType}`;
-    suggestionText.textContent = suggestion.text || 'No suggestion text available';
-
+    console.log(`EngageIQ: Raw suggestion text for ${reactionType}:`, suggestion.text);
+    // Use innerHTML and the helper function to render line breaks
+    suggestionText.innerHTML = formatTextWithLineBreaks(suggestion.text || ''); 
+    
     // Create length adjustment buttons
     const lengthAdjustment = document.createElement('div');
     lengthAdjustment.className = 'length-adjustment mb-2';
@@ -430,11 +443,15 @@ function handleAccordionButtonClick(event) {
     return;
   }
 
-  // Get the current text content
-  const currentText = textElement.textContent;
-
+  // Get the innerHTML which includes <br> tags
+  let rawHtml = textElement.innerHTML;
+  
+  // Convert <br> tags back to newline characters for insertion
+  let textToSend = rawHtml.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '\n\n'); // Double breaks first
+  textToSend = textToSend.replace(/<br\s*\/?>/gi, '\n'); // Single breaks
+  
   console.log(
-    `EngageIQ: Button clicked - Action: ${action}, Reaction: ${reactionType}`
+    `EngageIQ: Accepting suggestion for ${reactionType}:`, JSON.stringify(textToSend) // Log with newlines visible
   );
 
   // Handle different actions
@@ -453,7 +470,7 @@ function handleAccordionButtonClick(event) {
       sendMessageFn({
         type: 'REQUEST_SHORTER',
         reactionType: reactionType,
-        originalText: currentText,
+        originalText: textToSend,
       });
       break;
 
@@ -469,15 +486,11 @@ function handleAccordionButtonClick(event) {
       sendMessageFn({
         type: 'REQUEST_LONGER',
         reactionType: reactionType,
-        originalText: currentText,
+        originalText: textToSend,
       });
       break;
 
     case 'accept': {
-      console.log(
-        `EngageIQ: Accepting suggestion for ${reactionType}: ${currentText}`
-      );
-      
       // Add acceptance animation and feedback
       const accordionItem = button.closest('.accordion-item');
       if (accordionItem) {
@@ -491,11 +504,11 @@ function handleAccordionButtonClick(event) {
       // Send message to content script to insert text into comment box
       sendMessageFn({
         type: 'ACCEPT_SUGGESTION',
-        text: currentText,
+        text: textToSend, // Send text with newline characters
       });
       // Optional: Still copy to clipboard as a fallback
       navigator.clipboard
-        .writeText(currentText)
+        .writeText(textToSend) // Copy text with newline characters
         .then(() => {
           console.log('EngageIQ: Suggestion copied to clipboard as fallback');
         })
@@ -558,8 +571,9 @@ export function updateSingleSuggestion(suggestion) {
   
   // After fade out, update content and fade back in
   setTimeout(() => {
-    // Update the text content
-    textElement.textContent = suggestion.text || 'No suggestion text available';
+    console.log(`EngageIQ: Raw updated suggestion text for ${reactionType}:`, suggestion.text);
+    // Update the text content using innerHTML and the helper function
+    textElement.innerHTML = formatTextWithLineBreaks(suggestion.text || 'No suggestion text available');
     
     // Remove fade out and add fade in
     textElement.classList.remove('fade-out');

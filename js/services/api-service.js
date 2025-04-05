@@ -202,28 +202,48 @@ async function regenerateComment(requestType, payload, sendResponse) {
 
     // Construct regeneration prompt
     const lengthInstruction = requestType === 'REGENERATE_LONGER' ? 'longer' : 'shorter';
-    const prompt = `
-      You are an AI assistant helping refine a comment for a LinkedIn post.
-      The original comment provided is for the '${reactionType}' reaction.
-      Original comment: "${originalText}"
-
-      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).
-      Maintain the original tone, language, and professional style suitable for LinkedIn.
-      Focus solely on adjusting the length based on the original comment's content and intent.
-      Output the single regenerated comment using the provided function tool.
-    `;
+    const prompt = `\n      You are an AI assistant helping refine a comment for a LinkedIn post.\n      The original comment provided is for the '${reactionType}' reaction.\n      Original comment: "${originalText}"\n\n      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).\n      Maintain the original tone, language, and professional style suitable for LinkedIn.\n      Use paragraph breaks (double line breaks: \n\n) where appropriate to improve readability.\n      Focus solely on adjusting the length based on the original comment's content and intent.\n      Output *only* the regenerated comment text, nothing else.\n    `;
     console.log('EngageIQ: Constructed regeneration prompt.');
 
-    // Create request body for regeneration
-    const requestBody = createRegenerationRequestBody(prompt);
-    console.log('EngageIQ: Created regeneration request body.');
+    // Create request body for regeneration - WITHOUT function calling
+    const requestBody = { // New way - standard text generation
+      contents: [{ parts: [{ text: prompt }] }],
+      // No tools or tool_config needed
+       safety_settings: [ 
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+        },
+      ],
+    };
+    console.log('EngageIQ: Created standard regeneration request body.');
 
     // Make the API call
     const response = await callGeminiAPI(requestBody, apiKey);
     console.log('EngageIQ: Processing regeneration API response');
 
-    // Process the regeneration response
-    const newText = processRegenerationResponse(response);
+    // Process the regeneration response directly - WITHOUT function call parsing
+    let newText = '';
+    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      newText = response.candidates[0].content.parts[0].text.trim();
+      console.log('EngageIQ: [api-service RAW RESPONSE] Text extracted:', JSON.stringify(newText)); 
+    } else {
+      console.error('EngageIQ: Failed to extract text from regeneration response:', response);
+      throw new Error('Invalid response format or missing text content.');
+    }
+    
     console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
 
     // Log the successfully processed regenerated comment
@@ -748,75 +768,6 @@ function processGenerationResponse(data) {
 }
 
 /**
- * Processes the API response from a comment regeneration request.
- * 
- * @param {Object} data - The API response data
- * @returns {string} The regenerated comment text
- * @throws {Error} If the response format is invalid
- */
-function processRegenerationResponse(data) {
-  // Check for candidate data
-  if (!data || !data.candidates || data.candidates.length === 0) {
-    console.error('EngageIQ: Invalid regeneration response format - no candidates found');
-    throw new Error('Invalid response format: No candidates found');
-  }
-  
-  const candidate = data.candidates[0];
-  
-  // Check finish reason
-  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-    console.error(`EngageIQ: Regeneration stopped due to ${candidate.finishReason}`);
-    throw new Error(`Generation stopped: ${candidate.finishReason}`);
-  }
-  
-  // Check for safety blocks
-  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
-    console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
-    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-  
-  // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
-      !candidate.content.parts[0].functionCall) {
-    console.error('EngageIQ: Invalid regeneration response format - functionCall not found');
-    throw new Error('Invalid response format: Function call data not found');
-  }
-  
-  const functionCall = candidate.content.parts[0].functionCall;
-  
-  // Verify function name
-  if (functionCall.name !== 'regenerateComment') {
-    console.error(`EngageIQ: Unexpected regeneration function name: ${functionCall.name}`);
-    throw new Error(`Unexpected function name: ${functionCall.name}`);
-  }
-  
-  // Extract and parse arguments
-  let args = functionCall.args;
-  
-  // Parse args if it's a string
-  if (typeof args === 'string') {
-    try {
-      args = JSON.parse(args);
-    } catch (error) {
-      console.error('EngageIQ: Failed to parse regeneration args string:', error);
-      throw new Error('Failed to parse response data');
-    }
-  }
-  
-  // Validate structure
-  if (!args || !args.regeneratedComment) {
-    console.error('EngageIQ: Missing regeneratedComment in response');
-    throw new Error('Invalid response format: Missing regeneratedComment');
-  }
-  
-  // Log the successfully processed regenerated comment
-  console.log('EngageIQ: [api-service] Processed regenerated comment:', args.regeneratedComment);
-
-  return args.regeneratedComment;
-}
-
-/**
  * Processes the API response from a direction analysis request.
  * 
  * @param {Object} data - The API response data
@@ -958,6 +909,72 @@ function processDirectionCommentsResponse(data) {
 
   return args.comments;
 }
+
+// This function is no longer strictly needed as we parse directly in regenerateComment,
+// but keep it for potential future use or reference.
+/* 
+function processRegenerationResponse(data) {
+  // Check for candidate data
+  if (!data || !data.candidates || data.candidates.length === 0) {
+    console.error('EngageIQ: Invalid regeneration response format - no candidates found');
+    throw new Error('Invalid response format: No candidates found');
+  }
+  
+  const candidate = data.candidates[0];
+  
+  // Check finish reason
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    console.error(`EngageIQ: Regeneration stopped due to ${candidate.finishReason}`);
+    throw new Error(`Generation stopped: ${candidate.finishReason}`);
+  }
+  
+  // Check for safety blocks
+  if (data.promptFeedback && data.promptFeedback.blockReason && data.promptFeedback.blockReason !== 'NONE') {
+    console.error(`EngageIQ: Regeneration prompt blocked due to ${data.promptFeedback.blockReason}`);
+    throw new Error(`Prompt blocked: ${data.promptFeedback.blockReason}`);
+  }
+  
+  // Extract function call
+  if (!candidate.content || !candidate.content.parts || 
+      candidate.content.parts.length === 0 || 
+      !candidate.content.parts[0].functionCall) {
+    console.error('EngageIQ: Invalid regeneration response format - functionCall not found');
+    throw new Error('Invalid response format: Function call data not found');
+  }
+  
+  const functionCall = candidate.content.parts[0].functionCall;
+  
+  // Verify function name
+  if (functionCall.name !== 'regenerateComment') {
+    console.error(`EngageIQ: Unexpected regeneration function name: ${functionCall.name}`);
+    throw new Error(`Unexpected function name: ${functionCall.name}`);
+  }
+  
+  // Extract and parse arguments
+  let args = functionCall.args;
+  
+  // Parse args if it's a string
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch (error) {
+      console.error('EngageIQ: Failed to parse regeneration args string:', error);
+      throw new Error('Failed to parse response data');
+    }
+  }
+  
+  // Validate structure
+  if (!args || !args.regeneratedComment) {
+    console.error('EngageIQ: Missing regeneratedComment in response');
+    throw new Error('Invalid response format: Missing regeneratedComment');
+  }
+  
+  // Log the successfully processed regenerated comment
+  console.log('EngageIQ: [api-service] Processed regenerated comment:', args.regeneratedComment);
+
+  return args.regeneratedComment;
+}
+*/
 
 // Export functions for use by other modules
 export { 
