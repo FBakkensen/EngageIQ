@@ -10,6 +10,7 @@
 
 // Import accordion controller
 import { initAccordion } from '/js/ui/accordion-controller.js';
+import { getSelectedDirection } from '/js/services/state-persistence-service.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Suggestion Renderer Module Loaded');
@@ -53,8 +54,9 @@ export function getAccordionController() {
 /**
  * Displays suggestions in the accordion
  * @param {Array} suggestions - Array of suggestion objects
+ * @param {Object} [selectedDirection] - Optional selected direction object with title and description
  */
-export function displaySuggestions(suggestions) {
+export function displaySuggestions(suggestions, selectedDirection) {
   // Safety check if DOM references aren't initialized yet
   if (!suggestionsAccordion || !showStateFn) {
     console.warn(
@@ -67,6 +69,54 @@ export function displaySuggestions(suggestions) {
 
   // Clear existing content
   suggestionsAccordion.innerHTML = '';
+  
+  // If no direction is provided, try to get it from session storage
+  if (!selectedDirection) {
+    selectedDirection = getSelectedDirection();
+  }
+  
+  // Add direction context at the top if available
+  if (selectedDirection && selectedDirection.title) {
+    const directionContext = document.createElement('div');
+    directionContext.className = 'direction-context mb-3';
+    
+    const directionHeader = document.createElement('div');
+    directionHeader.className = 'direction-header d-flex align-items-center';
+    
+    const directionBadge = document.createElement('span');
+    directionBadge.className = 'badge bg-primary me-2';
+    directionBadge.textContent = 'Direction';
+    
+    const directionTitle = document.createElement('span');
+    directionTitle.className = 'fw-bold';
+    directionTitle.textContent = selectedDirection.title;
+    
+    directionHeader.appendChild(directionBadge);
+    directionHeader.appendChild(directionTitle);
+    directionContext.appendChild(directionHeader);
+    
+    if (selectedDirection.description) {
+      const directionDescription = document.createElement('p');
+      directionDescription.className = 'small text-muted mt-1 mb-0';
+      directionDescription.textContent = selectedDirection.description;
+      directionContext.appendChild(directionDescription);
+    }
+    
+    suggestionsAccordion.appendChild(directionContext);
+  }
+  
+  // Add the "Back to Directions" button after the direction context
+  const backButtonContainer = document.createElement('div');
+  backButtonContainer.className = 'mb-3 text-center';
+  
+  const backButton = document.createElement('button');
+  backButton.className = 'btn btn-sm btn-outline-primary mb-2';
+  backButton.textContent = '← Back to Directions';
+  backButton.setAttribute('type', 'button');
+  backButton.setAttribute('data-action', 'back-to-directions');
+  
+  backButtonContainer.appendChild(backButton);
+  suggestionsAccordion.appendChild(backButtonContainer);
 
   // Define reaction type order (LinkedIn standard reactions)
   const reactionOrder = [
@@ -118,106 +168,85 @@ export function displaySuggestions(suggestions) {
     button.setAttribute('data-bs-target', `#collapse-${itemId}`);
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-controls', `collapse-${itemId}`);
-    button.setAttribute('data-reaction-type', reactionType); // Store reaction type for manual toggle
-    // Add additional aria attributes for improved accessibility
-    button.setAttribute('aria-describedby', `suggestion-text-${reactionType}`);
+    button.setAttribute('aria-label', `${reactionType} suggestion`);
 
-    // Capitalize first letter of reaction type for display
-    const displayType =
-      reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
-    button.textContent = displayType;
+    // Create title with reaction type
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
+    button.appendChild(titleSpan);
 
     accordionHeader.appendChild(button);
+    accordionItem.appendChild(accordionHeader);
 
-    // Create body
+    // Create collapsible content
     const collapseDiv = document.createElement('div');
     collapseDiv.id = `collapse-${itemId}`;
     collapseDiv.className = 'accordion-collapse collapse';
     collapseDiv.setAttribute('aria-labelledby', `heading-${itemId}`);
     collapseDiv.setAttribute('data-bs-parent', '#suggestionsAccordion');
-    // Add role for accessibility
-    collapseDiv.setAttribute('role', 'region');
 
     const accordionBody = document.createElement('div');
     accordionBody.className = 'accordion-body';
 
-    // Add suggestion text paragraph
-    const textParagraph = document.createElement('p');
-    textParagraph.id = `suggestion-text-${reactionType}`;
-    textParagraph.className = 'suggestion-text mb-2';
-    textParagraph.textContent =
-      suggestion.text || 'No suggestion text available';
-    // Add tabindex for keyboard accessibility
-    textParagraph.setAttribute('tabindex', '0');
-    accordionBody.appendChild(textParagraph);
+    // Create suggestion content with id for text replacement
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'suggestion-content';
+    contentDiv.id = `suggestion-text-${reactionType}`;
+    contentDiv.textContent = suggestion.text || 'No suggestion text available';
 
-    // Add button group for controls
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'btn-group btn-group-sm';
-    buttonGroup.setAttribute('role', 'group');
-    buttonGroup.setAttribute('aria-label', 'Suggestion controls');
+    accordionBody.appendChild(contentDiv);
 
-    // Add decrease length button
-    const decreaseBtn = document.createElement('button');
-    decreaseBtn.type = 'button';
-    decreaseBtn.className = 'btn btn-outline-secondary';
-    decreaseBtn.textContent = '-';
-    decreaseBtn.setAttribute('data-reaction', reactionType);
-    decreaseBtn.setAttribute('data-action', 'decrease');
-    decreaseBtn.title = 'Make suggestion shorter';
-    // Add ARIA attributes for screen readers
-    decreaseBtn.setAttribute(
-      'aria-label',
-      `Make ${displayType} suggestion shorter`
-    );
+    // Create length adjustment buttons
+    const lengthAdjustmentDiv = document.createElement('div');
+    lengthAdjustmentDiv.className = 'length-adjustment';
 
-    buttonGroup.appendChild(decreaseBtn);
+    // Shorter button
+    const shorterButton = document.createElement('button');
+    shorterButton.className = 'btn btn-sm';
+    shorterButton.type = 'button';
+    shorterButton.textContent = 'Shorter';
+    shorterButton.setAttribute('data-action', 'decrease');
+    shorterButton.setAttribute('data-reaction', reactionType);
+    shorterButton.setAttribute('aria-label', 'Generate a shorter suggestion');
 
-    // Add increase length button
-    const increaseBtn = document.createElement('button');
-    increaseBtn.type = 'button';
-    increaseBtn.className = 'btn btn-outline-secondary';
-    increaseBtn.textContent = '+';
-    increaseBtn.setAttribute('data-reaction', reactionType);
-    increaseBtn.setAttribute('data-action', 'increase');
-    increaseBtn.title = 'Make suggestion longer';
-    // Add ARIA attributes for screen readers
-    increaseBtn.setAttribute(
-      'aria-label',
-      `Make ${displayType} suggestion longer`
-    );
+    // Longer button
+    const longerButton = document.createElement('button');
+    longerButton.className = 'btn btn-sm';
+    longerButton.type = 'button';
+    longerButton.textContent = 'Longer';
+    longerButton.setAttribute('data-action', 'increase');
+    longerButton.setAttribute('data-reaction', reactionType);
+    longerButton.setAttribute('aria-label', 'Generate a longer suggestion');
 
-    buttonGroup.appendChild(increaseBtn);
+    lengthAdjustmentDiv.appendChild(shorterButton);
+    lengthAdjustmentDiv.appendChild(longerButton);
 
-    // Add accept button
-    const acceptBtn = document.createElement('button');
-    acceptBtn.type = 'button';
-    acceptBtn.className = 'btn btn-primary ms-2';
-    acceptBtn.textContent = 'Accept';
-    acceptBtn.setAttribute('data-reaction', reactionType);
-    acceptBtn.setAttribute('data-action', 'accept');
-    acceptBtn.title = 'Use this suggestion';
-    // Add ARIA attributes for screen readers
-    acceptBtn.setAttribute('aria-label', `Use ${displayType} suggestion`);
+    accordionBody.appendChild(lengthAdjustmentDiv);
 
-    buttonGroup.appendChild(acceptBtn);
+    // Create accept button
+    const acceptButton = document.createElement('button');
+    acceptButton.className = 'btn btn-primary btn-accept';
+    acceptButton.type = 'button';
+    acceptButton.textContent = 'Accept';
+    acceptButton.setAttribute('data-action', 'accept');
+    acceptButton.setAttribute('data-reaction', reactionType);
+    acceptButton.setAttribute('aria-label', 'Accept this suggestion');
 
-    // Add button group to accordion body
-    accordionBody.appendChild(buttonGroup);
+    accordionBody.appendChild(acceptButton);
+
     collapseDiv.appendChild(accordionBody);
-
-    // Add header and body to the accordion item
-    accordionItem.appendChild(accordionHeader);
     accordionItem.appendChild(collapseDiv);
 
-    // Add the complete item to the accordion
     suggestionsAccordion.appendChild(accordionItem);
   });
 
-  // Add event listeners to the buttons
+  // Add accordion button listeners
   addAccordionButtonListeners();
 
-  showStateFn('suggestions');
+  // Show the suggestions state
+  if (showStateFn) {
+    showStateFn('suggestions');
+  }
 }
 
 /**
@@ -225,19 +254,7 @@ export function displaySuggestions(suggestions) {
  * Uses event delegation to handle all button clicks with a single listener
  */
 function addAccordionButtonListeners() {
-  // Safety check if DOM references aren't initialized yet
-  if (!suggestionsAccordion) {
-    console.warn(
-      'EngageIQ: Cannot add button listeners - Suggestion Renderer not initialized'
-    );
-    return;
-  }
-
-  console.log(
-    'EngageIQ: Adding button event listeners to suggestion accordion'
-  );
-
-  // Remove any existing listeners to prevent duplicates (if re-adding)
+  // Remove any existing event listener first to prevent duplicates
   suggestionsAccordion.removeEventListener('click', handleAccordionButtonClick);
 
   // Add event listener using event delegation
@@ -265,6 +282,16 @@ function handleAccordionButtonClick(event) {
 
   // Get the action and reaction from the button's data attributes
   const action = button.getAttribute('data-action');
+  
+  // Handle the back to directions action differently
+  if (action === 'back-to-directions') {
+    console.log('EngageIQ: Back to directions button clicked');
+    sendMessageFn({
+      type: 'BACK_TO_DIRECTIONS'
+    });
+    return;
+  }
+  
   const reactionType = button.getAttribute('data-reaction');
 
   // Find the text element for this reaction type

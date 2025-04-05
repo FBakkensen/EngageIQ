@@ -124,7 +124,7 @@ export function processMessage(data) {
       if (showDirectionsLoading) {
         showDirectionsLoading();
       } else if (showStateFn) {
-        showStateFn('loading');
+        showStateFn('loading_directions');
       }
       break;
       
@@ -162,9 +162,19 @@ export function processMessage(data) {
 
       // Use the displaySuggestions function
       if (displaySuggestions) {
-        displaySuggestions(data.suggestions);
+        // If direction is included in the message, pass it to the displaySuggestions function
+        if (data.direction) {
+          displaySuggestions(data.suggestions, data.direction);
+        } else {
+          displaySuggestions(data.suggestions);
+        }
       } else {
         console.error('EngageIQ: Cannot display suggestions - displaySuggestions function not available');
+      }
+      
+      // Update the model indicator if model info is provided
+      if (data.modelInfo && updateModelIndicator) {
+        updateModelIndicator(data.modelInfo);
       }
       break;
 

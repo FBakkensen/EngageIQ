@@ -7,7 +7,7 @@
  */
 
 // Import service modules
-import { generateComments } from './services/api-service.js';
+import { generateComments, analyzeDirections, generateDirectionComments } from './services/api-service.js';
 import { handleRegenerationRequest } from './services/regeneration-service.js';
 
 console.log('EngageIQ: Background Script Loaded');
@@ -38,6 +38,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       // Call the generateComments function from api-service.js module
       generateComments(postContent, sendResponse);
+      
+      // Return true to indicate we'll respond asynchronously
+      return true;
+    }
+
+    case 'ANALYZE_DIRECTIONS': {
+      console.log('EngageIQ: Processing ANALYZE_DIRECTIONS request');
+
+      // Extract post content from message
+      const postContent = message.postContent;
+      if (!postContent) {
+        console.error('EngageIQ: No post content provided in ANALYZE_DIRECTIONS request');
+        sendResponse({
+          success: false,
+          error: 'Missing post content',
+          details: 'No content was provided to analyze for directions',
+        });
+        return true;
+      }
+
+      // Call the analyzeDirections function from api-service.js module
+      analyzeDirections(postContent, sendResponse);
+      
+      // Return true to indicate we'll respond asynchronously
+      return true;
+    }
+
+    case 'GENERATE_DIRECTION_COMMENTS': {
+      console.log('EngageIQ: Processing GENERATE_DIRECTION_COMMENTS request');
+
+      // Extract payload from message
+      const payload = message.payload;
+      if (!payload || !payload.direction || !payload.postContent) {
+        console.error('EngageIQ: Invalid payload provided in GENERATE_DIRECTION_COMMENTS request');
+        sendResponse({
+          success: false,
+          error: 'Missing required data',
+          details: 'Direction and post content are required to generate comments',
+        });
+        return true;
+      }
+
+      // Call the generateDirectionComments function from api-service.js module
+      generateDirectionComments(payload, sendResponse);
       
       // Return true to indicate we'll respond asynchronously
       return true;

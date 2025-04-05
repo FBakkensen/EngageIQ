@@ -20,14 +20,21 @@ import { initAccordion } from '/js/ui/accordion-controller.js';
 import { initStateController, showState } from '/js/ui/state-controller.js';
 import { initModelIndicator, displayCurrentModel } from '/js/ui/model-indicator.js';
 import { initDirectionCards } from '/js/ui/direction-card.js';
+import { initNavigationController, updateBackButtonVisibility } from '/js/ui/navigation-controller.js';
 
-// Import message service module
+// Import service modules
 import { 
   initPopupMessageService,
   notifyPopupReady,
   processQueuedMessages,
   sendMessageToContentScript
 } from '/js/services/popup-message-service.js';
+import {
+  hasActiveSession,
+  getLastState,
+  getDirections,
+  getSuggestions
+} from '/js/services/state-persistence-service.js';
 
 // Log script load confirmation - Compliant with user preference for prefixing logs
 console.log('EngageIQ: Popup Script Loaded');
@@ -43,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const suggestionsAccordion = document.getElementById('suggestionsAccordion');
   const directionsContainer = document.getElementById('directionsContainer');
   const modelIndicator = document.getElementById('modelIndicator');
+  const backButton = document.getElementById('backButton');
 
   // Initialize the state controller
   initStateController({
@@ -50,6 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
     errorElement: errorState,
     suggestionsElement: suggestionsAccordion,
     directionsElement: directionsContainer
+  });
+
+  // Initialize the navigation controller
+  initNavigationController({
+    backButtonElement: backButton
   });
 
   // Initialize the model indicator
@@ -94,16 +107,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Add ESC key functionality
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      console.log('EngageIQ: ESC key pressed');
-      sendMessageToContentScript({ type: 'CLOSE_POPUP' });
+  // Add ESC key functionality (handled by navigation controller now)
+  
+  // Determine initial state based on session persistence
+  let initialState = 'loading';
+  
+  // Check if there's an active session and restore state if possible
+  if (hasActiveSession()) {
+    const lastState = getLastState();
+    
+    // If the last state was showing directions and we have them, show them
+    if (lastState === 'directions') {
+      const directions = getDirections();
+      if (directions && directions.length > 0) {
+        console.log('EngageIQ: Restoring directions from previous session');
+        // The direction-cards module will handle showing the directions
+        // once they've been loaded from storage
+        initialState = 'directions';
+      }
     }
-  });
+    // If the last state was showing suggestions and we have them, show them
+    else if (lastState === 'suggestions') {
+      const suggestions = getSuggestions();
+      if (suggestions && suggestions.length > 0) {
+        console.log('EngageIQ: Restoring suggestions from previous session');
+        // The suggestion-renderer module will handle showing the suggestions
+        // once they've been loaded from storage
+        initialState = 'suggestions';
+      }
+    }
+  }
 
-  // Show initial loading state
-  showState('loading');
+  // Show initial state
+  showState(initialState);
+  
+  // Update back button visibility based on initial state
+  updateBackButtonVisibility(initialState);
 
   // Display current model in the UI
   displayCurrentModel();

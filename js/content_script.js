@@ -11,6 +11,14 @@ const buttonInjectorUrl = chrome.runtime.getURL('js/ui/button-injector.js');
 const iframeManagerUrl = chrome.runtime.getURL('js/ui/iframe-manager.js');
 const postExtractorUrl = chrome.runtime.getURL('js/services/post-extractor.js');
 const messageServiceUrl = chrome.runtime.getURL('js/services/message-service.js');
+const directionServiceUrl = chrome.runtime.getURL('js/services/direction-service.js');
+
+// Global storage for app state
+let appState = {
+  currentPostContent: null,
+  currentDirections: null,
+  isTwoStepProcess: true // Enable the two-step process by default
+};
 
 // Load modules dynamically to ensure proper Chrome extension context
 let modules = {};
@@ -22,14 +30,16 @@ Promise.all([
   import(buttonInjectorUrl),
   import(iframeManagerUrl),
   import(postExtractorUrl),
-  import(messageServiceUrl)
+  import(messageServiceUrl),
+  import(directionServiceUrl)
 ])
-.then(([buttonInjector, iframeManager, postExtractor, messageService]) => {
+.then(([buttonInjector, iframeManager, postExtractor, messageService, directionService]) => {
   // Store modules for easier access
   modules.buttonInjector = buttonInjector;
   modules.iframeManager = iframeManager;
   modules.postExtractor = postExtractor;
   modules.messageService = messageService;
+  modules.directionService = directionService;
   
   console.log('EngageIQ: All modules loaded successfully');
   
@@ -67,6 +77,32 @@ function handleCustomIframeMessages(event) {
         modules.messageService.findAllCommentBoxes,
         modules.iframeManager.hideIframe,
         modules.iframeManager.resetActiveCommentBox
+      );
+      break;
+      
+    case 'DIRECTION_SELECTED':
+      // Handle the selection of a direction
+      console.log('EngageIQ: Direction selected:', event.data.direction);
+      
+      // Generate comments based on the selected direction
+      modules.directionService.handleDirectionSelection(
+        event.data.direction,
+        appState.currentPostContent,
+        modules.iframeManager.sendMessageToIframe
+      )
+      .catch(error => {
+        console.error('EngageIQ: Error handling direction selection:', error);
+      });
+      break;
+      
+    case 'BACK_TO_DIRECTIONS':
+      // Handle navigation back to directions screen
+      console.log('EngageIQ: Navigating back to directions');
+      
+      // Show previously generated directions
+      modules.directionService.handleBackToDirections(
+        appState.currentDirections,
+        modules.iframeManager.sendMessageToIframe
       );
       break;
 
@@ -118,14 +154,35 @@ function handleEngageIQButtonClick(event) {
     // Content is valid, prepare it for the background script
     const postContent = modules.postExtractor.preparePostContent(extractedText);
     
-    // Generate comment suggestions using the message service
-    modules.messageService.generateCommentSuggestions(
-      postContent, 
-      modules.iframeManager.sendMessageToIframe
-    )
-    .catch(error => {
-      console.error('EngageIQ: Error generating comment suggestions:', error);
-    });
+    // Store post content in app state
+    appState.currentPostContent = postContent;
+    
+    // Check if we should use the one-step or two-step process
+    if (appState.isTwoStepProcess) {
+      // Use the two-step process with direction analysis first
+      modules.directionService.handleDirectionAnalysis(
+        postContent, 
+        modules.iframeManager.sendMessageToIframe
+      )
+      .then(response => {
+        // Store directions for possible back navigation
+        if (response && response.directions) {
+          appState.currentDirections = response.directions;
+        }
+      })
+      .catch(error => {
+        console.error('EngageIQ: Error analyzing directions:', error);
+      });
+    } else {
+      // Use the original one-step process
+      modules.messageService.generateCommentSuggestions(
+        postContent, 
+        modules.iframeManager.sendMessageToIframe
+      )
+      .catch(error => {
+        console.error('EngageIQ: Error generating comment suggestions:', error);
+      });
+    }
   } else {
     modules.iframeManager.hideIframe();
   }
