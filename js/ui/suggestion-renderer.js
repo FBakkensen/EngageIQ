@@ -6,6 +6,7 @@
  *  - Displaying suggestions in an accordion format
  *  - Managing accordion toggle behavior
  *  - Handling button interactions (accept, increase/decrease length)
+ *  - Implementing keyboard navigation and animations for accessibility
  */
 
 // Import accordion controller
@@ -41,6 +42,9 @@ export function initSuggestionRenderer(config) {
   if (suggestionsAccordion) {
     accordionController = initAccordion(suggestionsAccordion);
   }
+  
+  // Add event listener for accordion item focus for keyboard navigation
+  document.addEventListener('keydown', handleGlobalKeyNavigation);
 }
 
 /**
@@ -69,6 +73,9 @@ export function displaySuggestions(suggestions, selectedDirection) {
 
   // Clear existing content
   suggestionsAccordion.innerHTML = '';
+  
+  // Add entrance animation class
+  suggestionsAccordion.classList.add('fade-in');
   
   // If no direction is provided, try to get it from session storage
   if (!selectedDirection) {
@@ -104,149 +111,228 @@ export function displaySuggestions(suggestions, selectedDirection) {
     
     suggestionsAccordion.appendChild(directionContext);
   }
+
+  // Create accordion items for each suggestion
+  const screenReaderInstruction = document.createElement('div');
+  screenReaderInstruction.className = 'visually-hidden';
+  screenReaderInstruction.setAttribute('aria-live', 'polite');
+  screenReaderInstruction.textContent = 'Use tab key to navigate between suggestions and Enter key to expand or collapse';
+  suggestionsAccordion.appendChild(screenReaderInstruction);
   
-  // Add the "Back to Directions" button after the direction context
-  const backButtonContainer = document.createElement('div');
-  backButtonContainer.className = 'mb-3 text-center';
-  
-  const backButton = document.createElement('button');
-  backButton.className = 'btn btn-sm btn-outline-primary mb-2';
-  backButton.textContent = '← Back to Directions';
-  backButton.setAttribute('type', 'button');
-  backButton.setAttribute('data-action', 'back-to-directions');
-  
-  backButtonContainer.appendChild(backButton);
-  suggestionsAccordion.appendChild(backButtonContainer);
-
-  // Define reaction type order (LinkedIn standard reactions)
-  const reactionOrder = [
-    'like',
-    'celebrate',
-    'support',
-    'funny',
-    'love',
-    'insightful',
-  ];
-
-  // Convert suggestions array to an object keyed by reaction type for easy access
-  const suggestionsByType = {};
-  suggestions.forEach((suggestion) => {
-    // Use the id property instead of type
-    if (suggestion.id) {
-      suggestionsByType[suggestion.id.toLowerCase()] = suggestion;
-    }
-  });
-
-  // Iterate through ordered reaction types
-  reactionOrder.forEach((reactionType) => {
-    const suggestion = suggestionsByType[reactionType];
-
-    // Skip if no suggestion for this reaction type
-    if (!suggestion) {
-      console.log(`EngageIQ: No suggestion for reaction type: ${reactionType}`);
-      return;
-    }
-
-    // Create unique IDs for this reaction type
-    const itemId = `suggestion-${reactionType}`;
+  suggestions.forEach((suggestion, index) => {
+    // Normalize suggestion ID to lowercase for consistency
+    const reactionType = suggestion.id.toLowerCase();
 
     // Create accordion item
     const accordionItem = document.createElement('div');
-    accordionItem.className = 'accordion-item';
-    // Add role for accessibility
-    accordionItem.setAttribute('role', 'region');
+    accordionItem.className = 'accordion-item mb-2';
+    accordionItem.setAttribute('data-suggestion-id', reactionType);
 
-    // Create header
+    // Create accordion header
     const accordionHeader = document.createElement('h2');
     accordionHeader.className = 'accordion-header';
-    accordionHeader.id = `heading-${itemId}`;
+    accordionHeader.id = `heading-${reactionType}`;
 
-    const button = document.createElement('button');
-    button.className = 'accordion-button collapsed';
-    button.type = 'button';
-    button.setAttribute('data-bs-toggle', 'collapse');
-    button.setAttribute('data-bs-target', `#collapse-${itemId}`);
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-controls', `collapse-${itemId}`);
-    button.setAttribute('aria-label', `${reactionType} suggestion`);
+    // Create accordion button
+    const accordionButton = document.createElement('button');
+    accordionButton.className = 'accordion-button collapsed focus-visible-pulse';
+    accordionButton.setAttribute('type', 'button');
+    accordionButton.setAttribute('data-bs-toggle', 'collapse');
+    accordionButton.setAttribute('data-bs-target', `#collapse-${reactionType}`);
+    accordionButton.setAttribute('aria-expanded', 'false');
+    accordionButton.setAttribute('aria-controls', `collapse-${reactionType}`);
+    // First item should be focusable by default
+    accordionButton.setAttribute('tabindex', index === 0 ? '0' : '0');
+    
+    // Add keyboard accessibility attributes
+    accordionButton.setAttribute('role', 'button');
+    accordionButton.setAttribute('aria-label', `${suggestion.title} suggestion. Press Enter to expand`);
 
-    // Create title with reaction type
-    const titleSpan = document.createElement('span');
-    titleSpan.textContent = reactionType.charAt(0).toUpperCase() + reactionType.slice(1);
-    button.appendChild(titleSpan);
+    // Create title text
+    const buttonText = document.createElement('span');
+    buttonText.textContent = suggestion.title || 'Suggestion';
 
-    accordionHeader.appendChild(button);
+    // Assemble accordion button
+    accordionButton.appendChild(buttonText);
+    accordionHeader.appendChild(accordionButton);
     accordionItem.appendChild(accordionHeader);
 
-    // Create collapsible content
-    const collapseDiv = document.createElement('div');
-    collapseDiv.id = `collapse-${itemId}`;
-    collapseDiv.className = 'accordion-collapse collapse';
-    collapseDiv.setAttribute('aria-labelledby', `heading-${itemId}`);
-    collapseDiv.setAttribute('data-bs-parent', '#suggestionsAccordion');
+    // Create accordion collapse container
+    const collapseContainer = document.createElement('div');
+    collapseContainer.id = `collapse-${reactionType}`;
+    collapseContainer.className = 'accordion-collapse collapse';
+    collapseContainer.setAttribute('aria-labelledby', `heading-${reactionType}`);
+    collapseContainer.setAttribute('data-bs-parent', '#suggestionsAccordion');
 
+    // Create accordion body
     const accordionBody = document.createElement('div');
     accordionBody.className = 'accordion-body';
 
-    // Create suggestion content with id for text replacement
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'suggestion-content';
-    contentDiv.id = `suggestion-text-${reactionType}`;
-    contentDiv.textContent = suggestion.text || 'No suggestion text available';
-
-    accordionBody.appendChild(contentDiv);
+    // Create suggestion text container
+    const suggestionText = document.createElement('div');
+    suggestionText.className = 'suggestion-content mb-2';
+    suggestionText.id = `suggestion-text-${reactionType}`;
+    suggestionText.textContent = suggestion.text || 'No suggestion text available';
 
     // Create length adjustment buttons
-    const lengthAdjustmentDiv = document.createElement('div');
-    lengthAdjustmentDiv.className = 'length-adjustment';
+    const lengthAdjustment = document.createElement('div');
+    lengthAdjustment.className = 'length-adjustment mb-2';
 
-    // Shorter button
-    const shorterButton = document.createElement('button');
-    shorterButton.className = 'btn btn-sm';
-    shorterButton.type = 'button';
-    shorterButton.textContent = 'Shorter';
-    shorterButton.setAttribute('data-action', 'decrease');
-    shorterButton.setAttribute('data-reaction', reactionType);
-    shorterButton.setAttribute('aria-label', 'Generate a shorter suggestion');
+    const decreaseButton = document.createElement('button');
+    decreaseButton.className = 'btn btn-sm btn-light focus-visible-pulse';
+    decreaseButton.setAttribute('type', 'button');
+    decreaseButton.setAttribute('data-action', 'decrease');
+    decreaseButton.setAttribute('data-reaction', reactionType);
+    decreaseButton.setAttribute('aria-label', 'Make suggestion shorter');
+    decreaseButton.innerHTML = '<i class="bi bi-dash-lg"></i> Shorter';
 
-    // Longer button
-    const longerButton = document.createElement('button');
-    longerButton.className = 'btn btn-sm';
-    longerButton.type = 'button';
-    longerButton.textContent = 'Longer';
-    longerButton.setAttribute('data-action', 'increase');
-    longerButton.setAttribute('data-reaction', reactionType);
-    longerButton.setAttribute('aria-label', 'Generate a longer suggestion');
+    const increaseButton = document.createElement('button');
+    increaseButton.className = 'btn btn-sm btn-light focus-visible-pulse';
+    increaseButton.setAttribute('type', 'button');
+    increaseButton.setAttribute('data-action', 'increase');
+    increaseButton.setAttribute('data-reaction', reactionType);
+    increaseButton.setAttribute('aria-label', 'Make suggestion longer');
+    increaseButton.innerHTML = '<i class="bi bi-plus-lg"></i> Longer';
 
-    lengthAdjustmentDiv.appendChild(shorterButton);
-    lengthAdjustmentDiv.appendChild(longerButton);
-
-    accordionBody.appendChild(lengthAdjustmentDiv);
+    lengthAdjustment.appendChild(decreaseButton);
+    lengthAdjustment.appendChild(increaseButton);
 
     // Create accept button
     const acceptButton = document.createElement('button');
-    acceptButton.className = 'btn btn-primary btn-accept';
-    acceptButton.type = 'button';
-    acceptButton.textContent = 'Accept';
+    acceptButton.className = 'btn btn-sm btn-primary btn-accept focus-visible-pulse';
+    acceptButton.setAttribute('type', 'button');
     acceptButton.setAttribute('data-action', 'accept');
     acceptButton.setAttribute('data-reaction', reactionType);
-    acceptButton.setAttribute('aria-label', 'Accept this suggestion');
+    acceptButton.innerHTML = '<i class="bi bi-check-lg"></i> Use this suggestion';
 
+    // Assemble accordion body
+    accordionBody.appendChild(suggestionText);
+    accordionBody.appendChild(lengthAdjustment);
     accordionBody.appendChild(acceptButton);
+    collapseContainer.appendChild(accordionBody);
+    accordionItem.appendChild(collapseContainer);
 
-    collapseDiv.appendChild(accordionBody);
-    accordionItem.appendChild(collapseDiv);
-
+    // Add accordion item to the container
     suggestionsAccordion.appendChild(accordionItem);
+    
+    // Apply entrance animation with delay based on index
+    setTimeout(() => {
+      accordionItem.style.animation = `fadeInUp 0.3s ease forwards ${index * 0.1}s`;
+    }, 10);
   });
 
-  // Add accordion button listeners
-  addAccordionButtonListeners();
+  // Add back to directions button if we have a selected direction
+  if (selectedDirection) {
+    const backContainer = document.createElement('div');
+    backContainer.className = 'text-center mt-3';
 
-  // Show the suggestions state
-  if (showStateFn) {
-    showStateFn('suggestions');
+    const backButton = document.createElement('button');
+    backButton.className = 'btn btn-sm btn-outline-secondary focus-visible-pulse';
+    backButton.setAttribute('type', 'button');
+    backButton.setAttribute('data-action', 'back-to-directions');
+    backButton.setAttribute('aria-label', 'Go back to direction selection');
+    backButton.innerHTML = '<i class="bi bi-arrow-left-short"></i> Back to directions';
+
+    backContainer.appendChild(backButton);
+    suggestionsAccordion.appendChild(backContainer);
   }
+
+  // Show suggestion state and attach event listeners
+  showStateFn('suggestions');
+  addAccordionButtonListeners();
+  
+  // Initialize any Bootstrap components that need JS initialization
+  if (window.bootstrap && window.bootstrap.Collapse) {
+    const collapseElements = suggestionsAccordion.querySelectorAll('.accordion-collapse');
+    collapseElements.forEach(element => {
+      // Add transition classes for smooth animations
+      element.addEventListener('show.bs.collapse', () => {
+        const header = document.getElementById(element.getAttribute('aria-labelledby'));
+        if (header) {
+          const button = header.querySelector('.accordion-button');
+          if (button) {
+            button.setAttribute('aria-expanded', 'true');
+            button.setAttribute('aria-label', `${button.textContent} suggestion. Press Enter to collapse`);
+          }
+        }
+      });
+      
+      element.addEventListener('hide.bs.collapse', () => {
+        const header = document.getElementById(element.getAttribute('aria-labelledby'));
+        if (header) {
+          const button = header.querySelector('.accordion-button');
+          if (button) {
+            button.setAttribute('aria-expanded', 'false');
+            button.setAttribute('aria-label', `${button.textContent} suggestion. Press Enter to expand`);
+          }
+        }
+      });
+    });
+  }
+  
+  // Announce that suggestions are available
+  announceToScreenReader(`${suggestions.length} suggestions are now available. Use tab to navigate between them.`);
+}
+
+/**
+ * Handles global keyboard navigation for accordion items
+ * @param {KeyboardEvent} event - Keyboard event
+ */
+function handleGlobalKeyNavigation(event) {
+  // Only process when suggestions are visible
+  if (!suggestionsAccordion || suggestionsAccordion.style.display === 'none') {
+    return;
+  }
+  
+  const accordionButtons = suggestionsAccordion.querySelectorAll('.accordion-button');
+  if (accordionButtons.length === 0) return;
+  
+  // Get the currently focused element
+  const focusedElement = document.activeElement;
+  const isAccordionButton = focusedElement && focusedElement.classList.contains('accordion-button');
+  
+  // Handle arrow key navigation between accordion items
+  if (isAccordionButton) {
+    let focusIndex = Array.from(accordionButtons).indexOf(focusedElement);
+    
+    if (event.key === 'ArrowDown' && focusIndex < accordionButtons.length - 1) {
+      event.preventDefault();
+      accordionButtons[focusIndex + 1].focus();
+    } else if (event.key === 'ArrowUp' && focusIndex > 0) {
+      event.preventDefault();
+      accordionButtons[focusIndex - 1].focus();
+    }
+  }
+}
+
+/**
+ * Announces a message to screen readers
+ * @param {string} message - The message to announce
+ * @param {boolean} assertive - Whether to use assertive (true) or polite (false) live region
+ */
+function announceToScreenReader(message, assertive = false) {
+  // Find or create a dedicated screen reader announcement element
+  let announcer = document.getElementById('sr-suggestions-announcer');
+  
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.id = 'sr-suggestions-announcer';
+    announcer.className = 'visually-hidden';
+    announcer.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+    announcer.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(announcer);
+  }
+  
+  // Update aria-live if needed
+  announcer.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+  
+  // Set the message
+  announcer.textContent = message;
+  
+  // Clear after a delay
+  setTimeout(() => {
+    announcer.textContent = '';
+  }, 3000);
 }
 
 /**
@@ -254,11 +340,32 @@ export function displaySuggestions(suggestions, selectedDirection) {
  * Uses event delegation to handle all button clicks with a single listener
  */
 function addAccordionButtonListeners() {
-  // Remove any existing event listener first to prevent duplicates
+  // Safety check
+  if (!suggestionsAccordion) return;
+
+  // Remove existing listener if any
   suggestionsAccordion.removeEventListener('click', handleAccordionButtonClick);
 
-  // Add event listener using event delegation
+  // Add the listener to the container using event delegation
   suggestionsAccordion.addEventListener('click', handleAccordionButtonClick);
+  
+  // Add animation and focus effects to all action buttons
+  const actionButtons = suggestionsAccordion.querySelectorAll('button[data-action]');
+  actionButtons.forEach(button => {
+    // Ensure all buttons have appropriate focus and animation classes
+    if (!button.classList.contains('focus-visible-pulse')) {
+      button.classList.add('focus-visible-pulse');
+    }
+    
+    // Add visual feedback effect on click
+    button.addEventListener('click', function() {
+      // Add temporary animation
+      if (button.getAttribute('data-action') === 'accept') {
+        button.classList.add('btn-pulse');
+        setTimeout(() => button.classList.remove('btn-pulse'), 500);
+      }
+    });
+  });
 }
 
 /**
@@ -286,9 +393,24 @@ function handleAccordionButtonClick(event) {
   // Handle the back to directions action differently
   if (action === 'back-to-directions') {
     console.log('EngageIQ: Back to directions button clicked');
-    sendMessageFn({
-      type: 'BACK_TO_DIRECTIONS'
-    });
+    
+    // Add animation feedback
+    button.classList.add('btn-pulse');
+    
+    // Add slide transition to the accordion
+    suggestionsAccordion.classList.add('slide-out-right');
+    
+    // Wait for animation to complete
+    setTimeout(() => {
+      // Remove animation classes
+      suggestionsAccordion.classList.remove('slide-out-right');
+      
+      // Send message to go back to directions
+      sendMessageFn({
+        type: 'BACK_TO_DIRECTIONS'
+      });
+    }, 300);
+    
     return;
   }
   
@@ -319,6 +441,13 @@ function handleAccordionButtonClick(event) {
       console.log(
         `EngageIQ: Requesting shorter suggestion for ${reactionType}`
       );
+      // Add loading animation
+      textElement.classList.add('loading-pulse');
+      button.disabled = true;
+      
+      // Announce to screen readers
+      announceToScreenReader(`Generating shorter suggestion for ${reactionType}`, true);
+      
       sendMessageFn({
         type: 'REQUEST_SHORTER',
         reactionType: reactionType,
@@ -328,6 +457,13 @@ function handleAccordionButtonClick(event) {
 
     case 'increase':
       console.log(`EngageIQ: Requesting longer suggestion for ${reactionType}`);
+      // Add loading animation
+      textElement.classList.add('loading-pulse');
+      button.disabled = true;
+      
+      // Announce to screen readers
+      announceToScreenReader(`Generating longer suggestion for ${reactionType}`, true);
+      
       sendMessageFn({
         type: 'REQUEST_LONGER',
         reactionType: reactionType,
@@ -335,10 +471,21 @@ function handleAccordionButtonClick(event) {
       });
       break;
 
-    case 'accept':
+    case 'accept': {
       console.log(
         `EngageIQ: Accepting suggestion for ${reactionType}: ${currentText}`
       );
+      
+      // Add acceptance animation and feedback
+      const accordionItem = button.closest('.accordion-item');
+      if (accordionItem) {
+        accordionItem.classList.add('border-success');
+        setTimeout(() => accordionItem.classList.remove('border-success'), 1000);
+      }
+      
+      // Announce to screen readers
+      announceToScreenReader(`Suggestion accepted and will be applied`, true);
+      
       // Send message to content script to insert text into comment box
       sendMessageFn({
         type: 'ACCEPT_SUGGESTION',
@@ -357,6 +504,7 @@ function handleAccordionButtonClick(event) {
           );
         });
       break;
+    }
 
     default:
       console.warn(`EngageIQ: Unknown button action: ${action}`);
@@ -393,10 +541,38 @@ export function updateSingleSuggestion(suggestion) {
     );
     return;
   }
+  
+  // Find length adjustment buttons and re-enable them
+  const accordionItem = textElement.closest('.accordion-item');
+  if (accordionItem) {
+    const buttons = accordionItem.querySelectorAll('button[data-action]');
+    buttons.forEach(button => button.disabled = false);
+  }
 
-  // Update the text content
-  textElement.textContent = suggestion.text || 'No suggestion text available';
-  console.log(`EngageIQ: Updated suggestion text for ${reactionType}`);
+  // Add update animation
+  textElement.classList.remove('loading-pulse');
+  textElement.classList.add('fade-transition');
+  textElement.classList.add('fade-out');
+  
+  // After fade out, update content and fade back in
+  setTimeout(() => {
+    // Update the text content
+    textElement.textContent = suggestion.text || 'No suggestion text available';
+    
+    // Remove fade out and add fade in
+    textElement.classList.remove('fade-out');
+    textElement.classList.add('fade-in');
+    
+    // Remove animation classes after animation completes
+    setTimeout(() => {
+      textElement.classList.remove('fade-in', 'fade-transition');
+    }, 300);
+    
+    console.log(`EngageIQ: Updated suggestion text for ${reactionType}`);
+    
+    // Announce update to screen readers
+    announceToScreenReader(`Updated ${reactionType} suggestion is now available`);
+  }, 300);
 
   // No need to update the whole accordion or change state
   // Just ensure the suggestion state is showing

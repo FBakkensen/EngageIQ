@@ -12,6 +12,7 @@ const iframeManagerUrl = chrome.runtime.getURL('js/ui/iframe-manager.js');
 const postExtractorUrl = chrome.runtime.getURL('js/services/post-extractor.js');
 const messageServiceUrl = chrome.runtime.getURL('js/services/message-service.js');
 const directionServiceUrl = chrome.runtime.getURL('js/services/direction-service.js');
+const statePersistenceUrl = chrome.runtime.getURL('js/services/state-persistence-service.js');
 
 // Global storage for app state
 let appState = {
@@ -31,15 +32,17 @@ Promise.all([
   import(iframeManagerUrl),
   import(postExtractorUrl),
   import(messageServiceUrl),
-  import(directionServiceUrl)
+  import(directionServiceUrl),
+  import(statePersistenceUrl)
 ])
-.then(([buttonInjector, iframeManager, postExtractor, messageService, directionService]) => {
+.then(([buttonInjector, iframeManager, postExtractor, messageService, directionService, statePersistence]) => {
   // Store modules for easier access
   modules.buttonInjector = buttonInjector;
   modules.iframeManager = iframeManager;
   modules.postExtractor = postExtractor;
   modules.messageService = messageService;
   modules.directionService = directionService;
+  modules.statePersistence = statePersistence;
   
   console.log('EngageIQ: All modules loaded successfully');
   
@@ -106,6 +109,54 @@ function handleCustomIframeMessages(event) {
       );
       break;
 
+    case 'RETRY_REQUEST': {
+      // Handle retry request from the popup
+      console.log('EngageIQ: Retry request received');
+      
+      // Check for stored post content
+      const storedPostContent = modules.statePersistence.getPostContent();
+      
+      if (storedPostContent) {
+        // We have stored post content, use that
+        appState.currentPostContent = storedPostContent;
+      }
+      
+      // If we have post content, retry the direction analysis
+      if (appState.currentPostContent) {
+        console.log('EngageIQ: Retrying direction analysis with stored post content');
+        
+        // Show loading message
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_LOADING',
+          message: 'Retrying analysis...'
+        });
+        
+        // Retry the direction analysis
+        modules.directionService.handleDirectionAnalysis(
+          appState.currentPostContent, 
+          modules.iframeManager.sendMessageToIframe
+        )
+        .then(response => {
+          // Store directions for possible back navigation
+          if (response && response.directions) {
+            appState.currentDirections = response.directions;
+          }
+        })
+        .catch(error => {
+          console.error('EngageIQ: Error retrying direction analysis:', error);
+        });
+      } else {
+        // No stored post content, show error
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Retry Failed',
+          details: 'No post content available to retry',
+          actionHint: 'Please close the popup and try again'
+        });
+      }
+      break;
+    }
+
     default:
       console.log(`EngageIQ: Unhandled iframe message type: ${event.data.type}`);
   }
@@ -147,6 +198,7 @@ function handleEngageIQButtonClick(event) {
         type: 'SHOW_ERROR',
         error: 'Extraction Failed',
         details: validationResult.errorMessage,
+        actionHint: 'Try with a different post'
       });
       return; // Stop processing if validation failed
     }
@@ -154,8 +206,12 @@ function handleEngageIQButtonClick(event) {
     // Content is valid, prepare it for the background script
     const postContent = modules.postExtractor.preparePostContent(extractedText);
     
-    // Store post content in app state
+    // Store post content in app state and persistence service
     appState.currentPostContent = postContent;
+    modules.statePersistence.savePostContent(postContent);
+    
+    // Clear any previous session data when starting fresh
+    modules.statePersistence.saveLastState('initial');
     
     // Check if we should use the one-step or two-step process
     if (appState.isTwoStepProcess) {
@@ -168,6 +224,8 @@ function handleEngageIQButtonClick(event) {
         // Store directions for possible back navigation
         if (response && response.directions) {
           appState.currentDirections = response.directions;
+          // Save last state as 'directions'
+          modules.statePersistence.saveLastState('directions');
         }
       })
       .catch(error => {

@@ -8,6 +8,10 @@
  * - Managing the communication flow for the two-step commenting process
  */
 
+// Import API service
+import { analyzePostDirections, generateDirectionComments } from './smart-suggestions-api.js';
+import { saveDirections, saveSelectedDirection, saveSuggestions } from './state-persistence-service.js';
+
 // Log module load confirmation
 console.log('EngageIQ: Direction Service Module Loaded');
 
@@ -25,37 +29,19 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
     });
     console.log('EngageIQ: Sent SHOW_DIRECTIONS_LOADING message to iframe');
 
-    // Send ANALYZE_DIRECTIONS message to background script
-    chrome.runtime.sendMessage(
-      {
-        type: 'ANALYZE_DIRECTIONS',
-        postContent: postContent,
-      },
-      (response) => {
-        // Handle chrome.runtime.lastError first
-        if (chrome.runtime.lastError) {
-          console.error(
-            'EngageIQ: Error sending message to background script:',
-            chrome.runtime.lastError
-          );
-
-          // Send error message to iframe
-          sendMessageToIframe({
-            type: 'SHOW_ERROR',
-            error: 'Failed to analyze post content',
-            details: chrome.runtime.lastError.message,
-          });
-          reject(chrome.runtime.lastError);
-          return;
-        }
-
+    // Call API to analyze post directions
+    analyzePostDirections(postContent)
+      .then((response) => {
         // Handle successful response
         console.log(
-          'EngageIQ: Received direction analysis response from background script:',
+          'EngageIQ: Received direction analysis response from API:',
           response
         );
 
         if (response && response.success) {
+          // Save directions to session storage
+          saveDirections(response.directions);
+          
           // Extract model information if available
           const modelInfo = response.modelInfo || null;
 
@@ -73,13 +59,27 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
             type: 'SHOW_ERROR',
             error: response?.error || 'Failed to analyze post content',
             details: response?.details || 'Unknown error',
+            actionHint: response?.actionHint || 'Please try again',
+            errorType: response?.errorType || 'unknown_error'
           });
           console.log('EngageIQ: Sent SHOW_ERROR to iframe');
           reject(new Error('Failed to analyze post content'));
         }
-      }
-    );
-    console.log('EngageIQ: Sent ANALYZE_DIRECTIONS message to background script');
+      })
+      .catch((error) => {
+        console.error(
+          'EngageIQ: Error analyzing post directions:',
+          error
+        );
+
+        // Send error message to iframe
+        sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Failed to analyze post content',
+          details: error.message,
+        });
+        reject(error);
+      });
   });
 }
 
@@ -92,6 +92,9 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
  */
 export function handleDirectionSelection(selectedDirection, postContent, sendMessageToIframe) {
   return new Promise((resolve, reject) => {
+    // Save the selected direction to session storage
+    saveSelectedDirection(selectedDirection);
+    
     // Show loading state
     sendMessageToIframe({
       type: 'SHOW_LOADING',
@@ -105,37 +108,19 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
       postContent: postContent
     };
 
-    // Send GENERATE_DIRECTION_COMMENTS message to background script
-    chrome.runtime.sendMessage(
-      {
-        type: 'GENERATE_DIRECTION_COMMENTS',
-        payload: payload,
-      },
-      (response) => {
-        // Handle chrome.runtime.lastError first
-        if (chrome.runtime.lastError) {
-          console.error(
-            'EngageIQ: Error sending message to background script:',
-            chrome.runtime.lastError
-          );
-
-          // Send error message to iframe
-          sendMessageToIframe({
-            type: 'SHOW_ERROR',
-            error: 'Failed to generate direction-based comments',
-            details: chrome.runtime.lastError.message,
-          });
-          reject(chrome.runtime.lastError);
-          return;
-        }
-
+    // Call API to generate direction comments
+    generateDirectionComments(payload)
+      .then((response) => {
         // Handle successful response
         console.log(
-          'EngageIQ: Received direction comments response from background script:',
+          'EngageIQ: Received direction comments response from API:',
           response
         );
 
         if (response && response.success) {
+          // Save suggestions to session storage
+          saveSuggestions(response.suggestions);
+          
           // Extract model information if available
           const modelInfo = response.modelInfo || null;
 
@@ -143,6 +128,7 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
           sendMessageToIframe({
             type: 'SHOW_SUGGESTIONS',
             suggestions: response.suggestions,
+            direction: selectedDirection,
             modelInfo: modelInfo,
           });
           console.log('EngageIQ: Sent SHOW_SUGGESTIONS to iframe');
@@ -153,13 +139,27 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
             type: 'SHOW_ERROR',
             error: response?.error || 'Failed to generate direction-based comments',
             details: response?.details || 'Unknown error',
+            actionHint: response?.actionHint || 'Please try again',
+            errorType: response?.errorType || 'unknown_error'
           });
           console.log('EngageIQ: Sent SHOW_ERROR to iframe');
           reject(new Error('Failed to generate direction-based comments'));
         }
-      }
-    );
-    console.log('EngageIQ: Sent GENERATE_DIRECTION_COMMENTS message to background script');
+      })
+      .catch((error) => {
+        console.error(
+          'EngageIQ: Error generating direction comments:',
+          error
+        );
+
+        // Send error message to iframe
+        sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Failed to generate direction-based comments',
+          details: error.message,
+        });
+        reject(error);
+      });
   });
 }
 
