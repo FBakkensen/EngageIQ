@@ -25,7 +25,10 @@
     {
       "matches": ["*://*.linkedin.com/*"],
       "js": ["js/content_script.js"],
-      "css": ["css/content_style.css"],
+      "css": [
+        "css/content_style.css",
+        "assets/css/bootstrap.min.css"
+      ],
       "type": "module"
     }
   ],

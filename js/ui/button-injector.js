@@ -34,7 +34,8 @@ function createEngageIQButton() {
   const engageButton = document.createElement('button');
 
   // Add Bootstrap-like button classes
-  engageButton.className = 'engageiq-btn engageiq-btn-icon';
+  engageButton.className =
+    'btn rounded-circle p-1 mx-1 d-inline-flex align-items-center justify-content-center engageiq-custom-icon-btn';
   engageButton.type = 'button'; // Set button type
 
   // Create and add icon image
@@ -44,6 +45,7 @@ function createEngageIQButton() {
   iconImg.alt = 'EngageIQ';
   iconImg.width = 20;
   iconImg.height = 20;
+  iconImg.classList.add('img-fluid'); // Added for responsive image scaling
   console.log('EngageIQ: Using icon URL:', iconUrl);
   engageButton.appendChild(iconImg);
 

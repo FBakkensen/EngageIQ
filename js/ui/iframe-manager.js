@@ -22,12 +22,22 @@ function getOrCreateIframe() {
     console.log('EngageIQ: Creating popup iframe.');
     engageIQIframe = document.createElement('iframe');
     engageIQIframe.id = 'engageiq-popup-iframe'; // ID matches css/content_style.css
+
+    // Apply Bootstrap utility classes
+    engageIQIframe.classList.add(
+      'position-fixed',
+      'border-0',
+      'bg-white',
+      'shadow-lg',
+      'overflow-hidden',
+      'd-none' // Bootstrap class for display: none
+    );
+
     // Use chrome.runtime.getURL to access extension resources
     try {
       engageIQIframe.src = chrome.runtime.getURL('html/popup.html');
       engageIQIframe.allow = 'clipboard-write'; // Grant clipboard permission to the iframe
       console.log('EngageIQ: Iframe src set to:', engageIQIframe.src);
-      engageIQIframe.style.display = 'none'; // Start hidden
       document.body.appendChild(engageIQIframe);
       console.log('EngageIQ: Iframe appended to body.');
 
@@ -129,7 +139,8 @@ function sendMessageToIframe(message) {
  */
 function showIframe() {
   const iframe = getOrCreateIframe();
-  iframe.style.display = 'block';
+  // Use Bootstrap classes instead of direct style manipulation
+  iframe.classList.remove('d-none');
   iframe.classList.add('visible'); // Add animation class
 }
 
@@ -145,10 +156,10 @@ function hideIframe(animated = true) {
     engageIQIframe.classList.remove('visible'); // Remove animation class
     // Add a small delay before hiding to allow animation to complete
     setTimeout(() => {
-      engageIQIframe.style.display = 'none';
+      engageIQIframe.classList.add('d-none');
     }, 200); // 200ms delay for animation to complete
   } else {
-    engageIQIframe.style.display = 'none';
+    engageIQIframe.classList.add('d-none');
   }
 }
 
