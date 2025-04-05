@@ -11,6 +11,15 @@ const buttonInjectorUrl = chrome.runtime.getURL('js/ui/button-injector.js');
 const iframeManagerUrl = chrome.runtime.getURL('js/ui/iframe-manager.js');
 const postExtractorUrl = chrome.runtime.getURL('js/services/post-extractor.js');
 const messageServiceUrl = chrome.runtime.getURL('js/services/message-service.js');
+const directionServiceUrl = chrome.runtime.getURL('js/services/direction-service.js');
+const statePersistenceUrl = chrome.runtime.getURL('js/services/state-persistence-service.js');
+
+// Global storage for app state
+let appState = {
+  currentPostContent: null,
+  currentDirections: null,
+  isTwoStepProcess: true // Enable the two-step process by default
+};
 
 // Load modules dynamically to ensure proper Chrome extension context
 let modules = {};
@@ -22,14 +31,18 @@ Promise.all([
   import(buttonInjectorUrl),
   import(iframeManagerUrl),
   import(postExtractorUrl),
-  import(messageServiceUrl)
+  import(messageServiceUrl),
+  import(directionServiceUrl),
+  import(statePersistenceUrl)
 ])
-.then(([buttonInjector, iframeManager, postExtractor, messageService]) => {
+.then(([buttonInjector, iframeManager, postExtractor, messageService, directionService, statePersistence]) => {
   // Store modules for easier access
   modules.buttonInjector = buttonInjector;
   modules.iframeManager = iframeManager;
   modules.postExtractor = postExtractor;
   modules.messageService = messageService;
+  modules.directionService = directionService;
+  modules.statePersistence = statePersistence;
   
   console.log('EngageIQ: All modules loaded successfully');
   
@@ -69,6 +82,100 @@ function handleCustomIframeMessages(event) {
         modules.iframeManager.resetActiveCommentBox
       );
       break;
+      
+    case 'DIRECTION_SELECTED': {
+      // Retrieve the stored post content
+      const postContent = modules.statePersistence.getPostContent();
+
+      if (!postContent) {
+        console.error('EngageIQ: Could not retrieve post content for direction selection.');
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Missing Post Content',
+          details: 'Could not retrieve the original post content to generate comments.',
+          actionHint: 'Please close the popup and try activating it on the post again.'
+        });
+        break; // Stop processing if post content is missing
+      }
+
+      console.log('EngageIQ: [content_script] Retrieved postContent:', postContent);
+      // Call the direction service to handle the selection, passing the post content
+      modules.directionService.handleDirectionSelection(
+        event.data.direction,
+        postContent, // Pass the retrieved post content here
+        modules.iframeManager.sendMessageToIframe
+      )
+      .catch(error => {
+        console.error('EngageIQ: [content_script] Error calling handleDirectionSelection:', error);
+        // Send error back to iframe
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Error Handling Direction Selection',
+          details: 'An error occurred while handling the direction selection.',
+          actionHint: 'Please try again or contact support.'
+        });
+      });
+      break;
+    }
+      
+    case 'BACK_TO_DIRECTIONS':
+      // Handle navigation back to directions screen
+      console.log('EngageIQ: Navigating back to directions');
+      
+      // Show previously generated directions
+      modules.directionService.handleBackToDirections(
+        appState.currentDirections,
+        modules.iframeManager.sendMessageToIframe
+      );
+      break;
+
+    case 'RETRY_REQUEST': {
+      // Handle retry request from the popup
+      console.log('EngageIQ: Retry request received');
+      
+      // Check for stored post content
+      const storedPostContent = modules.statePersistence.getPostContent();
+      
+      if (storedPostContent) {
+        // We have stored post content, use that
+        appState.currentPostContent = storedPostContent;
+      }
+      
+      // If we have post content, retry the direction analysis
+      if (appState.currentPostContent) {
+        console.log('EngageIQ: Retrying direction analysis with stored post content');
+        
+        // Show loading message
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_LOADING',
+          message: 'Retrying analysis...'
+        });
+        
+        // Retry the direction analysis
+        modules.directionService.handleDirectionAnalysis(
+          appState.currentPostContent, 
+          modules.iframeManager.sendMessageToIframe
+        )
+        .then(response => {
+          // Store directions for possible back navigation
+          if (response && response.directions) {
+            appState.currentDirections = response.directions;
+          }
+        })
+        .catch(error => {
+          console.error('EngageIQ: Error retrying direction analysis:', error);
+        });
+      } else {
+        // No stored post content, show error
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Retry Failed',
+          details: 'No post content available to retry',
+          actionHint: 'Please close the popup and try again'
+        });
+      }
+      break;
+    }
 
     default:
       console.log(`EngageIQ: Unhandled iframe message type: ${event.data.type}`);
@@ -111,6 +218,7 @@ function handleEngageIQButtonClick(event) {
         type: 'SHOW_ERROR',
         error: 'Extraction Failed',
         details: validationResult.errorMessage,
+        actionHint: 'Try with a different post'
       });
       return; // Stop processing if validation failed
     }
@@ -118,14 +226,41 @@ function handleEngageIQButtonClick(event) {
     // Content is valid, prepare it for the background script
     const postContent = modules.postExtractor.preparePostContent(extractedText);
     
-    // Generate comment suggestions using the message service
-    modules.messageService.generateCommentSuggestions(
-      postContent, 
-      modules.iframeManager.sendMessageToIframe
-    )
-    .catch(error => {
-      console.error('EngageIQ: Error generating comment suggestions:', error);
-    });
+    // Store post content in app state and persistence service
+    appState.currentPostContent = postContent;
+    modules.statePersistence.savePostContent(postContent);
+    
+    // Clear any previous session data when starting fresh
+    modules.statePersistence.saveLastState('initial');
+    
+    // Check if we should use the one-step or two-step process
+    if (appState.isTwoStepProcess) {
+      // Use the two-step process with direction analysis first
+      modules.directionService.handleDirectionAnalysis(
+        postContent, 
+        modules.iframeManager.sendMessageToIframe
+      )
+      .then(response => {
+        // Store directions for possible back navigation
+        if (response && response.directions) {
+          appState.currentDirections = response.directions;
+          // Save last state as 'directions'
+          modules.statePersistence.saveLastState('directions');
+        }
+      })
+      .catch(error => {
+        console.error('EngageIQ: Error analyzing directions:', error);
+      });
+    } else {
+      // Use the original one-step process
+      modules.messageService.generateCommentSuggestions(
+        postContent, 
+        modules.iframeManager.sendMessageToIframe
+      )
+      .catch(error => {
+        console.error('EngageIQ: Error generating comment suggestions:', error);
+      });
+    }
   } else {
     modules.iframeManager.hideIframe();
   }

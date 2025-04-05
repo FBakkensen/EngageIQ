@@ -7,6 +7,7 @@ EngageIQ is a Chrome extension that helps users generate contextually relevant a
 ## Features
 
 - **AI-Powered Comment Generation**: Generate six different comment suggestions based on LinkedIn's standard reaction types (Like, Celebrate, Support, Love, Insightful, Funny).
+- **Smart Suggestions**: Two-step comment generation with direction selection, offering more contextually-aware and purpose-driven comments.
 - **Contextual Understanding**: Suggestions are based on the specific content of the LinkedIn post.
 - **Language Matching**: Comments are generated in the same language as the post.
 - **Model Selection**: Choose from different Gemini AI models to optimize for speed, quality, or rate limits.

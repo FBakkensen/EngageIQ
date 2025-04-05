@@ -6,8 +6,14 @@
     <title>EngageIQ</title>
     <!-- Bootstrap CSS -->
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="../assets/css/bootstrap-icons.css" rel="stylesheet" />
     <!-- Custom Popup CSS -->
     <link href="../css/popup.css" rel="stylesheet" />
+    <!-- Direction Cards CSS -->
+    <link href="../css/direction-cards.css" rel="stylesheet" />
+    <!-- Animations CSS -->
+    <link href="../css/animations.css" rel="stylesheet" />
   </head>
   <body>
     <div
@@ -16,7 +22,18 @@
       aria-label="EngageIQ Suggestions"
     >
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">EngageIQ</h5>
+        <div class="d-flex align-items-center">
+          <button 
+            id="backButton" 
+            class="btn btn-sm btn-outline-secondary me-2" 
+            style="display: none;"
+            aria-label="Go back"
+            title="Back (Esc)"
+          >
+            <span aria-hidden="true">&larr;</span>
+          </button>
+          <h5 class="mb-0">EngageIQ</h5>
+        </div>
         <button 
           id="closeButton" 
           class="btn-close" 
@@ -53,6 +70,25 @@
         <div id="errorAction" class="mt-2" style="display: none">
           <small class="text-muted" id="errorActionText"></small>
         </div>
+        <div class="d-flex justify-content-end mt-2">
+          <button 
+            id="retryButton" 
+            class="btn btn-sm btn-outline-primary" 
+            aria-label="Retry request"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Directions Container -->
+      <div
+        id="directionsContainer"
+        class="fade-transition"
+        style="display: none"
+        aria-label="Comment direction options"
+      >
+        <!-- Direction cards will be injected here by direction-card.js -->
       </div>
 
       <!-- Suggestions Accordion -->
@@ -60,6 +96,7 @@
         class="accordion"
         id="suggestionsAccordion"
         aria-label="Comment suggestions"
+        style="display: none"
       >
         <!-- Accordion items will be injected here by popup.js -->
       </div>

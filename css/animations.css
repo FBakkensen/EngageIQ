@@ -1,0 +1,264 @@
+/**
+ * EngageIQ Chrome Extension - Animations CSS
+ *
+ * This file contains animation styles for the SmartSuggestions feature and
+ * other UI components to enhance the user experience with smooth transitions.
+ */
+
+/* Basic fade transitions */
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Slide transitions for screen changes */
+.slide-in-right {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+.slide-out-left {
+  animation: slideOutLeft 0.3s ease forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease forwards;
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.3s ease forwards;
+}
+
+@keyframes slideInRight {
+  from { 
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from { 
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to { 
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInLeft {
+  from { 
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from { 
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to { 
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Direction card hover and selection animations */
+.direction-card {
+  transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.direction-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.direction-card.selected {
+  animation: cardSelect 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cardSelect {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(10, 102, 194, 0);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.25);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.3);
+  }
+}
+
+/* Loading pulse animation for better visual feedback */
+.loading-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Smooth transition for accordion expand/collapse */
+.accordion-collapse {
+  transition: all 0.35s ease-out;
+}
+
+/* Button hover effect with slight elevation */
+.btn:not(.disabled):not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus animation for better accessibility */
+@keyframes focusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(10, 102, 194, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(10, 102, 194, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(10, 102, 194, 0);
+  }
+}
+
+.focus-visible-pulse:focus-visible {
+  animation: focusPulse 1s ease-in-out;
+}
+
+/* Keyboard focus indicator that animates on appearance */
+.keyboard-focus-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 8px;
+  pointer-events: none;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+*:focus-visible > .keyboard-focus-ring {
+  border-color: #0a66c2;
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.25);
+  animation: focusRingAppear 0.2s ease forwards;
+}
+
+@keyframes focusRingAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Button pulse animation for feedback */
+.btn-pulse {
+  animation: btnPulse 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes btnPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Accordion item animations */
+.accordion-item {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shake animation for error state */
+.shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translateX(-1px);
+  }
+  20%, 80% {
+    transform: translateX(2px);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-3px);
+  }
+  40%, 60% {
+    transform: translateX(3px);
+  }
+}
+
+/* Highlight text animation for error action text */
+.highlight-text {
+  animation: textHighlight 1.5s ease;
+}
+
+@keyframes textHighlight {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: rgba(10, 102, 194, 0.1);
+  }
+  80% {
+    background-color: rgba(10, 102, 194, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}

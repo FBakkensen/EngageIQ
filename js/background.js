@@ -1,70 +1,245 @@
 /**
  * EngageIQ Chrome Extension
- * Background Script - Service worker that runs in the background
- * 
- * This script serves as the central coordinator for the extension, handling messages
- * from content scripts and delegating to appropriate service modules.
+ * Background Script Module - Main background script for the extension
+ *
+ * This script runs in the background and serves as a central coordinator.
+ * It receives messages from content scripts and delegates to appropriate service modules.
  */
 
 // Import service modules
-import { generateComments } from './services/api-service.js';
-import { handleRegenerationRequest } from './services/regeneration-service.js';
+import { generateCommentSuggestions } from './services/comment-generation.js';
+import { regenerateComment as regenerateCommentService } from './services/regeneration-service.js';
+import { analyzePostDirections, generateDirectionComments } from './services/smart-suggestions-api.js';
+import { getApiKey } from './utils/storage-utils.js';
 
-console.log('EngageIQ: Background Script Loaded');
+// Log background script initialization
+console.log('EngageIQ: Background Script Initialized');
 
-/**
- * Listen for messages from content scripts and route to appropriate handlers
- * This is the main entry point for all extension functionality triggered from the UI
- */
+// Set up message listener for content script requests
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('EngageIQ: Background script received message:', message.type);
+  // Basic validation
+  if (!message || !message.type) {
+    console.warn('EngageIQ: Received invalid message format');
+    sendResponse({ success: false, error: 'Invalid message format' });
+    return false; // Indicate synchronous response is not needed
+  }
 
-  // Handle different message types with switch statement
+  // Log received message type for general debugging (Can be removed in production)
+  // console.log('EngageIQ: Background received message:', message.type); 
+
+  // Handle different message types
   switch (message.type) {
-    case 'GENERATE_COMMENTS': {
-      console.log('EngageIQ: Processing GENERATE_COMMENTS request');
+    // Standard comment generation
+    case 'GENERATE_COMMENTS':
+      handleGenerateComments(message, sendResponse);
+      return true; // Keep channel open for async response
+    
+    // Comment regeneration (for length adjustment)
+    case 'REGENERATE_COMMENT':
+      handleRegenerateComment(message, sendResponse);
+      return true; // Keep channel open for async response
 
-      // Extract post content from message
-      const postContent = message.postContent;
-      if (!postContent) {
-        console.error('EngageIQ: No post content provided in GENERATE_COMMENTS request');
-        sendResponse({
-          success: false,
-          error: 'Missing post content',
-          details: 'No content was provided to generate comments for',
-        });
-        return true;
-      }
-
-      // Call the generateComments function from api-service.js module
-      generateComments(postContent, sendResponse);
-      
-      // Return true to indicate we'll respond asynchronously
-      return true;
-    }
-
+    // Regeneration for specific length adjustments (longer/shorter)
+    // Note: These messages originate from message-service.js relayRegenerationRequest
     case 'REGENERATE_LONGER':
-    case 'REGENERATE_SHORTER': {
-      console.log(`EngageIQ: Processing ${message.type} request`);
-      
-      // Call the handleRegenerationRequest function from regeneration-service.js module
-      handleRegenerationRequest(message.type, message.payload, sendResponse);
-      
-      // Return true to indicate we'll respond asynchronously
-      return true;
-    }
+      // console.log('EngageIQ: Matched REGENERATE_LONGER case');
+      // Construct the expected message format for handleRegenerateComment explicitly
+      // Access data correctly from message.payload
+      handleRegenerateComment(
+        {
+          reactionType: message.payload.reactionType, 
+          originalText: message.payload.originalText,
+          lengthAction: 'longer' // Explicitly set lengthAction
+        },
+        sendResponse
+      );
+      return true; // Keep channel open for async response
 
-    default: {
-      console.warn('EngageIQ: Unknown message type received:', message.type);
-      sendResponse({
-        success: false,
-        error: 'Unknown Command',
-        details: `The command '${message.type}' is not recognized`,
-      });
-      return true;
-    }
+    case 'REGENERATE_SHORTER':
+      // console.log('EngageIQ: Matched REGENERATE_SHORTER case');
+      // Construct the expected message format for handleRegenerateComment explicitly
+      // Access data correctly from message.payload
+      handleRegenerateComment(
+        {
+          reactionType: message.payload.reactionType, 
+          originalText: message.payload.originalText,
+          lengthAction: 'shorter' // Explicitly set lengthAction
+        },
+        sendResponse
+      );
+      return true; // Keep channel open for async response
+
+    // Direction analysis for Smart Suggestions
+    case 'ANALYZE_DIRECTIONS':
+      handleAnalyzeDirections(message, sendResponse);
+      return true; // Keep channel open for async response
+    
+    // Direction-based comment generation for Smart Suggestions
+    case 'GENERATE_DIRECTION_COMMENTS':
+      handleGenerateDirectionComments(message, sendResponse);
+      return true; // Keep channel open for async response
+    
+    // Unknown message type
+    default:
+      console.warn(`EngageIQ: Unknown message type: ${message.type}`);
+      sendResponse({ success: false, error: 'Unknown message type' });
+      return false;
   }
 });
+
+/**
+ * Handles 'GENERATE_COMMENTS' messages
+ * @param {Object} message - The message from the content script
+ * @param {Function} sendResponse - Function to send the response back
+ */
+async function handleGenerateComments(message, sendResponse) {
+  try {
+    console.log('EngageIQ: Handling GENERATE_COMMENTS request');
+    
+    // Validate message contains required data
+    if (!message.postContent) {
+      sendResponse({ success: false, error: 'Missing post content' });
+      return;
+    }
+    
+    // Get API Key
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
+      return;
+    }
+
+    // Call the comment service to generate suggestions
+    const response = await generateCommentSuggestions(message.postContent, apiKey);
+    sendResponse({ success: true, payload: response });
+    
+  } catch (error) {
+    console.error('EngageIQ: Error generating comments:', error);
+    sendResponse({
+      success: false,
+      error: 'Failed to generate comments',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handles 'REGENERATE_COMMENT' messages
+ * @param {Object} message - The message from the content script (should include originalText, lengthAction, reactionType)
+ * @param {Function} sendResponse - Function to send the response back
+ */
+async function handleRegenerateComment(message, sendResponse) {
+  // Log received message for detailed debugging
+  // console.log('EngageIQ: [handleRegenerateComment] Received message:', JSON.stringify(message)); 
+  
+  try {
+    // console.log('EngageIQ: Handling REGENERATE_COMMENT request'); 
+    
+    // Validate message contains required data
+    if (!message.originalText || !message.lengthAction || !message.reactionType) { 
+      sendResponse({
+        success: false,
+        error: 'Missing required data for regeneration (originalText, lengthAction, reactionType)' 
+      });
+      return;
+    }
+    
+    // Get API Key
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
+      return;
+    }
+
+    // Determine length adjustment
+    const makeLonger = message.lengthAction === 'longer';
+
+    // Call the comment service to regenerate the comment
+    const newText = await regenerateCommentService(
+      message.originalText,
+      message.reactionType, 
+      makeLonger,
+      apiKey
+    );
+    sendResponse({ success: true, payload: { newText: newText, reactionType: message.reactionType } });
+    
+  } catch (error) {
+    console.error('EngageIQ: Error regenerating comment:', error);
+    sendResponse({
+      success: false,
+      error: 'Failed to regenerate comment',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handles 'ANALYZE_DIRECTIONS' messages
+ * @param {Object} message - The message from the content script
+ * @param {Function} sendResponse - Function to send the response back
+ */
+async function handleAnalyzeDirections(message, sendResponse) {
+  try {
+    console.log('EngageIQ: Handling ANALYZE_DIRECTIONS request');
+    
+    // Validate message contains required data
+    if (!message.postContent) {
+      sendResponse({ success: false, error: 'Missing post content' });
+      return;
+    }
+    
+    // Call the API service to analyze directions
+    const response = await analyzePostDirections(message.postContent);
+    sendResponse(response);
+    
+  } catch (error) {
+    console.error('EngageIQ: Error analyzing directions:', error);
+    sendResponse({
+      success: false,
+      error: 'Failed to analyze post for directions',
+      details: error.message,
+      actionHint: error.actionHint || 'Please try again',
+      errorType: error.type || 'unknown_error'
+    });
+  }
+}
+
+/**
+ * Handles 'GENERATE_DIRECTION_COMMENTS' messages
+ * @param {Object} message - The message from the content script
+ * @param {Function} sendResponse - Function to send the response back
+ */
+async function handleGenerateDirectionComments(message, sendResponse) {
+  try {
+    console.log('EngageIQ: Handling GENERATE_DIRECTION_COMMENTS request');
+    
+    // Validate message contains required data
+    if (!message.payload || !message.payload.direction || !message.payload.postContent) {
+      sendResponse({
+        success: false,
+        error: 'Missing required data for direction-based comment generation'
+      });
+      return;
+    }
+    
+    // Call the API service to generate direction-based comments
+    const response = await generateDirectionComments(
+      message.payload.direction,
+      message.payload.postContent
+    );
+    sendResponse(response);
+    
+  } catch (error) {
+    console.error('EngageIQ: Error generating direction comments:', error);
+    sendResponse({
+      success: false,
+      error: 'Failed to generate direction-based comments',
+      details: error.message,
+      actionHint: error.actionHint || 'Please try again',
+      errorType: error.type || 'unknown_error'
+    });
+  }
+}
 
 /**
  * Listener for extension installation or update

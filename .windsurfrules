@@ -12,4 +12,5 @@ Do not work on files that are not directly related to the current task.
 Do not work on other tasks without approval.
 No inline css styles
 Prefer to use the bootstrap 5 framework
+Only make custom css if absolutely necessary else use bootstrap 5
 Bootstrap 5 is available in the asssets/js folder and asssets/css folders

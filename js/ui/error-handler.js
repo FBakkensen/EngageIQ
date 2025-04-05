@@ -6,6 +6,7 @@
  *  - Converting technical error messages to user-friendly formats
  *  - Displaying error messages in the UI with proper formatting
  *  - Handling error actions and guidance for users
+ *  - Providing smooth animation transitions for error states
  */
 
 // Log module load confirmation - Compliant with user preference
@@ -27,7 +28,29 @@ export function initErrorHandler(config) {
   errorMessage = config.errorMessageElement;
   showStateFn = config.showStateFunction;
   
+  // Initialize retry button animations
+  const retryButton = document.getElementById('retryButton');
+  if (retryButton) {
+    retryButton.addEventListener('click', handleRetryClick);
+  }
+  
   console.log('EngageIQ: Error Handler initialized');
+}
+
+/**
+ * Handles retry button click with animation
+ * @param {Event} event - The click event
+ */
+function handleRetryClick(event) {
+  const button = event.currentTarget;
+  
+  // Add animation class for visual feedback
+  button.classList.add('btn-pulse');
+  
+  // Remove the animation class after it completes
+  setTimeout(() => {
+    button.classList.remove('btn-pulse');
+  }, 500);
 }
 
 /**
@@ -47,20 +70,57 @@ export function displayError(message, details, actionData) {
 
   console.log(`EngageIQ: Displaying error: ${message}`);
 
-  // Get error action elements
+  // Get error elements
+  const errorContainer = document.getElementById('errorState');
+  const errorHeading = errorContainer?.querySelector('.alert-heading');
   const errorAction = document.getElementById('errorAction');
   const errorActionText = document.getElementById('errorActionText');
+  const retryButton = document.getElementById('retryButton');
 
-  // Display the main error message
-  errorMessage.textContent =
-    getUserFriendlyErrorMessage(message) || 'Unknown error';
+  // Check if we're already showing this exact error to avoid unnecessary animations
+  const isShowingSameError = 
+    errorMessage.textContent === getUserFriendlyErrorMessage(message);
+
+  if (!isShowingSameError) {
+    // Apply entrance animation
+    errorContainer?.classList.add('fade-in');
+    
+    // Remove animation class after it completes
+    setTimeout(() => {
+      errorContainer?.classList.remove('fade-in');
+    }, 300);
+    
+    // Display the main error message with subtle animation
+    const friendlyMessage = getUserFriendlyErrorMessage(message) || 'Unknown error';
+    errorMessage.textContent = friendlyMessage;
+    
+    // Add shake animation for new errors
+    if (errorHeading) {
+      errorHeading.classList.add('shake');
+      setTimeout(() => {
+        errorHeading.classList.remove('shake');
+      }, 800);
+    }
+  }
 
   // Display action guidance if provided
   if (errorAction && errorActionText && actionData && actionData.text) {
     errorActionText.textContent = actionData.text;
     errorAction.style.display = 'block';
+    
+    // Highlight the action text briefly
+    errorActionText.classList.add('highlight-text');
+    setTimeout(() => {
+      errorActionText.classList.remove('highlight-text');
+    }, 1000);
   } else if (errorAction) {
     errorAction.style.display = 'none';
+  }
+  
+  // Ensure retry button is properly styled and accessible
+  if (retryButton) {
+    retryButton.classList.add('focus-visible-pulse');
+    retryButton.setAttribute('aria-label', 'Retry request');
   }
 
   // Log additional details if provided
@@ -68,7 +128,44 @@ export function displayError(message, details, actionData) {
     console.log(`EngageIQ: Error details: ${details}`);
   }
 
+  // Show the error state
   showStateFn('error');
+  
+  // Announce to screen readers
+  announceErrorToScreenReader(message, actionData?.text);
+}
+
+/**
+ * Announces error message to screen readers
+ * @param {string} message - The error message
+ * @param {string} [actionGuidance] - Optional action guidance
+ */
+function announceErrorToScreenReader(message, actionGuidance) {
+  // Find or create the announcer element
+  let announcer = document.getElementById('sr-error-announcer');
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.id = 'sr-error-announcer';
+    announcer.className = 'visually-hidden';
+    announcer.setAttribute('aria-live', 'assertive');
+    announcer.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(announcer);
+  }
+  
+  // Format the announcement
+  const friendlyMessage = getUserFriendlyErrorMessage(message);
+  let announcement = `Error: ${friendlyMessage}`;
+  if (actionGuidance) {
+    announcement += ` ${actionGuidance}`;
+  }
+  
+  // Set the announcement text
+  announcer.textContent = announcement;
+  
+  // Clear after a delay
+  setTimeout(() => {
+    announcer.textContent = '';
+  }, 3000);
 }
 
 /**
