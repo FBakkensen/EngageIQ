@@ -79,9 +79,7 @@ export async function analyzePostDirections(postContent) {
         {
           parts: [
             {
-              text: `Analyze this LinkedIn post content and identify 3-4 different possible directions for commenting. Each direction should offer a unique perspective or approach.
-
-Post content: "${processedText}"
+              text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Keep the response in the same language as the post. Post content: "${processedText}"
 
 Generate an array of direction objects where each has:
 - A short, catchy title (2-5 words)
@@ -125,9 +123,9 @@ Make sure the directions are diverse and appropriate for professional networking
     );
     
     // Extract the function call result from the response
-    const functionCall = extractFunctionCall(response, "generateDirections");
+    const directionsFunctionCall = extractFunctionCall(response, "generateDirections");
     
-    if (!functionCall) {
+    if (!directionsFunctionCall) {
       throw createApiError(
         ERROR_TYPES.PARSING,
         'Failed to extract direction suggestions from API response',
@@ -136,7 +134,8 @@ Make sure the directions are diverse and appropriate for professional networking
     }
     
     // Format and validate the direction suggestions
-    const directions = formatDirections(functionCall.directions);
+    // Correctly access the directions array within the 'args' property
+    const directions = formatDirections(directionsFunctionCall.args.directions);
     
     console.log(`EngageIQ: Successfully generated ${directions.length} direction suggestions`);
     
@@ -206,17 +205,13 @@ export async function generateDirectionComments(direction, postContent) {
         {
           parts: [
             {
-              text: `Generate 3 comment suggestions for a LinkedIn post based on the following direction approach.
+              text: `Generate 3 comment suggestions (short, medium, detailed) based on the direction "${direction.title}". For each suggestion, provide:
+- The comment text itself.
+- The type (short, medium, or detailed).
+- A unique and descriptive title (3-6 words) that accurately summarizes the specific comment's content and tone. Do NOT use generic titles like "Short Comment" or "Suggestion 1".
 
-Post content: "${processedText}"
-
-Direction approach: "${direction.title} - ${direction.description}"
-
-Generate an array of comment objects where each has:
-- A well-crafted comment text that follows the direction approach
-- A length type classification (short, medium, or detailed)
-
-Make sure the comments are professional, engaging, and varied in length and style while following the specified direction.`
+Keep the response in the same language as the original post if provided.
+Original post content for context: "${processedText}"`
             }
           ]
         }
@@ -265,19 +260,28 @@ Make sure the comments are professional, engaging, and varied in length and styl
       );
     }
     
-    // Format and validate the comment suggestions
-    const suggestions = formatSuggestions(functionCall.comments);
+    // Log the raw comments extracted from the function call before formatting
+    console.log('EngageIQ: [smart-suggestions-api] Raw comments extracted:', functionCall.args.comments);
     
+    // Format and validate the comment suggestions
+    const suggestions = formatSuggestions(functionCall.args.comments);
+    
+    // Log the suggestions after formatting to confirm titles are included
+    console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
+
+    console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
+
+    // Get current model info (using existing declarations from earlier in the function)
+    const modelMatch = endpoint.match(/models\/([^:]+):/);
+    const modelInfo = modelMatch ? { name: modelMatch[1] } : null;
+
     console.log(`EngageIQ: Successfully generated ${suggestions.length} comment suggestions`);
     
     return {
       success: true,
       suggestions: suggestions,
       direction: direction,
-      modelInfo: {
-        name: model,
-        temperature: temperature
-      }
+      modelInfo: modelInfo // Use correctly scoped modelInfo
     };
     
   } catch (error) {
@@ -398,14 +402,10 @@ function extractFunctionCall(response, functionName) {
     for (const part of parts) {
       if (part.functionCall && part.functionCall.name === functionName) {
         try {
-          // Arguments should already be an object, no need to parse
-          if (typeof part.functionCall.args !== 'object' || part.functionCall.args === null) {
-            console.error('EngageIQ: Function call arguments are not a valid object:', part.functionCall.args);
-            return null;
-          }
-          return part.functionCall.args; 
+          // Return the entire functionCall object, not just the args
+          return part.functionCall; 
         } catch (error) { // Keep catch block for unexpected issues
-          console.error('EngageIQ: Error processing function call arguments:', error, 'Args:', part.functionCall.args);
+          console.error('EngageIQ: Error processing function call:', error);
           return null;
         }
       }
@@ -563,6 +563,7 @@ function formatSuggestions(comments) {
       id: reactionType,
       text: comment.text || 'No suggestion available',
       type: comment.type || 'medium',
+      title: comment.title || `Suggestion ${index + 1}` // Add title here, with a fallback
     };
   });
 }

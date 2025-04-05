@@ -120,7 +120,9 @@ export function displaySuggestions(suggestions, selectedDirection) {
   suggestionsAccordion.appendChild(screenReaderInstruction);
   
   suggestions.forEach((suggestion, index) => {
-    // Normalize suggestion ID to lowercase for consistency
+    // Add console log to inspect the suggestion object
+    console.log('EngageIQ: [suggestion-renderer] Processing suggestion:', suggestion);
+
     const reactionType = suggestion.id.toLowerCase();
 
     // Create accordion item
@@ -143,17 +145,17 @@ export function displaySuggestions(suggestions, selectedDirection) {
     accordionButton.setAttribute('aria-controls', `collapse-${reactionType}`);
     // First item should be focusable by default
     accordionButton.setAttribute('tabindex', index === 0 ? '0' : '0');
-    
+    accordionButton.textContent = suggestion.title || `Suggestion ${index + 1}`; // Use title from suggestion
+    accordionButton.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+      }
+    });
     // Add keyboard accessibility attributes
     accordionButton.setAttribute('role', 'button');
     accordionButton.setAttribute('aria-label', `${suggestion.title} suggestion. Press Enter to expand`);
 
-    // Create title text
-    const buttonText = document.createElement('span');
-    buttonText.textContent = suggestion.title || 'Suggestion';
-
     // Assemble accordion button
-    accordionButton.appendChild(buttonText);
     accordionHeader.appendChild(accordionButton);
     accordionItem.appendChild(accordionHeader);
 

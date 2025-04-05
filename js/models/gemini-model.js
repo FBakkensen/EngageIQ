@@ -111,8 +111,12 @@ const DIRECTION_COMMENT_SCHEMA = {
             description: 'The length type of the comment (short, medium, detailed).',
             enum: ['short', 'medium', 'detailed'],
           },
+          title: {
+            type: 'string',
+            description: 'A short, descriptive title for the comment (e.g., \'Quick Reply\').',
+          },
         },
-        required: ['text', 'type'],
+        required: ['text', 'type', 'title'],
       },
       minItems: 3,
       maxItems: 3,

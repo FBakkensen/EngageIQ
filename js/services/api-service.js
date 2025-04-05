@@ -128,6 +128,12 @@ async function generateComments(postContent, sendResponse) {
       },
     ];
 
+    // Log the successfully processed suggestions
+    console.log('EngageIQ: [api-service] Processed suggestions:', suggestions);
+
+    // Log the final formatted suggestions before sending the response
+    console.log('EngageIQ: [api-service] Final formattedSuggestions before sendResponse:', formattedSuggestions);
+
     // Get current model to return with response
     const endpoint = await getGenerateContentEndpoint();
     const modelMatch = endpoint.match(/models\/([^:]+):/); // Extract model name from endpoint
@@ -219,6 +225,9 @@ async function regenerateComment(requestType, payload, sendResponse) {
     // Process the regeneration response
     const newText = processRegenerationResponse(response);
     console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
+
+    // Log the successfully processed regenerated comment
+    console.log('EngageIQ: [api-service] Processed regenerated comment:', newText);
 
     // Send success response
     sendResponse({
@@ -336,6 +345,9 @@ async function analyzeDirections(postContent, sendResponse) {
     // Process the response from the API
     const directions = processDirectionAnalysisResponse(response);
     
+    // Log the successfully processed directions
+    console.log('EngageIQ: [api-service] Processed directions:', directions);
+
     // Send the response
     sendResponse({
       success: true,
@@ -407,9 +419,9 @@ async function generateDirectionComments(payload, sendResponse) {
       The comments should focus on the selected direction: "${selectedDirection.title} - ${selectedDirection.description}"
       
       Create three distinct comments with different lengths and perspectives:
-      1. Short (1 sentence)
-      2. Medium (2-3 sentences)
-      3. Detailed (4-5 sentences)
+      1. Short (1 sentence) - Give this a descriptive title (e.g., 'Quick Reply')
+      2. Medium (2-3 sentences) - Give this a descriptive title (e.g., 'Balanced View')
+      3. Detailed (4-5 sentences) - Give this a descriptive title (e.g., 'In-depth Comment')
       
       Each comment should be:
       - Professional and appropriate for LinkedIn
@@ -418,7 +430,7 @@ async function generateDirectionComments(payload, sendResponse) {
       - Natural sounding (as if written by a human)
       - Free of excessive emoji use
       
-      Return your suggestions using the provided function call format with a 'comments' array. Do not include any additional text.
+      Return your suggestions using the provided function call format with a 'comments' array. Each comment object in the array must have 'type' (short, medium, detailed), 'text' (the comment itself), and 'title' (the descriptive title). Do not include any additional text.
     `;
 
     // Create request body with higher temperature for more diverse comments
@@ -458,14 +470,21 @@ async function generateDirectionComments(payload, sendResponse) {
     // Process the response from the API
     const comments = processDirectionCommentsResponse(response);
     
+    // Log the successfully processed comments
+    console.log('EngageIQ: [api-service] Processed comments:', comments);
+
     // Format the comments for UI presentation
     const formattedComments = comments.map(comment => ({
       id: comment.type,
       text: comment.text,
       type: comment.type,
-      direction: selectedDirection.title
+      direction: selectedDirection.title,
+      title: comment.title
     }));
     
+    // Log the final formatted comments before sending the response
+    console.log('EngageIQ: [api-service] Final formattedComments before sendResponse:', formattedComments);
+
     // Send the response
     sendResponse({
       success: true,
@@ -722,6 +741,9 @@ function processGenerationResponse(data) {
     throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
   }
   
+  // Log the successfully processed comments
+  console.log('EngageIQ: [api-service] Processed comments:', comments);
+
   return comments;
 }
 
@@ -788,6 +810,9 @@ function processRegenerationResponse(data) {
     throw new Error('Invalid response format: Missing regeneratedComment');
   }
   
+  // Log the successfully processed regenerated comment
+  console.log('EngageIQ: [api-service] Processed regenerated comment:', args.regeneratedComment);
+
   return args.regeneratedComment;
 }
 
@@ -848,7 +873,16 @@ function processDirectionAnalysisResponse(data) {
     throw new Error('Invalid response format: Missing directions array');
   }
   
-  return args.directions;
+  // Ensure each direction maintains its original language context
+  const directions = args.directions.map(direction => ({
+    ...direction,
+    headerText: direction.headerText || `Choose a commenting approach` // Fallback
+  }));
+  
+  // Log the successfully processed directions
+  console.log('EngageIQ: [api-service] Processed directions:', directions);
+
+  return directions;
 }
 
 /**
@@ -908,17 +942,20 @@ function processDirectionCommentsResponse(data) {
     throw new Error('Invalid response format: Missing comments array');
   }
   
-  // Validate that we have all required comment types
+  // Validate that we have all required comment types and titles
   const requiredTypes = ['short', 'medium', 'detailed'];
   const missingTypes = requiredTypes.filter(type => 
-    !args.comments.some(comment => comment.type === type)
+    !args.comments.some(comment => comment.type === type && comment.title)
   );
   
   if (missingTypes.length > 0) {
-    console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
-    throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
+    console.error(`EngageIQ: Missing comment types or titles in response: ${missingTypes.join(', ')}`);
+    throw new Error(`Missing comment data: ${missingTypes.join(', ')}`);
   }
   
+  // Log the successfully processed comments
+  console.log('EngageIQ: [api-service] Processed comments:', args.comments);
+
   return args.comments;
 }
 
