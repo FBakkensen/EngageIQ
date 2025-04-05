@@ -11,6 +11,7 @@ let pendingIframeMessages = []; // Store messages that need to be sent to the if
 let popupReady = false; // Track if the popup has reported it's ready to receive messages
 let activeCommentBox = null; // Track the active comment box that was clicked
 let messageHandler = null; // External message handler callback
+let escKeyHandler = null; // Reference to the ESC key handler
 
 /**
  * Gets the existing iframe or creates it if it doesn't exist.
@@ -96,6 +97,11 @@ function handleIframeMessage(event) {
       }
       break;
 
+    case 'CLOSE_POPUP':
+      console.log('EngageIQ: Received close popup request from iframe');
+      hideIframe();
+      break;
+
     default:
       // Handle any other message type through the provided message handler
       if (messageHandler && typeof messageHandler === 'function') {
@@ -142,6 +148,14 @@ function showIframe() {
   // Use Bootstrap classes instead of direct style manipulation
   iframe.classList.remove('d-none');
   iframe.classList.add('visible'); // Add animation class
+  
+  // Add ESC key handler
+  escKeyHandler = (event) => {
+    if (event.key === 'Escape') {
+      hideIframe();
+    }
+  };
+  document.addEventListener('keydown', escKeyHandler);
 }
 
 /**
@@ -161,6 +175,9 @@ function hideIframe(animated = true) {
   } else {
     engageIQIframe.classList.add('d-none');
   }
+  
+  // Remove ESC key handler
+  document.removeEventListener('keydown', escKeyHandler);
 }
 
 /**

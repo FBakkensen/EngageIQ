@@ -75,6 +75,23 @@ document.addEventListener('DOMContentLoaded', () => {
     showStateFunction: showState
   });
 
+  // Add close button functionality
+  const closeButton = document.getElementById('closeButton');
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      console.log('EngageIQ: Close button clicked');
+      sendMessageToContentScript({ type: 'CLOSE_POPUP' });
+    });
+  }
+
+  // Add ESC key functionality
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      console.log('EngageIQ: ESC key pressed');
+      sendMessageToContentScript({ type: 'CLOSE_POPUP' });
+    }
+  });
+
   // Show initial loading state
   showState('loading');
 
