@@ -17,7 +17,7 @@
  */
 async function handleRegenerateRequest(message) {
   console.log('EngageIQ: Handling regeneration request');
-  const { originalText, reactionType, type: requestType } = message.data; // Access data payload
+  const { originalText, reactionType, type: requestType, languageCode } = message.data; // Access data payload
 
   // Basic validation
   if (!originalText || !reactionType) {
@@ -32,7 +32,7 @@ async function handleRegenerateRequest(message) {
   const makeLonger = requestType === 'REGENERATE_LONGER';
 
   // Regenerate the comment directly calling the internal function
-  const newText = await regenerateComment(originalText, reactionType, makeLonger);
+  const newText = await regenerateComment(originalText, reactionType, makeLonger, languageCode);
   console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
   return newText;
 }
@@ -43,12 +43,13 @@ async function handleRegenerateRequest(message) {
  * @param {string} originalText - The original comment text.
  * @param {string} reactionType - The LinkedIn reaction associated with the comment.
  * @param {boolean} makeLonger - Whether to make the comment longer (true) or shorter (false).
+ * @param {string} languageCode - The ISO 639-1 language code (e.g., 'en', 'es').
  * @returns {Promise<string>} A promise that resolves with the regenerated comment text.
  * @throws {ApiError} Throws an ApiError if any step fails.
  */
-async function regenerateComment(originalText, reactionType, makeLonger) {
+async function regenerateComment(originalText, reactionType, makeLonger, languageCode) {
   const operationName = `Regenerate Comment (${makeLonger ? 'Longer' : 'Shorter'})`;
-  console.log(`EngageIQ: [${operationName}] Starting regeneration.`);
+  console.log(`EngageIQ: [${operationName}] Starting regeneration with language code: ${languageCode || 'Not provided'}.`);
  
   // 1. Validate Input (Could add more checks if needed)
   if (typeof originalText !== 'string' || originalText.trim() === '' || typeof reactionType !== 'string' || reactionType.trim() === '') {
@@ -58,8 +59,15 @@ async function regenerateComment(originalText, reactionType, makeLonger) {
   }
 
   try {
-    // Call the specialized function from comment-generation.js
-    const regeneratedText = await regenerateCommentWithLength(originalText, reactionType, makeLonger);
+    // Call the specialized function from comment-generation.js, passing the language code
+    const regeneratedText = await regenerateCommentWithLength(originalText, reactionType, makeLonger, languageCode);
+
+    // Check if the regeneration actually produced text
+    if (!regeneratedText || regeneratedText.trim() === '') {
+      console.warn(`EngageIQ: [${operationName}] Regeneration returned null or empty text.`);
+      throw new Error('Failed to regenerate comment: The AI did not provide a new comment.');
+    }
+
     console.log(`EngageIQ: [${operationName}] Regeneration successful.`);
     return regeneratedText; // Directly return the string result
   } catch (error) {
