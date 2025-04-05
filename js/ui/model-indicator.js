@@ -10,26 +10,43 @@
 // Log module load confirmation
 console.log('EngageIQ: Model Indicator Module Loaded');
 
-// Default model if none is selected
-const DEFAULT_GEMINI_MODEL = 'gemini-1.5-pro';
+// Import the centralized default model constant
+import { DEFAULT_GEMINI_MODEL } from '../models/gemini-model.js'; // Corrected relative path
 
 // Reference to DOM element (to be initialized when module is used)
 let modelIndicatorElement;
 
 /**
- * Initializes the model indicator module with required DOM reference
+ * Initializes the model indicator component
+ * - Stores the DOM element reference
+ * - Sets up a listener for storage changes to keep the UI updated
+ * 
  * @param {Object} config - Configuration object
- * @param {HTMLElement} config.modelIndicatorElement - The model indicator DOM element
+ * @param {HTMLElement} config.modelIndicatorElement - The DOM element for the indicator
  */
-export function initModelIndicator(config) {
-  modelIndicatorElement = config.modelIndicatorElement;
-  
-  console.log('EngageIQ: Model Indicator initialized');
+export function initModelIndicator({ modelIndicatorElement: element }) {
+  if (!element) {
+    console.error("EngageIQ: Model indicator element not provided during initialization.");
+    return;
+  }
+  modelIndicatorElement = element;
+  console.log("EngageIQ: Model indicator initialized.");
+
+  // Add listener for storage changes
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    // Check if the change is in 'sync' storage and affects 'geminiModel'
+    if (areaName === 'sync' && changes.geminiModel) {
+      const newModel = changes.geminiModel.newValue || DEFAULT_GEMINI_MODEL;
+      console.log(`EngageIQ: Detected model change in storage: ${newModel}`);
+      updateModelIndicator(newModel);
+    }
+  });
 }
 
 /**
- * Updates the model indicator with the provided model name
- * @param {string} modelName - The name of the model to display
+ * Updates the model indicator UI with the given model ID
+ * 
+ * @param {string} modelId - The ID of the model (e.g., 'gemini-1.5-pro')
  */
 export function updateModelIndicator(modelName) {
   if (!modelIndicatorElement) {
@@ -69,22 +86,18 @@ export function updateModelIndicator(modelName) {
 export function displayCurrentModel() {
   console.log('EngageIQ: Retrieving current model setting');
 
-  // Get stored model preference using chrome.storage.sync
-  chrome.storage.sync.get(['geminiModel'], (result) => {
-    let currentModel = DEFAULT_GEMINI_MODEL;
-
+  // Use the imported DEFAULT_GEMINI_MODEL for fallback
+  chrome.storage.sync.get({ geminiModel: DEFAULT_GEMINI_MODEL }, (result) => {
+    // The result.geminiModel will either be the stored value or the default we provided
+    const currentModel = result.geminiModel;
+    
     if (chrome.runtime.lastError) {
       console.warn(
         'EngageIQ: Error retrieving model preference:',
         chrome.runtime.lastError
       );
-    } else if (result.geminiModel) {
-      currentModel = result.geminiModel;
-      console.log(`EngageIQ: Retrieved model preference: ${currentModel}`);
     } else {
-      console.log(
-        `EngageIQ: No model preference found, using default: ${currentModel}`
-      );
+      console.log(`EngageIQ: Retrieved model preference: ${currentModel}`);
     }
 
     // Update the UI

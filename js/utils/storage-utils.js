@@ -2,12 +2,11 @@
  * EngageIQ Chrome Extension
  * Storage Utilities Module
  * 
- * This module provides utility functions for storage operations used throughout the extension.
- * It abstracts all Chrome storage API interactions to provide a consistent interface.
+ * This module provides utility functions for handling Chrome storage operations
+ * related to the EngageIQ extension settings, such as API key and model preferences.
  */
 
-// Default model to use if none is specified in storage
-const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash'; // Using Gemini 2.0 Flash as default for faster responses
+import { DEFAULT_GEMINI_MODEL } from '../models/gemini-model.js'; // Import the default model constant
 
 /**
  * Gets the currently selected Gemini model from storage

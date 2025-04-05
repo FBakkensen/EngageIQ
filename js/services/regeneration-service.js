@@ -6,111 +6,68 @@
  * It handles the regeneration requests, processing, and response formatting.
  */
 
-// Import required dependencies
-import { getApiKey } from '../utils/storage-utils.js';
-import { callGeminiAPI } from './api-service.js';
-import { 
-  createCommentRegenerationPrompt, 
-  createRegenerationRequestBody,
-  processRegenerationResponse 
-} from './comment-generation.js';
 
 /**
- * Handles a request to regenerate a comment, making it either longer or shorter.
+ * Handles the regeneration request logic.
+ * This function is now async and contains the core logic previously split.
  * 
- * @param {string} requestType - 'REGENERATE_LONGER' or 'REGENERATE_SHORTER'
- * @param {Object} payload - Contains originalText and reactionType
- * @param {function} sendResponse - Callback function to send the response back to the caller
+ * @param {Object} message - The message object containing request details.
+ * @returns {Promise<string>} - Promise resolving to the regenerated text.
+ * @throws {ApiError} If validation or API call fails.
  */
-async function handleRegenerationRequest(requestType, payload, sendResponse) {
-  console.log(`EngageIQ: Entering handleRegenerationRequest for ${requestType}`);
+async function handleRegenerateRequest(message) {
+  console.log('EngageIQ: Handling regeneration request');
+  const { originalText, reactionType, type: requestType } = message.data; // Access data payload
 
-  try {
-    // Get API key from storage
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      console.error('EngageIQ: No API key found in storage for regeneration request');
-      sendResponse({
-        success: false,
-        type: 'REGENERATION_ERROR',
-        error: 'API_KEY_MISSING',
-        details: 'API key is missing. Please set it in the extension options.',
-        payload: { reactionType: payload?.reactionType },
-      });
-      return;
-    }
-
-    console.log('EngageIQ: API key retrieved successfully for regeneration.');
-
-    // Validate payload
-    if (!payload || !payload.originalText || !payload.reactionType) {
-      console.error('EngageIQ: Invalid payload for regeneration request:', payload);
-      sendResponse({
-        success: false,
-        type: 'REGENERATION_ERROR',
-        error: 'INVALID_PAYLOAD',
-        details: 'Missing originalText or reactionType in regeneration request.',
-        payload: { reactionType: payload?.reactionType },
-      });
-      return;
-    }
-
-    const { originalText, reactionType } = payload;
-    
-    // Determine if we're making the comment longer or shorter
-    const makeLonger = requestType === 'REGENERATE_LONGER';
-    
-    // Regenerate the comment
-    const newText = await regenerateComment(originalText, reactionType, makeLonger, apiKey);
-    console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
-
-    // Send success response
-    sendResponse({
-      success: true,
-      type: 'REGENERATION_SUCCESS',
-      payload: {
-        newText: newText,
-        reactionType: reactionType,
-      },
-    });
-
-  } catch (error) {
-    console.error('EngageIQ: Error during regeneration process:', error);
-    sendResponse({
-      success: false,
-      type: 'REGENERATION_ERROR',
-      error: 'API_ERROR',
-      details: error.message || 'Unknown regeneration error occurred.',
-      payload: {
-        reactionType: payload?.reactionType,
-      },
-    });
+  // Basic validation
+  if (!originalText || !reactionType) {
+    console.error('EngageIQ: Invalid regeneration request - missing originalText or reactionType in message.data');
+    // Use createApiError if available and appropriate, otherwise a standard Error
+    // Assuming createApiError is NOT imported here, use standard Error
+    throw new Error('Invalid regeneration request payload.'); 
   }
+
+  console.log(`EngageIQ: Regenerating for reaction: ${reactionType}`);
+
+  const makeLonger = requestType === 'REGENERATE_LONGER';
+
+  // Regenerate the comment directly calling the internal function
+  const newText = await regenerateComment(originalText, reactionType, makeLonger);
+  console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
+  return newText;
 }
 
 /**
- * Regenerates a comment with adjusted length.
+ * Internal function to regenerate a comment.
  * 
- * @param {string} originalText - The original comment text
- * @param {string} reactionType - The LinkedIn reaction type (like, celebrate, etc.)
- * @param {boolean} makeLonger - True to make comment longer, false to make it shorter
- * @param {string} apiKey - The Gemini API key
- * @returns {Promise<string>} - Promise resolving to the regenerated comment text
+ * @param {string} originalText - The original comment text.
+ * @param {string} reactionType - The LinkedIn reaction associated with the comment.
+ * @param {boolean} makeLonger - Whether to make the comment longer (true) or shorter (false).
+ * @returns {Promise<string>} A promise that resolves with the regenerated comment text.
+ * @throws {ApiError} Throws an ApiError if any step fails.
  */
-async function regenerateComment(originalText, reactionType, makeLonger, apiKey) {
-  console.log(`EngageIQ: Regenerating comment to make it ${makeLonger ? 'longer' : 'shorter'}`);
-  
-  // Create the prompt for regeneration
-  const prompt = createCommentRegenerationPrompt(originalText, reactionType, makeLonger);
-  
-  // Create request body
-  const requestBody = createRegenerationRequestBody(prompt);
-  
-  // Make the API call
-  const response = await callGeminiAPI(requestBody, apiKey);
-  
-  // Process the response
-  return processRegenerationResponse(response);
+async function regenerateComment(originalText, reactionType, makeLonger) {
+  const operationName = `Regenerate Comment (${makeLonger ? 'Longer' : 'Shorter'})`;
+  console.log(`EngageIQ: [${operationName}] Starting regeneration.`);
+ 
+  // 1. Validate Input (Could add more checks if needed)
+  if (typeof originalText !== 'string' || originalText.trim() === '' || typeof reactionType !== 'string' || reactionType.trim() === '') {
+    // Assuming createApiError is NOT imported, throw standard Error
+    console.error(`EngageIQ: [${operationName}] Invalid input provided.`);
+    throw new Error('Invalid input: Original text and reaction type are required.');
+  }
+
+  try {
+    // Call the specialized function from comment-generation.js
+    const regeneratedText = await regenerateCommentWithLength(originalText, reactionType, makeLonger);
+    console.log(`EngageIQ: [${operationName}] Regeneration successful.`);
+    return regeneratedText; // Directly return the string result
+  } catch (error) {
+    // Log the error here as well for context
+    console.error(`EngageIQ: [${operationName}] Failed:`, error);
+    // Re-throw the error to be handled by the caller (e.g., background.js)
+    throw error; 
+  }
 }
 
 /**
@@ -177,9 +134,14 @@ function analyzeTextDifference(originalText, regeneratedText) {
   };
 }
 
+// Import required dependencies
+import { 
+  regenerateCommentWithLength, // Import the specific function
+} from './comment-generation.js';
+
 // Export functions for use by other modules
 export {
-  handleRegenerationRequest,
+  handleRegenerateRequest,
   regenerateComment,
   sanitizeRegeneratedText,
   analyzeTextDifference

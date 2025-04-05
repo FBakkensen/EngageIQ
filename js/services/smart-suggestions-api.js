@@ -11,11 +11,14 @@
 // Import required modules
 import {
   DIRECTION_ANALYSIS_SCHEMA,
-  getGenerateContentEndpoint,
-  getModelTemperature
+  getModelTemperature,
 } from '../models/gemini-model.js';
-import { getApiKey } from '../utils/storage-utils.js';
 import { getCurrentModel } from '../utils/storage-utils.js';
+import {
+  callGeminiAPI,
+  ERROR_TYPES as API_ERROR_TYPES, // Alias to avoid name collision if needed later
+  createApiError as createBaseApiError // Alias for clarity
+} from './api-service.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Smart Suggestions API Service Module Loaded');
@@ -31,12 +34,6 @@ const ERROR_TYPES = {
   INTERNAL: 'internal_error',
 };
 
-const API_SETTINGS = {
-  MAX_RETRIES: 2,
-  RETRY_DELAY_MS: 1000,
-  TIMEOUT_MS: 20000,
-};
-
 /**
  * Analyzes post content to generate direction suggestions
  * 
@@ -48,21 +45,11 @@ export async function analyzePostDirections(postContent) {
   
   try {
     // Prepare request data
-    const endpoint = await getGenerateContentEndpoint();
-    const apiKey = await getApiKey();
     const model = await getCurrentModel();
     const temperature = getModelTemperature(model);
     
-    if (!apiKey) {
-      throw createApiError(
-        ERROR_TYPES.API_KEY,
-        'API key not found. Please check your API key settings.',
-        'Go to extension options to set up your API key'
-      );
-    }
-    
     if (!postContent || !postContent.text) {
-      throw createApiError(
+      throw createBaseApiError(
         ERROR_TYPES.INTERNAL,
         'Post content is missing or invalid',
         'Please try again with a valid post'
@@ -114,18 +101,13 @@ Make sure the directions are diverse and appropriate for professional networking
     };
     
     // Make the API request with retry logic
-    const response = await makeRequestWithRetry(
-      endpoint,
-      apiKey,
-      payload,
-      'analyzePostDirections'
-    );
+    const response = await callGeminiAPI(payload, 'Analyze Post Directions');
     
     // Extract the function call result from the response
     const directionsFunctionCall = extractFunctionCall(response, "generateDirections");
     
     if (!directionsFunctionCall) {
-      throw createApiError(
+      throw createBaseApiError(
         ERROR_TYPES.PARSING,
         'Failed to extract direction suggestions from API response',
         'Try again or use a different post'
@@ -166,29 +148,19 @@ export async function generateDirectionComments(direction, postContent) {
   
   try {
     // Prepare request data
-    const endpoint = await getGenerateContentEndpoint();
-    const apiKey = await getApiKey();
     const model = await getCurrentModel();
     const temperature = getModelTemperature(model);
     
-    if (!apiKey) {
-      throw createApiError(
-        ERROR_TYPES.API_KEY,
-        'API key not found. Please check your API key settings.',
-        'Go to extension options to set up your API key'
-      );
-    }
-    
     if (!direction || !direction.title) {
-      throw createApiError(
+      throw createBaseApiError(
         ERROR_TYPES.INTERNAL,
-        'Direction is missing or invalid',
+        'Direction data is missing or invalid',
         'Please select a valid direction'
       );
     }
     
     if (!postContent || !postContent.text) {
-      throw createApiError(
+      throw createBaseApiError(
         ERROR_TYPES.INTERNAL,
         'Post content is missing or invalid',
         'Please try again with a valid post'
@@ -217,12 +189,7 @@ export async function generateDirectionComments(direction, postContent) {
     };
     
     // Make the API request with retry logic
-    const response = await makeRequestWithRetry(
-      endpoint,
-      apiKey,
-      payload,
-      'generateDirectionComments'
-    );
+    const response = await callGeminiAPI(payload, `Generate Direction Comments (${direction.title})`);
     
     console.log('EngageIQ: [api-service] Raw API response for comments:', response);
     
@@ -253,7 +220,7 @@ export async function generateDirectionComments(direction, postContent) {
     } catch (parseError) {
        console.error('EngageIQ: Failed to parse JSON from text response:', parseError);
        console.error('EngageIQ: Raw text received:', rawTextResponse); // Log the text that failed parsing
-       throw createApiError(
+       throw createBaseApiError(
          ERROR_TYPES.PARSING,
          `Failed to parse comment suggestions from API response. Details: ${parseError.message}`,
          'Try again or select a different direction'
@@ -268,7 +235,7 @@ export async function generateDirectionComments(direction, postContent) {
     console.log('EngageIQ: [smart-suggestions-api] Formatted suggestions (should have titles):', suggestions);
 
     // Get current model info (using existing declarations from earlier in the function)
-    const modelMatch = endpoint.match(/models\/([^:]+):/);
+    const modelMatch = model.match(/models\/([^:]+):/);
     const modelInfo = modelMatch ? { name: modelMatch[1] } : null;
 
     console.log(`EngageIQ: Successfully generated ${suggestions.length} comment suggestions`);
@@ -284,93 +251,6 @@ export async function generateDirectionComments(direction, postContent) {
     console.error('EngageIQ: [api-service] Error in generateDirectionComments:', error);
     console.error('EngageIQ: Error generating direction comments:', error);
     return handleApiError(error, 'comment generation');
-  }
-}
-
-/**
- * Makes an API request with retry logic
- * 
- * @param {string} endpoint - The API endpoint URL
- * @param {string} apiKey - The API key
- * @param {Object} payload - The request payload
- * @param {string} operationName - Name of the operation for logging
- * @returns {Promise<Object>} - The API response
- * @private
- */
-async function makeRequestWithRetry(endpoint, apiKey, payload, operationName) {
-  console.log(`EngageIQ: [api-service] Making API request for ${operationName} to ${endpoint}`, { payload: JSON.stringify(payload).substring(0, 200) + '...' }); // Log truncated payload
-  let retries = 0;
-  
-  while (retries <= API_SETTINGS.MAX_RETRIES) {
-    try {
-      if (retries > 0) {
-        console.log(`EngageIQ: Retry attempt ${retries} for ${operationName}`);
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, API_SETTINGS.RETRY_DELAY_MS * retries));
-      }
-      
-      console.debug(`EngageIQ: [api-service] Sending payload for ${operationName}:`, JSON.stringify(payload)); // Log the stringified payload
-      
-      // Make the API request with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_SETTINGS.TIMEOUT_MS);
-      
-      const response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      // Handle HTTP error responses
-      if (!response.ok) {
-        let errorData = null;
-        let responseText = '';
-        try {
-          responseText = await response.text(); // Get raw text first
-          console.debug(`EngageIQ: [api-service] Raw error response text for ${operationName}:`, responseText); // Log raw text
-          errorData = JSON.parse(responseText); // Try to parse as JSON
-        } catch (e) {
-          console.error(`EngageIQ: [api-service] Failed to parse error response body for ${operationName}:`, e);
-        }
-        throw createApiError(response.status, errorData, operationName, responseText);
-      }
-      
-      // Parse and return the successful response
-      const data = await response.json();
-      console.log(`EngageIQ: [api-service] API request successful for ${operationName}`);
-      return data;
-      
-    } catch (error) {
-      console.error(`EngageIQ: [api-service] Error during API request for ${operationName} (retry ${retries}):`, error);
-      // Handle abort (timeout) errors
-      if (error.name === 'AbortError') {
-        throw createApiError(
-          ERROR_TYPES.TIMEOUT,
-          'Request timed out',
-          'Check your internet connection and try again'
-        );
-      }
-      
-      // If it's already an API error and not the last retry, continue retrying
-      if (error.isApiError && retries < API_SETTINGS.MAX_RETRIES) {
-        retries++;
-        continue;
-      }
-      
-      // For network errors, retry if possible
-      if (error instanceof TypeError && error.message.includes('network') && retries < API_SETTINGS.MAX_RETRIES) {
-        retries++;
-        continue;
-      }
-      
-      // For other errors or if we've exhausted retries, throw the error
-      throw error;
-    }
   }
 }
 
@@ -417,23 +297,6 @@ function extractFunctionCall(response, functionName) {
 }
 
 /**
- * Creates a standardized API error object
- * 
- * @param {string} type - The error type from ERROR_TYPES
- * @param {string} message - The error message
- * @param {string} actionHint - Suggested action to resolve the error
- * @returns {Error} - Error object with additional properties
- * @private
- */
-function createApiError(type, message, actionHint) {
-  const error = new Error(message);
-  error.isApiError = true;
-  error.type = type;
-  error.actionHint = actionHint;
-  return error;
-}
-
-/**
  * Handles API errors by returning a standardized error response
  * 
  * @param {Error} error - The caught error
@@ -442,34 +305,52 @@ function createApiError(type, message, actionHint) {
  * @private
  */
 function handleApiError(error, operation) {
-  // Default error information
-  let errorType = ERROR_TYPES.INTERNAL;
-  let errorMessage = `An unexpected error occurred during ${operation}.`;
-  let actionHint = 'Please try again later.';
+  console.error(`EngageIQ: Error during ${operation}:`, error);
   
-  // Use the structured error info if available
-  if (error.isApiError) {
-    errorType = error.type;
-    errorMessage = error.message;
-    actionHint = error.actionHint;
-  } 
-  // Handle network errors
-  else if (error instanceof TypeError && error.message.includes('network')) {
-    errorType = ERROR_TYPES.NETWORK;
-    errorMessage = 'Network error. Unable to reach the API server.';
-    actionHint = 'Check your internet connection and try again.';
-  }
-  // Handle unexpected errors
-  else {
-    console.error(`EngageIQ: Unhandled error in ${operation}:`, error);
-  }
-  
-  return {
+  // Default error response
+  let errorResponse = {
     success: false,
-    error: errorMessage,
-    errorType: errorType,
-    actionHint: actionHint,
+    error: 'An unexpected error occurred.',
+    errorType: 'unknown_error',
+    actionHint: 'Check console logs for more details',
   };
+  
+  // If it's a structured API error from our service or the centralized one
+  if (error.isApiError) {
+    errorResponse.error = error.message;
+    errorResponse.errorType = error.errorType || API_ERROR_TYPES.UNKNOWN; // Use the type from the error
+    errorResponse.details = error.details || {}; // Include details if available
+    errorResponse.actionHint = error.actionHint || 'Check console logs for more details';
+    
+    switch (error.errorType) {
+      case ERROR_TYPES.API_KEY:
+      case 'api_key_error': // Check alias if needed
+        errorResponse.actionHint = error.actionHint || 'Please verify your API key in the extension settings.';
+        break;
+      case ERROR_TYPES.RATE_LIMIT:
+      case 'rate_limit_error':
+        errorResponse.actionHint = error.actionHint || 'You have exceeded the API rate limit. Please wait and try again later.';
+        break;
+      case ERROR_TYPES.TIMEOUT:
+      case 'timeout_error':
+        errorResponse.actionHint = error.actionHint || 'The request timed out. Check your connection or try again.';
+        break;
+      case ERROR_TYPES.CONTENT_FILTER:
+      case 'content_filter_error':
+        errorResponse.actionHint = error.actionHint || 'The content was filtered. Please adjust your input and try again.';
+        break;
+      case ERROR_TYPES.PARSING:
+      case 'parsing_error':
+        errorResponse.actionHint = error.actionHint || 'Failed to parse the response. Please try again or contact support.';
+        break;
+      case ERROR_TYPES.INTERNAL:
+      case 'internal_error':
+        errorResponse.actionHint = error.actionHint || 'An internal error occurred. Please try again later.';
+        break;
+    }
+  }
+  
+  return errorResponse;
 }
 
 /**

@@ -7,10 +7,8 @@
  */
 
 // Import service modules
-import { generateCommentSuggestions } from './services/comment-generation.js';
 import { regenerateComment as regenerateCommentService } from './services/regeneration-service.js';
 import { analyzePostDirections, generateDirectionComments } from './services/smart-suggestions-api.js';
-import { getApiKey } from './utils/storage-utils.js';
 
 // Log background script initialization
 console.log('EngageIQ: Background Script Initialized');
@@ -26,11 +24,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle different message types
   switch (message.type) {
-    // Standard comment generation
-    case 'GENERATE_COMMENTS':
-      handleGenerateComments(message, sendResponse);
-      return true; // Keep channel open for async response
-    
     // Comment regeneration (for length adjustment)
     case 'REGENERATE_COMMENT':
       handleRegenerateComment(message, sendResponse);
@@ -83,40 +76,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 /**
- * Handles 'GENERATE_COMMENTS' messages
- * @param {Object} message - The message from the content script
- * @param {Function} sendResponse - Function to send the response back
- */
-async function handleGenerateComments(message, sendResponse) {
-  try {
-    // Validate message contains required data
-    if (!message.postContent) {
-      sendResponse({ success: false, error: 'Missing post content' });
-      return;
-    }
-    
-    // Get API Key
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
-      return;
-    }
-
-    // Call the comment service to generate suggestions
-    const response = await generateCommentSuggestions(message.postContent, apiKey);
-    sendResponse({ success: true, payload: response });
-    
-  } catch (error) {
-    console.error('EngageIQ: Error generating comments:', error);
-    sendResponse({
-      success: false,
-      error: 'Failed to generate comments',
-      details: error.message
-    });
-  }
-}
-
-/**
  * Handles 'REGENERATE_COMMENT' messages
  * @param {Object} message - The message from the content script (should include originalText, lengthAction, reactionType)
  * @param {Function} sendResponse - Function to send the response back
@@ -132,22 +91,15 @@ async function handleRegenerateComment(message, sendResponse) {
       return;
     }
     
-    // Get API Key
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
-      return;
-    }
-
     // Determine length adjustment
     const makeLonger = message.lengthAction === 'longer';
 
     // Call the comment service to regenerate the comment
+    // API Key is handled internally by api-service.js now
     const newText = await regenerateCommentService(
       message.originalText,
       message.reactionType, 
-      makeLonger,
-      apiKey
+      makeLonger
     );
     sendResponse({ success: true, payload: { newText: newText, reactionType: message.reactionType } });
     
