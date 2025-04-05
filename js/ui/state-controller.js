@@ -14,6 +14,7 @@ console.log('EngageIQ: State Controller Module Loaded');
 let loadingState;
 let errorState;
 let suggestionsState;
+let directionsState;
 
 /**
  * Initializes the state controller with required DOM references
@@ -21,18 +22,20 @@ let suggestionsState;
  * @param {HTMLElement} config.loadingElement - The loading state container element
  * @param {HTMLElement} config.errorElement - The error state container element
  * @param {HTMLElement} config.suggestionsElement - The suggestions state container element
+ * @param {HTMLElement} [config.directionsElement] - The directions state container element (optional)
  */
 export function initStateController(config) {
   loadingState = config.loadingElement;
   errorState = config.errorElement;
   suggestionsState = config.suggestionsElement;
+  directionsState = config.directionsElement || null;
   
   console.log('EngageIQ: State Controller initialized');
 }
 
 /**
  * Shows a specific state element and hides the others
- * @param {string} stateToShow - 'loading', 'error', or 'suggestions'
+ * @param {string} stateToShow - 'loading', 'error', 'suggestions', or 'directions'
  */
 export function showState(stateToShow) {
   // Safety check if DOM references aren't initialized yet
@@ -49,6 +52,9 @@ export function showState(stateToShow) {
   loadingState.style.display = 'none';
   errorState.style.display = 'none';
   suggestionsState.style.display = 'none';
+  if (directionsState) {
+    directionsState.style.display = 'none';
+  }
 
   // Show the requested state
   switch (stateToShow) {
@@ -60,6 +66,13 @@ export function showState(stateToShow) {
       break;
     case 'suggestions':
       suggestionsState.style.display = 'block';
+      break;
+    case 'directions':
+      if (directionsState) {
+        directionsState.style.display = 'block';
+      } else {
+        console.warn('EngageIQ: Directions state container not initialized');
+      }
       break;
     default:
       console.warn(`EngageIQ: Unknown state: ${stateToShow}`);

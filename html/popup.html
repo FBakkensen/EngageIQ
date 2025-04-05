@@ -8,6 +8,8 @@
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Custom Popup CSS -->
     <link href="../css/popup.css" rel="stylesheet" />
+    <!-- Direction Cards CSS -->
+    <link href="../css/direction-cards.css" rel="stylesheet" />
   </head>
   <body>
     <div
@@ -55,11 +57,22 @@
         </div>
       </div>
 
+      <!-- Directions Container -->
+      <div
+        id="directionsContainer"
+        class="fade-transition"
+        style="display: none"
+        aria-label="Comment direction options"
+      >
+        <!-- Direction cards will be injected here by direction-card.js -->
+      </div>
+
       <!-- Suggestions Accordion -->
       <div
         class="accordion"
         id="suggestionsAccordion"
         aria-label="Comment suggestions"
+        style="display: none"
       >
         <!-- Accordion items will be injected here by popup.js -->
       </div>

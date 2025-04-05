@@ -11,6 +11,7 @@
 import { displaySuggestions, updateSingleSuggestion } from '/js/ui/suggestion-renderer.js';
 import { displayError } from '/js/ui/error-handler.js';
 import { updateModelIndicator } from '/js/ui/model-indicator.js';
+import { displayDirections, showDirectionsLoading } from '/js/ui/direction-card.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Popup Message Service Module Loaded');
@@ -117,6 +118,30 @@ export function processMessage(data) {
   switch (data.type) {
     case 'SHOW_LOADING':
       if (showStateFn) showStateFn('loading');
+      break;
+
+    case 'SHOW_DIRECTIONS_LOADING':
+      if (showDirectionsLoading) {
+        showDirectionsLoading();
+      } else if (showStateFn) {
+        showStateFn('loading');
+      }
+      break;
+      
+    case 'SHOW_DIRECTIONS':
+      if (!data.directions || !Array.isArray(data.directions)) {
+        console.error('EngageIQ: Invalid directions data:', data);
+        if (displayError) displayError('Invalid directions data received');
+        return;
+      }
+      
+      // Display the directions
+      if (displayDirections) {
+        displayDirections(data.directions);
+      } else {
+        console.error('EngageIQ: Cannot display directions - displayDirections function not available');
+        if (displayError) displayError('Cannot display directions - try refreshing the page');
+      }
       break;
 
     case 'SHOW_ERROR':

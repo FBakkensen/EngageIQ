@@ -10,6 +10,8 @@
 import { 
   GENERATION_SCHEMA, 
   REGENERATION_SCHEMA, 
+  DIRECTION_ANALYSIS_SCHEMA,
+  DIRECTION_COMMENT_SCHEMA,
   getGenerateContentEndpoint 
 } from '../models/gemini-model.js';
 import { getApiKey } from '../utils/storage-utils.js';
@@ -238,6 +240,246 @@ async function regenerateComment(requestType, payload, sendResponse) {
       payload: {
         reactionType: payload?.reactionType,
       },
+    });
+  }
+}
+
+/**
+ * Analyzes post content to generate direction suggestions using Gemini API.
+ * 
+ * @param {Object} postContent - Object containing the post text and metadata
+ * @param {function} sendResponse - Callback function to send response back to the caller
+ */
+async function analyzeDirections(postContent, sendResponse) {
+  console.log('EngageIQ: Processing direction analysis request');
+
+  if (!postContent || !postContent.text) {
+    console.error('EngageIQ: No post content provided in direction analysis request');
+    sendResponse({
+      success: false,
+      error: 'Missing post content',
+      details: 'No content was provided to analyze for directions',
+    });
+    return;
+  }
+
+  try {
+    // Get API key from storage
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      console.error('EngageIQ: No API key found in storage');
+      sendResponse({
+        success: false,
+        error: 'API Key Missing',
+        details: 'Please set your API key in the extension options',
+      });
+      return;
+    }
+
+    console.log('EngageIQ: API key found in storage');
+
+    // Create prompt for direction analysis
+    console.log('EngageIQ: Creating prompt for direction analysis');
+    const prompt = `
+      You are an AI assistant helping analyze a LinkedIn post to suggest different approaches for commenting.
+      
+      Here is the LinkedIn post content to analyze:
+      "${postContent.text}"
+      ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
+      ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
+      
+      Please suggest 3-4 different directions or approaches for commenting on this post.
+      Each direction should be distinct and appropriate for a professional networking context.
+      
+      For each direction, provide:
+      1. A concise title (2-4 words)
+      2. A brief description explaining the approach (15-25 words)
+      3. A single relevant emoji
+      
+      Return your suggestions using the provided function call format with a 'directions' array. Do not include any additional text.
+    `;
+
+    // Create request body with lower temperature for more focused results
+    const requestBody = {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024
+      },
+      systemInstruction: {
+        parts: [{
+          text: 'You are an AI assistant that helps professionals engage effectively on LinkedIn.'
+        }]
+      },
+      functionDeclarations: [
+        {
+          name: 'suggestDirections',
+          description: 'Provide 3-4 distinct directions for commenting on a LinkedIn post',
+          parameters: DIRECTION_ANALYSIS_SCHEMA
+        }
+      ]
+    };
+    
+    console.log('EngageIQ: Direction analysis request constructed and ready for fetch call');
+
+    // Make the API call
+    const response = await callGeminiAPI(requestBody, apiKey);
+    console.log('EngageIQ: Processing direction analysis response');
+
+    // Process the response from the API
+    const directions = processDirectionAnalysisResponse(response);
+    
+    // Send the response
+    sendResponse({
+      success: true,
+      type: 'DIRECTION_ANALYSIS_SUCCESS',
+      directions: directions
+    });
+    
+  } catch (error) {
+    console.error('EngageIQ: Error in direction analysis:', error);
+    sendResponse({
+      success: false,
+      error: 'Direction Analysis Failed',
+      details: error.message || 'An unexpected error occurred while analyzing the post',
+    });
+  }
+}
+
+/**
+ * Generates comments based on a selected direction using the Gemini API.
+ * 
+ * @param {Object} payload - Contains postContent and selectedDirection
+ * @param {function} sendResponse - Callback function to send response back to the caller
+ */
+async function generateDirectionComments(payload, sendResponse) {
+  console.log('EngageIQ: Processing direction-based comment generation request');
+
+  if (!payload || !payload.postContent || !payload.postContent.text || !payload.selectedDirection) {
+    console.error('EngageIQ: Missing data in direction-based comment generation request');
+    sendResponse({
+      success: false,
+      error: 'Missing required data',
+      details: 'Post content or selected direction is missing',
+    });
+    return;
+  }
+
+  const { postContent, selectedDirection } = payload;
+
+  try {
+    // Get API key from storage
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      console.error('EngageIQ: No API key found in storage');
+      sendResponse({
+        success: false,
+        error: 'API Key Missing',
+        details: 'Please set your API key in the extension options',
+      });
+      return;
+    }
+
+    console.log('EngageIQ: API key found in storage');
+
+    // Create a brief summary of the post for context
+    const postSummary = postContent.text.length > 100 
+      ? postContent.text.substring(0, 100) + '...'
+      : postContent.text;
+
+    // Create prompt for direction-based comment generation
+    console.log('EngageIQ: Creating prompt for direction-based comment generation');
+    const prompt = `
+      You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
+      
+      Generate 3 different comments for this LinkedIn post about ${postSummary}:
+      "${postContent.text}"
+      ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
+      ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
+      
+      The comments should focus on the selected direction: "${selectedDirection.title} - ${selectedDirection.description}"
+      
+      Create three distinct comments with different lengths and perspectives:
+      1. Short (1 sentence)
+      2. Medium (2-3 sentences)
+      3. Detailed (4-5 sentences)
+      
+      Each comment should be:
+      - Professional and appropriate for LinkedIn
+      - Contextually relevant to the post content
+      - Focused on the selected direction approach
+      - Natural sounding (as if written by a human)
+      - Free of excessive emoji use
+      
+      Return your suggestions using the provided function call format with a 'comments' array. Do not include any additional text.
+    `;
+
+    // Create request body with higher temperature for more diverse comments
+    const requestBody = {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024
+      },
+      systemInstruction: {
+        parts: [{
+          text: 'You are an AI assistant that helps professionals engage effectively on LinkedIn.'
+        }]
+      },
+      functionDeclarations: [
+        {
+          name: 'generateDirectionComments',
+          description: 'Generate comments for a LinkedIn post based on a selected direction',
+          parameters: DIRECTION_COMMENT_SCHEMA
+        }
+      ]
+    };
+    
+    console.log('EngageIQ: Direction-based comment generation request constructed and ready for fetch call');
+
+    // Make the API call
+    const response = await callGeminiAPI(requestBody, apiKey);
+    console.log('EngageIQ: Processing direction-based comment generation response');
+
+    // Process the response from the API
+    const comments = processDirectionCommentsResponse(response);
+    
+    // Format the comments for UI presentation
+    const formattedComments = comments.map(comment => ({
+      id: comment.type,
+      text: comment.text,
+      type: comment.type,
+      direction: selectedDirection.title
+    }));
+    
+    // Send the response
+    sendResponse({
+      success: true,
+      type: 'DIRECTION_COMMENTS_SUCCESS',
+      comments: formattedComments,
+      direction: selectedDirection
+    });
+    
+  } catch (error) {
+    console.error('EngageIQ: Error in direction-based comment generation:', error);
+    sendResponse({
+      success: false,
+      error: 'Comment Generation Failed',
+      details: error.message || 'An unexpected error occurred while generating comments',
     });
   }
 }
@@ -549,9 +791,142 @@ function processRegenerationResponse(data) {
   return args.regeneratedComment;
 }
 
+/**
+ * Processes the API response from a direction analysis request.
+ * 
+ * @param {Object} data - The API response data
+ * @returns {Array} The extracted directions array
+ * @throws {Error} If the response format is invalid
+ */
+function processDirectionAnalysisResponse(data) {
+  // Check for candidate data
+  if (!data || !data.candidates || data.candidates.length === 0) {
+    console.error('EngageIQ: Invalid response format - no candidates found');
+    throw new Error('Invalid response format: No candidates found');
+  }
+  
+  const candidate = data.candidates[0];
+  
+  // Check finish reason
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    console.error(`EngageIQ: Analysis stopped due to ${candidate.finishReason}`);
+    throw new Error(`Analysis stopped: ${candidate.finishReason}`);
+  }
+  
+  // Extract function call
+  if (!candidate.content || !candidate.content.parts || 
+      candidate.content.parts.length === 0 || 
+      !candidate.content.parts[0].functionCall) {
+    console.error('EngageIQ: Invalid response format - functionCall not found');
+    throw new Error('Invalid response format: Function call data not found');
+  }
+  
+  const functionCall = candidate.content.parts[0].functionCall;
+  
+  // Verify function name
+  if (functionCall.name !== 'suggestDirections') {
+    console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
+    throw new Error(`Unexpected function name: ${functionCall.name}`);
+  }
+  
+  // Extract and parse arguments
+  let args = functionCall.args;
+  
+  // Parse args if it's a string
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch (error) {
+      console.error('EngageIQ: Failed to parse args string:', error);
+      throw new Error('Failed to parse response data');
+    }
+  }
+  
+  // Validate structure
+  if (!args || !args.directions || !Array.isArray(args.directions)) {
+    console.error('EngageIQ: Missing directions array in response');
+    throw new Error('Invalid response format: Missing directions array');
+  }
+  
+  return args.directions;
+}
+
+/**
+ * Processes the API response from a direction-based comment generation request.
+ * 
+ * @param {Object} data - The API response data
+ * @returns {Array} The extracted comments array
+ * @throws {Error} If the response format is invalid
+ */
+function processDirectionCommentsResponse(data) {
+  // Check for candidate data
+  if (!data || !data.candidates || data.candidates.length === 0) {
+    console.error('EngageIQ: Invalid response format - no candidates found');
+    throw new Error('Invalid response format: No candidates found');
+  }
+  
+  const candidate = data.candidates[0];
+  
+  // Check finish reason
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
+    throw new Error(`Generation stopped: ${candidate.finishReason}`);
+  }
+  
+  // Extract function call
+  if (!candidate.content || !candidate.content.parts || 
+      candidate.content.parts.length === 0 || 
+      !candidate.content.parts[0].functionCall) {
+    console.error('EngageIQ: Invalid response format - functionCall not found');
+    throw new Error('Invalid response format: Function call data not found');
+  }
+  
+  const functionCall = candidate.content.parts[0].functionCall;
+  
+  // Verify function name
+  if (functionCall.name !== 'generateDirectionComments') {
+    console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
+    throw new Error(`Unexpected function name: ${functionCall.name}`);
+  }
+  
+  // Extract and parse arguments
+  let args = functionCall.args;
+  
+  // Parse args if it's a string
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch (error) {
+      console.error('EngageIQ: Failed to parse args string:', error);
+      throw new Error('Failed to parse response data');
+    }
+  }
+  
+  // Validate structure
+  if (!args || !args.comments || !Array.isArray(args.comments)) {
+    console.error('EngageIQ: Missing comments array in response');
+    throw new Error('Invalid response format: Missing comments array');
+  }
+  
+  // Validate that we have all required comment types
+  const requiredTypes = ['short', 'medium', 'detailed'];
+  const missingTypes = requiredTypes.filter(type => 
+    !args.comments.some(comment => comment.type === type)
+  );
+  
+  if (missingTypes.length > 0) {
+    console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
+    throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
+  }
+  
+  return args.comments;
+}
+
 // Export functions for use by other modules
 export { 
   generateComments,
   regenerateComment,
+  analyzeDirections,
+  generateDirectionComments,
   callGeminiAPI
 };

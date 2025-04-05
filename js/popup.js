@@ -19,6 +19,7 @@ import { initErrorHandler } from '/js/ui/error-handler.js';
 import { initAccordion } from '/js/ui/accordion-controller.js';
 import { initStateController, showState } from '/js/ui/state-controller.js';
 import { initModelIndicator, displayCurrentModel } from '/js/ui/model-indicator.js';
+import { initDirectionCards } from '/js/ui/direction-card.js';
 
 // Import message service module
 import { 
@@ -40,13 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorState = document.getElementById('errorState');
   const errorMessage = document.getElementById('errorMessage');
   const suggestionsAccordion = document.getElementById('suggestionsAccordion');
+  const directionsContainer = document.getElementById('directionsContainer');
   const modelIndicator = document.getElementById('modelIndicator');
 
   // Initialize the state controller
   initStateController({
     loadingElement: loadingState,
     errorElement: errorState,
-    suggestionsElement: suggestionsAccordion
+    suggestionsElement: suggestionsAccordion,
+    directionsElement: directionsContainer
   });
 
   // Initialize the model indicator
@@ -60,6 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize the suggestion renderer module
   initSuggestionRenderer({
     accordionElement: suggestionsAccordion,
+    showStateFunction: showState,
+    sendMessageFunction: sendMessageToContentScript
+  });
+  
+  // Initialize the direction cards module
+  initDirectionCards({
+    containerElement: directionsContainer,
     showStateFunction: showState,
     sendMessageFunction: sendMessageToContentScript
   });

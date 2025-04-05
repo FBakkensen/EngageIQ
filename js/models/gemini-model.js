@@ -62,6 +62,69 @@ const REGENERATION_SCHEMA = {
   required: ['regeneratedComment'],
 };
 
+// Schema for Smart Suggestions direction analysis
+const DIRECTION_ANALYSIS_SCHEMA = {
+  type: 'object',
+  properties: {
+    directions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'The title of the direction approach.',
+          },
+          description: {
+            type: 'string',
+            description: 'Brief description of the direction approach.',
+          },
+          emoji: {
+            type: 'string',
+            description: 'Relevant emoji for the direction.',
+          },
+        },
+        required: ['title', 'description', 'emoji'],
+      },
+      minItems: 3,
+      maxItems: 4,
+    },
+  },
+  required: ['directions'],
+};
+
+// Schema for Smart Suggestions direction-based comment generation
+const DIRECTION_COMMENT_SCHEMA = {
+  type: 'object',
+  properties: {
+    comments: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          text: {
+            type: 'string',
+            description: 'The comment text.',
+          },
+          type: {
+            type: 'string',
+            description: 'The length type of the comment (short, medium, detailed).',
+            enum: ['short', 'medium', 'detailed'],
+          },
+        },
+        required: ['text', 'type'],
+      },
+      minItems: 3,
+      maxItems: 3,
+    },
+    direction: {
+      type: 'string',
+      description: 'The selected direction for which comments were generated.',
+    },
+  },
+  required: ['comments', 'direction'],
+};
+
 /**
  * Constructs the API endpoint URL with the current model
  * This is a key part of the model selection feature, as it dynamically
@@ -169,6 +232,8 @@ export {
   GEMINI_API_BASE_URL,
   GENERATION_SCHEMA,
   REGENERATION_SCHEMA,
+  DIRECTION_ANALYSIS_SCHEMA,
+  DIRECTION_COMMENT_SCHEMA,
   getGenerateContentEndpoint,
   getValidModels,
   isValidModel,

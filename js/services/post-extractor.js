@@ -10,7 +10,14 @@ console.log('EngageIQ: Post Extractor Module Loaded');
  */
 const SELECTORS = {
   postAncestor: '.feed-shared-update-v2',
-  textContent: '.update-components-text span[dir="ltr"]'
+  textContent: '.update-components-text span[dir="ltr"]',
+  // New selectors for metadata extraction
+  authorName: '.feed-shared-actor__name',
+  authorTitle: '.feed-shared-actor__description',
+  engagementSection: '.social-details-social-counts',
+  likeCount: '.social-details-social-counts__reactions-count',
+  commentCount: '.social-details-social-counts__comments button',
+  repostCount: '.social-details-social-counts__comments ~ div'  
 };
 
 /**
@@ -59,6 +66,86 @@ function extractPostContent(clickedButtonElement) {
 }
 
 /**
+ * Extracts author information from the LinkedIn post
+ * @param {HTMLElement} postElement - The post element to extract author info from
+ * @returns {Object|null} Author information or null if not found
+ */
+function extractAuthorInfo(postElement) {
+  if (!postElement) return null;
+  
+  try {
+    const nameElement = postElement.querySelector(SELECTORS.authorName);
+    const titleElement = postElement.querySelector(SELECTORS.authorTitle);
+    
+    if (!nameElement) {
+      console.warn('EngageIQ: Could not find author name element');
+      return null;
+    }
+    
+    const name = nameElement.textContent.trim();
+    const title = titleElement ? titleElement.textContent.trim() : '';
+    
+    return {
+      name,
+      title,
+      fullTitle: title ? `${name}, ${title}` : name
+    };
+  } catch (error) {
+    console.error('EngageIQ: Error extracting author info:', error);
+    return null;
+  }
+}
+
+/**
+ * Extracts engagement metrics from the LinkedIn post
+ * @param {HTMLElement} postElement - The post element to extract metrics from
+ * @returns {Object|null} Engagement metrics or null if not found
+ */
+function extractEngagementMetrics(postElement) {
+  if (!postElement) return null;
+  
+  try {
+    const engagementSection = postElement.querySelector(SELECTORS.engagementSection);
+    if (!engagementSection) {
+      console.warn('EngageIQ: Could not find engagement section');
+      return null;
+    }
+    
+    // Extract metrics text, defaults to '0' if not found
+    const likeCountText = postElement.querySelector(SELECTORS.likeCount)?.textContent?.trim() || '0';
+    const commentCountText = postElement.querySelector(SELECTORS.commentCount)?.textContent?.trim() || '0';
+    const repostCountText = postElement.querySelector(SELECTORS.repostCount)?.textContent?.trim() || '0';
+    
+    // Parse numeric values (handle cases like '1K', '2.5K', etc.)
+    const parseMetric = (text) => {
+      if (!text) return 0;
+      if (text.includes('K')) {
+        return parseFloat(text.replace('K', '')) * 1000;
+      }
+      return parseInt(text.replace(/[^0-9]/g, '')) || 0;
+    };
+    
+    const likes = parseMetric(likeCountText);
+    const comments = parseMetric(commentCountText);
+    const reposts = parseMetric(repostCountText);
+    
+    // Calculate engagement score (simple weighted sum)
+    const engagementScore = likes + (comments * 2) + (reposts * 3);
+    
+    return {
+      likes,
+      comments,
+      reposts,
+      engagementScore,
+      summary: `${likes} likes, ${comments} comments, ${reposts} reposts`
+    };
+  } catch (error) {
+    console.error('EngageIQ: Error extracting engagement metrics:', error);
+    return null;
+  }
+}
+
+/**
  * Validates extracted post content to ensure it's usable
  * @param {string|null} extractedText - The extracted post text or null if extraction failed
  * @returns {Object} Object containing validation result with { isValid, errorMessage }
@@ -87,19 +174,50 @@ function validatePostContent(extractedText) {
 /**
  * Prepares post content for sending to the background script
  * @param {string} extractedText - The validated text content
- * @returns {Object} The formatted post content object
+ * @param {HTMLElement} clickedButtonElement - The button element that was clicked
+ * @returns {Object} The formatted post content object with metadata
  */
-function preparePostContent(extractedText) {
-  return {
+function preparePostContent(extractedText, clickedButtonElement) {
+  // Initialize with basic text content
+  const result = {
     text: extractedText,
-    // Add other fields like author/timestamp later if needed/possible
   };
+  
+  // Find post element
+  const postElement = clickedButtonElement?.closest(SELECTORS.postAncestor);
+  if (!postElement) {
+    return result;
+  }
+  
+  // Add author information if available
+  const authorInfo = extractAuthorInfo(postElement);
+  if (authorInfo) {
+    result.author = authorInfo.fullTitle;
+    result.authorName = authorInfo.name;
+    result.authorTitle = authorInfo.title;
+  }
+  
+  // Add engagement metrics if available
+  const engagementInfo = extractEngagementMetrics(postElement);
+  if (engagementInfo) {
+    result.engagementStats = engagementInfo.summary;
+    result.engagementScore = engagementInfo.engagementScore;
+    result.engagementDetails = {
+      likes: engagementInfo.likes,
+      comments: engagementInfo.comments,
+      reposts: engagementInfo.reposts
+    };
+  }
+  
+  return result;
 }
 
 // Export the module functions and constants
 export {
   SELECTORS,
   extractPostContent,
+  extractAuthorInfo,
+  extractEngagementMetrics,
   validatePostContent,
   preparePostContent
 };
