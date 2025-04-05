@@ -7,16 +7,26 @@
  */
 
 // Import service modules
-import { generateComments, regenerateComment } from './services/comment-service.js';
+import { generateCommentSuggestions } from './services/comment-generation.js';
+import { regenerateComment as regenerateCommentService } from './services/regeneration-service.js';
 import { analyzePostDirections, generateDirectionComments } from './services/smart-suggestions-api.js';
+import { getApiKey } from './utils/storage-utils.js';
 
 // Log background script initialization
 console.log('EngageIQ: Background Script Initialized');
 
 // Set up message listener for content script requests
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(`EngageIQ: Background received message: ${message.type}`);
-  
+  // Basic validation
+  if (!message || !message.type) {
+    console.warn('EngageIQ: Received invalid message format');
+    sendResponse({ success: false, error: 'Invalid message format' });
+    return false; // Indicate synchronous response is not needed
+  }
+
+  // Log received message type for general debugging (Can be removed in production)
+  // console.log('EngageIQ: Background received message:', message.type); 
+
   // Handle different message types
   switch (message.type) {
     // Standard comment generation
@@ -28,7 +38,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'REGENERATE_COMMENT':
       handleRegenerateComment(message, sendResponse);
       return true; // Keep channel open for async response
-    
+
+    // Regeneration for specific length adjustments (longer/shorter)
+    // Note: These messages originate from message-service.js relayRegenerationRequest
+    case 'REGENERATE_LONGER':
+      // console.log('EngageIQ: Matched REGENERATE_LONGER case');
+      // Construct the expected message format for handleRegenerateComment explicitly
+      // Access data correctly from message.payload
+      handleRegenerateComment(
+        {
+          reactionType: message.payload.reactionType, 
+          originalText: message.payload.originalText,
+          lengthAction: 'longer' // Explicitly set lengthAction
+        },
+        sendResponse
+      );
+      return true; // Keep channel open for async response
+
+    case 'REGENERATE_SHORTER':
+      // console.log('EngageIQ: Matched REGENERATE_SHORTER case');
+      // Construct the expected message format for handleRegenerateComment explicitly
+      // Access data correctly from message.payload
+      handleRegenerateComment(
+        {
+          reactionType: message.payload.reactionType, 
+          originalText: message.payload.originalText,
+          lengthAction: 'shorter' // Explicitly set lengthAction
+        },
+        sendResponse
+      );
+      return true; // Keep channel open for async response
+
     // Direction analysis for Smart Suggestions
     case 'ANALYZE_DIRECTIONS':
       handleAnalyzeDirections(message, sendResponse);
@@ -62,9 +102,16 @@ async function handleGenerateComments(message, sendResponse) {
       return;
     }
     
+    // Get API Key
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
+      return;
+    }
+
     // Call the comment service to generate suggestions
-    const response = await generateComments(message.postContent);
-    sendResponse(response);
+    const response = await generateCommentSuggestions(message.postContent, apiKey);
+    sendResponse({ success: true, payload: response });
     
   } catch (error) {
     console.error('EngageIQ: Error generating comments:', error);
@@ -78,29 +125,43 @@ async function handleGenerateComments(message, sendResponse) {
 
 /**
  * Handles 'REGENERATE_COMMENT' messages
- * @param {Object} message - The message from the content script
+ * @param {Object} message - The message from the content script (should include originalText, lengthAction, reactionType)
  * @param {Function} sendResponse - Function to send the response back
  */
 async function handleRegenerateComment(message, sendResponse) {
+  // Log received message for detailed debugging
+  // console.log('EngageIQ: [handleRegenerateComment] Received message:', JSON.stringify(message)); 
+  
   try {
-    console.log('EngageIQ: Handling REGENERATE_COMMENT request');
+    // console.log('EngageIQ: Handling REGENERATE_COMMENT request'); 
     
     // Validate message contains required data
-    if (!message.originalText || !message.lengthAction || !message.postContent) {
+    if (!message.originalText || !message.lengthAction || !message.reactionType) { 
       sendResponse({
         success: false,
-        error: 'Missing required data for regeneration'
+        error: 'Missing required data for regeneration (originalText, lengthAction, reactionType)' 
       });
       return;
     }
     
+    // Get API Key
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      sendResponse({ success: false, error: 'API_KEY_MISSING', details: 'API key not found.' });
+      return;
+    }
+
+    // Determine length adjustment
+    const makeLonger = message.lengthAction === 'longer';
+
     // Call the comment service to regenerate the comment
-    const response = await regenerateComment(
+    const newText = await regenerateCommentService(
       message.originalText,
-      message.lengthAction,
-      message.postContent
+      message.reactionType, 
+      makeLonger,
+      apiKey
     );
-    sendResponse(response);
+    sendResponse({ success: true, payload: { newText: newText, reactionType: message.reactionType } });
     
   } catch (error) {
     console.error('EngageIQ: Error regenerating comment:', error);

@@ -15,7 +15,7 @@ import {
   getGenerateContentEndpoint,
   getModelTemperature
 } from '../models/gemini-model.js';
-import { getApiKey } from '../utils/api-key-manager.js';
+import { getApiKey } from '../utils/storage-utils.js';
 import { getCurrentModel } from '../utils/storage-utils.js';
 
 // Log module load confirmation
@@ -99,6 +99,7 @@ Make sure the directions are diverse and appropriate for professional networking
       },
       toolConfig: {
         functionCallingConfig: {
+          mode: 'ANY',
           allowedFunctionNames: ["generateDirections"]
         }
       },
@@ -162,6 +163,7 @@ Make sure the directions are diverse and appropriate for professional networking
  * @returns {Promise<Object>} - Object containing an array of suggested comments
  */
 export async function generateDirectionComments(direction, postContent) {
+  console.log('EngageIQ: [api-service] generateDirectionComments called with:', { directionTitle: direction?.title, hasPostContent: !!postContent?.text });
   console.log(`EngageIQ: Generating comments for direction: ${direction.title}`);
   
   try {
@@ -225,6 +227,7 @@ Make sure the comments are professional, engaging, and varied in length and styl
       },
       toolConfig: {
         functionCallingConfig: {
+          mode: 'ANY',
           allowedFunctionNames: ["generateDirectionComments"]
         }
       },
@@ -248,6 +251,8 @@ Make sure the comments are professional, engaging, and varied in length and styl
       payload,
       'generateDirectionComments'
     );
+    
+    console.log('EngageIQ: [api-service] Raw API response for comments:', response);
     
     // Extract the function call result from the response
     const functionCall = extractFunctionCall(response, "generateDirectionComments");
@@ -276,6 +281,7 @@ Make sure the comments are professional, engaging, and varied in length and styl
     };
     
   } catch (error) {
+    console.error('EngageIQ: [api-service] Error in generateDirectionComments:', error);
     console.error('EngageIQ: Error generating direction comments:', error);
     return handleApiError(error, 'comment generation');
   }
@@ -292,6 +298,7 @@ Make sure the comments are professional, engaging, and varied in length and styl
  * @private
  */
 async function makeRequestWithRetry(endpoint, apiKey, payload, operationName) {
+  console.log(`EngageIQ: [api-service] Making API request for ${operationName} to ${endpoint}`, { payload: JSON.stringify(payload).substring(0, 200) + '...' }); // Log truncated payload
   let retries = 0;
   
   while (retries <= API_SETTINGS.MAX_RETRIES) {
@@ -301,6 +308,8 @@ async function makeRequestWithRetry(endpoint, apiKey, payload, operationName) {
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, API_SETTINGS.RETRY_DELAY_MS * retries));
       }
+      
+      console.debug(`EngageIQ: [api-service] Sending payload for ${operationName}:`, JSON.stringify(payload)); // Log the stringified payload
       
       // Make the API request with timeout
       const controller = new AbortController();
@@ -319,41 +328,25 @@ async function makeRequestWithRetry(endpoint, apiKey, payload, operationName) {
       
       // Handle HTTP error responses
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Handle specific error codes
-        if (response.status === 400) {
-          throw createApiError(
-            ERROR_TYPES.CONTENT_FILTER,
-            'Content filter triggered or invalid request format',
-            'Try modifying your post content or direction'
-          );
-        } else if (response.status === 401 || response.status === 403) {
-          throw createApiError(
-            ERROR_TYPES.API_KEY,
-            'API key invalid or unauthorized',
-            'Check your API key in the extension options'
-          );
-        } else if (response.status === 429) {
-          throw createApiError(
-            ERROR_TYPES.RATE_LIMIT,
-            'API rate limit exceeded',
-            'Please try again later'
-          );
-        } else {
-          throw createApiError(
-            ERROR_TYPES.INTERNAL,
-            `API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`,
-            'Please try again later'
-          );
+        let errorData = null;
+        let responseText = '';
+        try {
+          responseText = await response.text(); // Get raw text first
+          console.debug(`EngageIQ: [api-service] Raw error response text for ${operationName}:`, responseText); // Log raw text
+          errorData = JSON.parse(responseText); // Try to parse as JSON
+        } catch (e) {
+          console.error(`EngageIQ: [api-service] Failed to parse error response body for ${operationName}:`, e);
         }
+        throw createApiError(response.status, errorData, operationName, responseText);
       }
       
       // Parse and return the successful response
       const data = await response.json();
+      console.log(`EngageIQ: [api-service] API request successful for ${operationName}`);
       return data;
       
     } catch (error) {
+      console.error(`EngageIQ: [api-service] Error during API request for ${operationName} (retry ${retries}):`, error);
       // Handle abort (timeout) errors
       if (error.name === 'AbortError') {
         throw createApiError(
@@ -390,6 +383,7 @@ async function makeRequestWithRetry(endpoint, apiKey, payload, operationName) {
  * @private
  */
 function extractFunctionCall(response, functionName) {
+  console.log(`EngageIQ: [api-service] Attempting to extract function call '${functionName}'`, { response: JSON.stringify(response).substring(0, 200) + '...' }); // Log truncated response
   try {
     // Check if response has the expected structure
     if (!response || !response.candidates || !response.candidates[0] ||
@@ -404,10 +398,14 @@ function extractFunctionCall(response, functionName) {
     for (const part of parts) {
       if (part.functionCall && part.functionCall.name === functionName) {
         try {
-          // Parse the function arguments 
-          return JSON.parse(part.functionCall.args);
-        } catch (parseError) {
-          console.error('EngageIQ: Error parsing function call arguments:', parseError);
+          // Arguments should already be an object, no need to parse
+          if (typeof part.functionCall.args !== 'object' || part.functionCall.args === null) {
+            console.error('EngageIQ: Function call arguments are not a valid object:', part.functionCall.args);
+            return null;
+          }
+          return part.functionCall.args; 
+        } catch (error) { // Keep catch block for unexpected issues
+          console.error('EngageIQ: Error processing function call arguments:', error, 'Args:', part.functionCall.args);
           return null;
         }
       }
@@ -487,19 +485,31 @@ function handleApiError(error, operation) {
  */
 function cleanPostContent(text) {
   if (!text) return '';
-  
-  // Trim whitespace and limit length for API requests
+
+  // 1. Trim whitespace
   let processed = text.trim();
-  
-  // Remove excess whitespace
+
+  // 2. Collapse multiple whitespace characters into a single space
   processed = processed.replace(/\s+/g, ' ');
-  
-  // Limit length to prevent token overflow
+
+  // 3. Escape characters that would break JSON strings when interpolated
+  //    (specifically backslash and double quote)
+  //    Also escape common control characters like newline, carriage return, tab
+  processed = processed.replace(/\\/g, '\\\\') // Escape backslashes FIRST
+                     .replace(/"/g, '\\"')  // Escape double quotes
+                     .replace(/\n/g, '\\n')  // Escape newlines
+                     .replace(/\r/g, '\\r')  // Escape carriage returns
+                     .replace(/\t/g, '\\t'); // Escape tabs
+
+  // 4. Limit length to prevent token overflow (after escaping)
   const MAX_LENGTH = 2000;
   if (processed.length > MAX_LENGTH) {
-    processed = processed.substring(0, MAX_LENGTH) + '...';
+    // Find the last space within the limit to avoid cutting mid-word
+    const lastSpaceIndex = processed.substring(0, MAX_LENGTH).lastIndexOf(' ');
+    const cutOffIndex = lastSpaceIndex !== -1 ? lastSpaceIndex : MAX_LENGTH;
+    processed = processed.substring(0, cutOffIndex) + '...';
   }
-  
+
   return processed;
 }
 

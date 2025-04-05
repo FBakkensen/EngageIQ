@@ -24,11 +24,11 @@ import { initNavigationController, updateBackButtonVisibility } from '/js/ui/nav
 
 // Import service modules
 import { 
-  initPopupMessageService,
-  notifyPopupReady,
+  initPopupComms,
   processQueuedMessages,
-  sendMessageToContentScript
-} from '/js/services/popup-message-service.js';
+  sendMessageToContentScript,
+  processMessage
+} from '/js/services/popup-comms.js';
 import {
   hasActiveSession,
   getLastState,
@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const directionsContainer = document.getElementById('directionsContainer');
   const modelIndicator = document.getElementById('modelIndicator');
   const backButton = document.getElementById('backButton');
+  const loadingMessage = document.getElementById('loadingMessage');
+  const contentContainer = document.getElementById('contentContainer');
 
   // Initialize the state controller
   initStateController({
@@ -93,11 +95,41 @@ document.addEventListener('DOMContentLoaded', () => {
     showStateFunction: showState
   });
 
-  // Initialize the message service
-  initPopupMessageService({
-    showStateFunction: showState
+  // Initialize the popup comms
+  initPopupComms({
+    loadingElement: loadingState,
+    loadingMessage: loadingMessage,
+    contentContainer: contentContainer,
+    errorContainer: errorState,
+    errorMessageElement: errorMessage,
+    backButton: backButton
   });
 
+  // Wrapper function to ensure processMessage is called from the current context
+  function handleMessageFromContentScript(eventData) {
+    console.log('EngageIQ: [popup message handler] Forwarding message:', eventData);
+    if (eventData && eventData.type) {
+      processMessage(eventData); // Call the imported function
+    } else {
+      console.warn('EngageIQ: [popup message handler] Received message without type:', eventData);
+    }
+  }
+
+  // *** Add the crucial message listener ***
+  window.addEventListener('message', (event) => {
+    // Basic security check: Ensure the message is from the expected source if possible,
+    // though for extensions, checking if it's from the parent might suffice.
+    // IMPORTANT: In a production scenario, origin checking is critical.
+    if (event.source !== window.parent) {
+      // Ignore messages not from the parent window (content script)
+      // console.warn('EngageIQ: Ignoring message from unexpected source.');
+      return;
+    }
+
+    // Call the wrapper function instead of processMessage directly
+    handleMessageFromContentScript(event.data);
+  });
+  
   // Add close button functionality
   const closeButton = document.getElementById('closeButton');
   if (closeButton) {
@@ -151,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   processQueuedMessages();
 
   // Tell the content script we're ready
-  notifyPopupReady();
+  sendMessageToContentScript({ type: 'POPUP_READY' });
   
   console.log('EngageIQ: Popup initialization complete');
 });

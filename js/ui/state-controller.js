@@ -43,13 +43,21 @@ export function initStateController(config) {
  *                             'loading_directions', 'loading_comments'
  */
 export function showState(stateToShow) {
-  // Safety check if DOM references aren't initialized yet
-  if (!loadingState || !errorState || !suggestionsState) {
-    console.warn(
-      `EngageIQ: Cannot change UI state to ${stateToShow} - DOM references not initialized`
+  // *** Debugging: Log element references before use ***
+  console.log(`EngageIQ: [showState] Checking elements for state: ${stateToShow}`);
+  console.log(`EngageIQ: [showState] loadingState:`, loadingState);
+  console.log(`EngageIQ: [showState] errorState:`, errorState);
+  console.log(`EngageIQ: [showState] suggestionsState:`, suggestionsState);
+  console.log(`EngageIQ: [showState] directionsState:`, directionsState);
+
+  // Original safety check (modified slightly for clarity)
+  if (!loadingState || !errorState || !suggestionsState /* || !directionsState */ ) {
+    // Note: directionsState can be legitimately null if not needed, so removed from main check
+    console.error(
+      `EngageIQ: [showState] Cannot change state to ${stateToShow} - one or more core DOM references (loading, error, suggestions) are null!`
     );
-    return;
-  }
+    return; // Stop execution if core elements are missing
+  }  
 
   // Save previous state for potential navigation
   if (currentState !== stateToShow) {

@@ -7,8 +7,8 @@
 @font-face {
   font-display: block;
   font-family: "bootstrap-icons";
-  src: url("./fonts/bootstrap-icons.woff2?2820a3852bdb9a5832199cc61cec4e65") format("woff2"),
-url("./fonts/bootstrap-icons.woff?2820a3852bdb9a5832199cc61cec4e65") format("woff");
+  src: url("../fonts/bootstrap-icons.woff2?2820a3852bdb9a5832199cc61cec4e65") format("woff2"),
+url("../fonts/bootstrap-icons.woff?2820a3852bdb9a5832199cc61cec4e65") format("woff");
 }
 
 .bi::before,
@@ -1108,7 +1108,6 @@ url("./fonts/bootstrap-icons.woff?2820a3852bdb9a5832199cc61cec4e65") format("wof
 .bi-shield-lock::before { content: "\f538"; }
 .bi-shield-minus::before { content: "\f539"; }
 .bi-shield-plus::before { content: "\f53a"; }
-.bi-shield-shaded::before { content: "\f53b"; }
 .bi-shield-slash-fill::before { content: "\f53c"; }
 .bi-shield-slash::before { content: "\f53d"; }
 .bi-shield-x::before { content: "\f53e"; }

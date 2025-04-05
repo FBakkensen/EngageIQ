@@ -10,7 +10,6 @@
 
 // Import state controller for state management
 import { goToPreviousState, getCurrentState } from '/js/ui/state-controller.js';
-import { sendMessageToContentScript } from '/js/services/popup-message-service.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Navigation Controller Module Loaded');
@@ -80,9 +79,10 @@ export function navigateBack() {
   if (currentState === 'suggestions') {
     // When in suggestions, navigate back to directions
     console.log('EngageIQ: Navigating back from suggestions to directions');
-    sendMessageToContentScript({
+    // Send message directly to the parent window (content script)
+    window.parent.postMessage({
       type: 'BACK_TO_DIRECTIONS'
-    });
+    }, '*'); // Use '*' or a specific target origin
     return true;
   } else {
     // For other states, use the general state controller's back functionality

@@ -317,14 +317,21 @@ function handleDirectionSelect(direction, callback) {
       
       // After animation completes, show loading state
       setTimeout(() => {
+        console.log('EngageIQ: [handleDirectionSelect] Inside second timeout.');
         directionsContainer.classList.remove('slide-out-left', 'fade-in');
+        console.log('EngageIQ: [handleDirectionSelect] Removed animation classes.');
         showStateFn('loading');
+        console.log('EngageIQ: [handleDirectionSelect] showStateFn("loading") finished.');
         
         // Call the callback if provided
+        console.log(`EngageIQ: [handleDirectionSelect] Checking callback type: ${typeof callback}`);
         if (typeof callback === 'function') {
+          console.log('EngageIQ: [handleDirectionSelect] Callback IS a function.');
           callback(direction);
         } else {
-          // Otherwise send the default message
+          console.log('EngageIQ: [handleDirectionSelect] Callback is NOT a function.');
+          console.log('EngageIQ: [handleDirectionSelect] No callback provided, calling sendMessageFn...');
+          console.log('EngageIQ: sendMessageFn called with direction selected');
           sendMessageFn({
             type: 'DIRECTION_SELECTED',
             direction: direction
@@ -333,9 +340,11 @@ function handleDirectionSelect(direction, callback) {
       }, 300); // Match the animation duration
     } else {
       // Without showStateFn, just trigger the callback or send the message
+      console.log('EngageIQ: [handleDirectionSelect] showStateFn was not available.');
       if (typeof callback === 'function') {
         callback(direction);
       } else {
+        console.log('EngageIQ: sendMessageFn called with direction selected');
         sendMessageFn({
           type: 'DIRECTION_SELECTED',
           direction: direction

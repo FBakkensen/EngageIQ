@@ -83,20 +83,40 @@ function handleCustomIframeMessages(event) {
       );
       break;
       
-    case 'DIRECTION_SELECTED':
-      // Handle the selection of a direction
-      console.log('EngageIQ: Direction selected:', event.data.direction);
-      
-      // Generate comments based on the selected direction
+    case 'DIRECTION_SELECTED': {
+      // Retrieve the stored post content
+      const postContent = modules.statePersistence.getPostContent();
+
+      if (!postContent) {
+        console.error('EngageIQ: Could not retrieve post content for direction selection.');
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Missing Post Content',
+          details: 'Could not retrieve the original post content to generate comments.',
+          actionHint: 'Please close the popup and try activating it on the post again.'
+        });
+        break; // Stop processing if post content is missing
+      }
+
+      console.log('EngageIQ: [content_script] Retrieved postContent:', postContent);
+      // Call the direction service to handle the selection, passing the post content
       modules.directionService.handleDirectionSelection(
         event.data.direction,
-        appState.currentPostContent,
+        postContent, // Pass the retrieved post content here
         modules.iframeManager.sendMessageToIframe
       )
       .catch(error => {
-        console.error('EngageIQ: Error handling direction selection:', error);
+        console.error('EngageIQ: [content_script] Error calling handleDirectionSelection:', error);
+        // Send error back to iframe
+        modules.iframeManager.sendMessageToIframe({
+          type: 'SHOW_ERROR',
+          error: 'Error Handling Direction Selection',
+          details: 'An error occurred while handling the direction selection.',
+          actionHint: 'Please try again or contact support.'
+        });
       });
       break;
+    }
       
     case 'BACK_TO_DIRECTIONS':
       // Handle navigation back to directions screen

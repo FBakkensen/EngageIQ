@@ -26,10 +26,6 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
         ? 'REGENERATE_LONGER'
         : 'REGENERATE_SHORTER';
 
-    console.log(
-      `EngageIQ: Relaying ${backgroundRequestType} message to background script for reaction type: ${payload?.reactionType}`
-    );
-
     // Ensure payload is valid before sending
     if (!payload || !payload.reactionType || !payload.originalText) {
       console.error(
@@ -74,20 +70,12 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
           return;
         }
 
-        console.log(
-          `EngageIQ: Received response from background for ${backgroundRequestType}:`,
-          response
-        );
-
-        if (
-          response &&
-          response.success &&
-          response.type === 'REGENERATION_SUCCESS'
-        ) {
+        // Check only for success flag, as background doesn't send REGENERATION_SUCCESS type
+        if (response && response.success) {
           // Format the suggestion object for updateSingleSuggestion
           const suggestion = {
-            id: response.payload?.reactionType || payload.reactionType,
-            text: response.payload?.newText || ''
+            id: response.payload.reactionType || payload.reactionType, // Use reactionType from payload if available
+            text: response.payload.newText || '' // Use newText from payload
           };
           
           // Handle REGENERATION_SUCCESS
@@ -95,10 +83,6 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
             type: 'UPDATE_SINGLE_SUGGESTION',
             suggestion: suggestion // Send properly formatted suggestion object
           });
-          
-          console.log(
-            `EngageIQ: Sent UPDATE_SINGLE_SUGGESTION to iframe for reaction type: ${suggestion.id}`
-          );
           
           resolve(response);
         } else {
@@ -117,10 +101,6 @@ function handleRegenerationRequest(requestType, payload, sendMessageToIframe) {
               reactionType: payload?.reactionType || response?.payload?.reactionType,
             }, // Pass reactionType for context
           });
-          
-          console.log(
-            `EngageIQ: Sent SHOW_ERROR to iframe for reaction type: ${payload?.reactionType || response?.payload?.reactionType}`
-          );
           
           reject(new Error('Regeneration failed'));
         }

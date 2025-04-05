@@ -91,6 +91,7 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
  * @returns {Promise<Object>} The response from the background script
  */
 export function handleDirectionSelection(selectedDirection, postContent, sendMessageToIframe) {
+  console.log('EngageIQ: [direction-service] handleDirectionSelection called with:', { selectedDirection, postContent: !!postContent, sendMessageToIframe: typeof sendMessageToIframe });
   return new Promise((resolve, reject) => {
     // Save the selected direction to session storage
     saveSelectedDirection(selectedDirection);
@@ -98,19 +99,14 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
     // Show loading state
     sendMessageToIframe({
       type: 'SHOW_LOADING',
-      message: 'Generating comments based on direction...',
+      message: 'Generating comments...',
     });
     console.log('EngageIQ: Sent SHOW_LOADING message to iframe');
 
-    // Prepare the payload
-    const payload = {
-      direction: selectedDirection,
-      postContent: postContent
-    };
-
     // Call API to generate direction comments
-    generateDirectionComments(payload)
+    generateDirectionComments(selectedDirection, postContent)
       .then((response) => {
+        console.log('EngageIQ: [direction-service] API response received:', response);
         // Handle successful response
         console.log(
           'EngageIQ: Received direction comments response from API:',
@@ -148,7 +144,7 @@ export function handleDirectionSelection(selectedDirection, postContent, sendMes
       })
       .catch((error) => {
         console.error(
-          'EngageIQ: Error generating direction comments:',
+          'EngageIQ: [direction-service] Error calling generateDirectionComments:',
           error
         );
 
