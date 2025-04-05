@@ -24,9 +24,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false; // Indicate synchronous response is not needed
   }
 
-  // Log received message type for general debugging (Can be removed in production)
-  // console.log('EngageIQ: Background received message:', message.type); 
-
   // Handle different message types
   switch (message.type) {
     // Standard comment generation
@@ -42,7 +39,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Regeneration for specific length adjustments (longer/shorter)
     // Note: These messages originate from message-service.js relayRegenerationRequest
     case 'REGENERATE_LONGER':
-      // console.log('EngageIQ: Matched REGENERATE_LONGER case');
       // Construct the expected message format for handleRegenerateComment explicitly
       // Access data correctly from message.payload
       handleRegenerateComment(
@@ -56,7 +52,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true; // Keep channel open for async response
 
     case 'REGENERATE_SHORTER':
-      // console.log('EngageIQ: Matched REGENERATE_SHORTER case');
       // Construct the expected message format for handleRegenerateComment explicitly
       // Access data correctly from message.payload
       handleRegenerateComment(
@@ -94,8 +89,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function handleGenerateComments(message, sendResponse) {
   try {
-    console.log('EngageIQ: Handling GENERATE_COMMENTS request');
-    
     // Validate message contains required data
     if (!message.postContent) {
       sendResponse({ success: false, error: 'Missing post content' });
@@ -129,12 +122,7 @@ async function handleGenerateComments(message, sendResponse) {
  * @param {Function} sendResponse - Function to send the response back
  */
 async function handleRegenerateComment(message, sendResponse) {
-  // Log received message for detailed debugging
-  // console.log('EngageIQ: [handleRegenerateComment] Received message:', JSON.stringify(message)); 
-  
   try {
-    // console.log('EngageIQ: Handling REGENERATE_COMMENT request'); 
-    
     // Validate message contains required data
     if (!message.originalText || !message.lengthAction || !message.reactionType) { 
       sendResponse({
