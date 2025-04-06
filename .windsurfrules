@@ -18,7 +18,6 @@ All Services must be in the js/services folder
 All UI components must be in the js/ui folder
 All Models must be in the js/models folder
 All Utilities must be in the js/utils folder
-All Services must follow SOLID principles
 Always use SOLID principles when creating new services
 Always respect DRY principles
 Remember to update your memory after changes that affect the architecture of the project, especially services and ui
