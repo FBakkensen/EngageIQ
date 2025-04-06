@@ -21,3 +21,4 @@ All Utilities must be in the js/utils folder
 Always use SOLID principles when creating new services
 Always respect DRY principles
 Remember to update your memory after changes that affect the architecture of the project, especially services and ui
+For verification, do not request the user to type in the developer console, instead use console.log.
