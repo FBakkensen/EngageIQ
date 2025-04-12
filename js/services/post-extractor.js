@@ -5,19 +5,24 @@
 
 console.log('EngageIQ: Post Extractor Module Loaded');
 
+import { ImageSelector } from '../utils/ImageSelector.js';
+import { ImageContextDebug } from '../utils/ImageContextDebug.js';
+
 /**
  * Selectors for finding post elements
  */
 const SELECTORS = {
   postAncestor: '.feed-shared-update-v2',
   textContent: '.update-components-text span[dir="ltr"]',
-  // New selectors for metadata extraction
-  authorName: '.feed-shared-actor__name',
-  authorTitle: '.feed-shared-actor__description',
+  // Updated selectors for metadata extraction based on current LinkedIn DOM
+  authorName: '.update-components-actor__title .hoverable-link-text',
+  authorNameFallback: '.update-components-actor__meta-link .t-bold',
+  authorTitle: '.update-components-actor__description',
+  authorTitleFallback: '.update-components-actor__meta .update-components-actor__sub-description',
   engagementSection: '.social-details-social-counts',
   likeCount: '.social-details-social-counts__reactions-count',
   commentCount: '.social-details-social-counts__comments button',
-  repostCount: '.social-details-social-counts__comments ~ div'  
+  repostCount: '.social-details-social-counts__comments ~ div'
 };
 
 /**
@@ -72,19 +77,26 @@ function extractPostContent(clickedButtonElement) {
  */
 function extractAuthorInfo(postElement) {
   if (!postElement) return null;
-  
+
   try {
-    const nameElement = postElement.querySelector(SELECTORS.authorName);
-    const titleElement = postElement.querySelector(SELECTORS.authorTitle);
-    
+    // Try primary selectors first, then fallback selectors
+    const nameElement = postElement.querySelector(SELECTORS.authorName) ||
+                        postElement.querySelector(SELECTORS.authorNameFallback);
+    const titleElement = postElement.querySelector(SELECTORS.authorTitle) ||
+                          postElement.querySelector(SELECTORS.authorTitleFallback);
+
     if (!nameElement) {
       console.warn('EngageIQ: Could not find author name element');
       return null;
     }
-    
-    const name = nameElement.textContent.trim();
+
+    // Extract and clean the text content
+    let name = nameElement.textContent.trim();
+    // Remove "Following" or other status indicators if present
+    name = name.split('•')[0].trim();
+
     const title = titleElement ? titleElement.textContent.trim() : '';
-    
+
     return {
       name,
       title,
@@ -103,19 +115,19 @@ function extractAuthorInfo(postElement) {
  */
 function extractEngagementMetrics(postElement) {
   if (!postElement) return null;
-  
+
   try {
     const engagementSection = postElement.querySelector(SELECTORS.engagementSection);
     if (!engagementSection) {
       console.warn('EngageIQ: Could not find engagement section');
       return null;
     }
-    
+
     // Extract metrics text, defaults to '0' if not found
     const likeCountText = postElement.querySelector(SELECTORS.likeCount)?.textContent?.trim() || '0';
     const commentCountText = postElement.querySelector(SELECTORS.commentCount)?.textContent?.trim() || '0';
     const repostCountText = postElement.querySelector(SELECTORS.repostCount)?.textContent?.trim() || '0';
-    
+
     // Parse numeric values (handle cases like '1K', '2.5K', etc.)
     const parseMetric = (text) => {
       if (!text) return 0;
@@ -124,14 +136,14 @@ function extractEngagementMetrics(postElement) {
       }
       return parseInt(text.replace(/[^0-9]/g, '')) || 0;
     };
-    
+
     const likes = parseMetric(likeCountText);
     const comments = parseMetric(commentCountText);
     const reposts = parseMetric(repostCountText);
-    
+
     // Calculate engagement score (simple weighted sum)
     const engagementScore = likes + (comments * 2) + (reposts * 3);
-    
+
     return {
       likes,
       comments,
@@ -157,14 +169,14 @@ function validatePostContent(extractedText) {
       errorMessage: 'Could not find post structure.'
     };
   }
-  
+
   if (extractedText.trim() === '') {
     return {
       isValid: false,
       errorMessage: 'Post text appears empty or could not be extracted.'
     };
   }
-  
+
   return {
     isValid: true,
     errorMessage: null
@@ -182,13 +194,50 @@ function preparePostContent(extractedText, clickedButtonElement) {
   const result = {
     text: extractedText,
   };
-  
-  // Find post element
-  const postElement = clickedButtonElement?.closest(SELECTORS.postAncestor);
+
+  // Find the post element using progressively broader searches
+  let postElement = null;
+
+  // Try different strategies to locate the post element
+  if (clickedButtonElement) {
+    // Strategy 1: Direct ancestor search
+    postElement = clickedButtonElement.closest(SELECTORS.postAncestor);
+
+    // Strategy 2: If not found, look for a parent comment section and then find its post ancestor
+    if (!postElement) {
+      const commentSection = clickedButtonElement.closest('.comments-comment-item, .comments-comments-list, .social-details-social-activity');
+      if (commentSection) {
+        // Find the nearest post element that contains this comment section
+        postElement = commentSection.closest(SELECTORS.postAncestor);
+      }
+    }
+
+    // Strategy 3: If still not found, look upward in DOM tree for any post element
+    if (!postElement) {
+      // Walk up the DOM tree looking for the post element
+      let currentElement = clickedButtonElement.parentElement;
+      while (currentElement && !postElement) {
+        if (currentElement.matches && currentElement.matches(SELECTORS.postAncestor)) {
+          postElement = currentElement;
+        } else {
+          // If current element has any post elements as children, use the first one
+          const childPosts = currentElement.querySelectorAll(SELECTORS.postAncestor);
+          if (childPosts.length > 0) {
+            postElement = childPosts[0];
+          }
+        }
+        currentElement = currentElement.parentElement;
+      }
+    }
+  }
+
   if (!postElement) {
+    console.warn('EngageIQ: Could not find post element for image detection');
     return result;
   }
-  
+
+  console.log('EngageIQ: Found post element for image detection:', postElement);
+
   // Add author information if available
   const authorInfo = extractAuthorInfo(postElement);
   if (authorInfo) {
@@ -196,7 +245,7 @@ function preparePostContent(extractedText, clickedButtonElement) {
     result.authorName = authorInfo.name;
     result.authorTitle = authorInfo.title;
   }
-  
+
   // Add engagement metrics if available
   const engagementInfo = extractEngagementMetrics(postElement);
   if (engagementInfo) {
@@ -208,7 +257,28 @@ function preparePostContent(extractedText, clickedButtonElement) {
       reposts: engagementInfo.reposts
     };
   }
-  
+
+  // Image detection - with extra debug logging
+  console.log('EngageIQ: Starting image detection on post element');
+
+  // DEBUG: Log if ImageContextDebug is enabled
+  console.log('EngageIQ: ImageContextDebug enabled:', ImageContextDebug.isEnabled());
+
+  // Find all images in the post
+  const images = ImageSelector.findPostImages(postElement);
+
+  console.log('EngageIQ: Image detection returned', images.length, 'images');
+
+  if (images.length > 0) {
+    const imageUrls = images.map(img => img.src);
+    // Log using both standard console and ImageContextDebug
+    console.log('EngageIQ: Found images in post:', imageUrls);
+    ImageContextDebug.logInfo(`Detected ${images.length} image(s) in post.`, imageUrls);
+    result.imageUrls = imageUrls;
+  } else {
+    console.log('EngageIQ: No images found in post');
+  }
+
   return result;
 }
 

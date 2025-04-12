@@ -21,12 +21,10 @@ This document outlines the implementation plan for adding image context to Gemin
    1. Create new file `js/utils/ImageContextDebug.js` with basic structure and export
    2. Implement prefix-standardized logging functions (`logInfo`, `logWarning`, `logError`)
    3. Add toggle functions to enable/disable debugging via localStorage
-   4. Create global accessor through `window.EngageIQ.debug` namespace
-   5. Add initialization code to activate debug tools when feature flag is enabled
-   6. Create basic console styling for improved log readability
-   7. Add simple verification message that appears when debug mode is toggled
-   8. Document all available debug commands in code comments
-   9. Test debug commands directly in Chrome console
+   4. Add initialization code to activate debug tools when feature flag is enabled
+   5. Create basic console styling for improved log readability
+   6. Add simple verification message that appears when debug mode is toggled
+   7. Document all available debug commands in code comments
 
 2. **Implement Basic Image Selector**
    - Create function to locate post images in DOM

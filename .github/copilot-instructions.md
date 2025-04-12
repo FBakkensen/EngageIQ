@@ -1,0 +1,24 @@
+Do not refactor any code without approval.
+Only make edits to the code that are directly related to the current task.
+Do not add new features or functionality without approval.
+Do not remove any existing functionality without approval.
+Do not add new dependencies without approval.
+Do not remove any existing dependencies without approval.
+Do not change the project structure without approval.
+Do not change the file names without approval.
+Do not change the folder names without approval.
+Do not change the file extensions without approval.
+Do not work on files that are not directly related to the current task.
+Do not work on other tasks without approval.
+No inline css styles
+Prefer to use the bootstrap 5 framework
+Only make custom css if absolutely necessary else use bootstrap 5
+Bootstrap 5 is available in the asssets/js folder and asssets/css folders
+All Services must be in the js/services folder
+All UI components must be in the js/ui folder
+All Models must be in the js/models folder
+All Utilities must be in the js/utils folder
+Always use SOLID principles when creating new services
+Always respect DRY principles
+Remember to update your memory after changes that affect the architecture of the project, especially services and ui
+For verification, do not request the user to type in the developer console, instead use console.log.
