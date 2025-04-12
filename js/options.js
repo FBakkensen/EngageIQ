@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // const saveButton = document.getElementById('saveButton'); // ESLint: Commented out as unused (no-unused-vars). Ref'd in plan but not directly used in code.
   const statusMessage = document.getElementById('statusMessage');
   const settingsForm = document.getElementById('settingsForm');
+  const imageContextDebugCheckbox = document.getElementById('imageContextDebug');
 
   /**
    * Model Selection Feature: Get reference to the model dropdown
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
    * for efficiency. If no model preference is found, the dropdown will remain
    * at its default value as specified in the HTML.
    */
-  chrome.storage.sync.get(['apiKey', 'geminiModel'], function (result) {
+  chrome.storage.sync.get(['apiKey', 'geminiModel', 'imageContextDebug'], function (result) {
     if (chrome.runtime.lastError) {
       console.error(
         'EngageIQ: Error retrieving settings:',
@@ -62,6 +63,15 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         console.log('EngageIQ: No model preference found, using default.');
       }
+
+      // Load Image Context Debug Mode
+      if (typeof result.imageContextDebug === 'boolean') {
+        imageContextDebugCheckbox.checked = result.imageContextDebug;
+        console.log('EngageIQ: Image Context Debug Mode loaded:', result.imageContextDebug);
+      } else {
+        imageContextDebugCheckbox.checked = false;
+        console.log('EngageIQ: No Image Context Debug Mode setting found, using default (off).');
+      }
     }
   });
 
@@ -83,12 +93,14 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     const geminiModel = geminiModelSelect.value;
 
+    const imageContextDebug = imageContextDebugCheckbox.checked;
+
     /**
      * Save both settings to Chrome storage
      * Stores both the API key and model preference in a single operation
      */
     chrome.storage.sync.set(
-      { apiKey: apiKey, geminiModel: geminiModel },
+      { apiKey: apiKey, geminiModel: geminiModel, imageContextDebug: imageContextDebug },
       function () {
         // Handle the storage callback
         if (chrome.runtime.lastError) {

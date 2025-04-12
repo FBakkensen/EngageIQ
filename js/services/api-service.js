@@ -1,7 +1,7 @@
 /**
  * EngageIQ Chrome Extension
  * API Service Module
- * 
+ *
  * This module provides functions for interacting with the Gemini API,
  * including request construction, error handling, and response processing.
  */
@@ -13,6 +13,244 @@ import {
   getGenerateContentEndpoint 
 } from '../models/gemini-model.js';
 import { getApiKey } from '../utils/storage-utils.js';
+import { ImageContextDebug } from '../utils/ImageContextDebug.js';
+import { ImageConverter } from '../utils/ImageConverter.js';
+
+// Add verification log for API service module initialization
+console.log('EngageIQ API Service: Module initialized, checking environment...');
+
+// Feature flag for image context
+const IMAGE_CONTEXT_ENABLED_KEY = 'engageiq_image_context_enabled';
+// Set to true to enable image context support by default
+const DEFAULT_IMAGE_CONTEXT_ENABLED = true;
+
+/**
+ * Determine if code is running in service worker context
+ * @returns {boolean} True if in service worker context
+ */
+function isServiceWorkerContext() {
+  return (typeof window === 'undefined') || 
+         (typeof localStorage === 'undefined') ||
+         (typeof self !== 'undefined' && self.constructor && self.constructor.name === 'ServiceWorkerGlobalScope');
+}
+
+/**
+ * Check if image context feature is enabled
+ * @param {Function} callback - Callback for async result in service worker context
+ * @returns {boolean|void} True if image context is enabled, void if callback used
+ */
+function isImageContextEnabled(callback) {
+  if (isServiceWorkerContext()) {
+    // In service worker context, use chrome.storage.local
+    if (chrome && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get([IMAGE_CONTEXT_ENABLED_KEY], result => {
+        let enabled = result[IMAGE_CONTEXT_ENABLED_KEY];
+        if (enabled === undefined) {
+          // First time - set default
+          const data = {};
+          data[IMAGE_CONTEXT_ENABLED_KEY] = DEFAULT_IMAGE_CONTEXT_ENABLED;
+          chrome.storage.local.set(data);
+          enabled = DEFAULT_IMAGE_CONTEXT_ENABLED;
+        }
+        if (callback) callback(enabled === true);
+      });
+      return; // Return void since this is async
+    }
+    // Fallback if storage is not available
+    if (callback) callback(DEFAULT_IMAGE_CONTEXT_ENABLED);
+    return;
+  } 
+  
+  // In content script or UI context, use localStorage
+  try {
+    const storedValue = localStorage.getItem(IMAGE_CONTEXT_ENABLED_KEY);
+    if (storedValue === null) {
+      // First time - set default
+      localStorage.setItem(IMAGE_CONTEXT_ENABLED_KEY, DEFAULT_IMAGE_CONTEXT_ENABLED);
+      if (callback) callback(DEFAULT_IMAGE_CONTEXT_ENABLED);
+      return DEFAULT_IMAGE_CONTEXT_ENABLED;
+    }
+    const enabled = storedValue === 'true';
+    if (callback) callback(enabled);
+    return enabled;
+  } catch (e) {
+    // Fallback if localStorage fails
+    ImageContextDebug.logError('Error accessing localStorage:', e);
+    if (callback) callback(DEFAULT_IMAGE_CONTEXT_ENABLED);
+    return DEFAULT_IMAGE_CONTEXT_ENABLED;
+  }
+}
+
+/**
+ * Toggle image context feature and return new state
+ * @param {Function} callback - Callback for async result in service worker context
+ * @returns {boolean|void} New state (true if enabled), void if callback used
+ */
+function toggleImageContext(callback) {
+  if (isServiceWorkerContext()) {
+    // In service worker context, use chrome.storage.local
+    isImageContextEnabled(currentState => {
+      const newState = !currentState;
+      const data = {};
+      data[IMAGE_CONTEXT_ENABLED_KEY] = newState;
+      chrome.storage.local.set(data);
+      ImageContextDebug.logInfo(`Image context ${newState ? 'enabled' : 'disabled'}`);
+      if (callback) callback(newState);
+    });
+    return;
+  }
+  
+  // In content script or UI context, use localStorage
+  try {
+    const currentState = isImageContextEnabled();
+    const newState = !currentState;
+    localStorage.setItem(IMAGE_CONTEXT_ENABLED_KEY, newState);
+    ImageContextDebug.logInfo(`Image context ${newState ? 'enabled' : 'disabled'}`);
+    if (callback) callback(newState);
+    return newState;
+  } catch (e) {
+    ImageContextDebug.logError('Error toggling image context:', e);
+    if (callback) callback(DEFAULT_IMAGE_CONTEXT_ENABLED);
+    return DEFAULT_IMAGE_CONTEXT_ENABLED;
+  }
+}
+
+/**
+ * Create an API payload with optional image context
+ * @param {string} promptText - The text prompt for the API
+ * @param {Object} options - Configuration options
+ * @param {Object} [options.imageContext] - Optional image context data
+ * @param {string} options.imageContext.base64Data - Base64 image data
+ * @param {string} options.imageContext.mimeType - Image MIME type
+ * @param {Object} [options.generationConfig] - Optional generation configuration
+ * @param {Array} [options.safetySettings] - Optional safety settings
+ * @param {Object} [options.functionDeclaration] - Optional function declaration for structured output
+ * @returns {Object} API request payload
+ */
+function createPayloadWithImageContext(promptText, options = {}) {
+  const { imageContext, generationConfig, safetySettings, functionDeclaration } = options;
+
+  // Default safety settings if not provided
+  const defaultSafetySettings = [
+    {
+      category: 'HARM_CATEGORY_HARASSMENT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+    },
+    {
+      category: 'HARM_CATEGORY_HATE_SPEECH',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+    },
+    {
+      category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+    },
+    {
+      category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+    },
+  ];
+
+  // Base payload structure
+  const payload = {
+    contents: [],
+    safety_settings: safetySettings || defaultSafetySettings
+  };
+
+  // Add generation config if provided
+  if (generationConfig) {
+    payload.generationConfig = generationConfig;
+  }
+
+  // Add function declaration for structured output if provided
+  if (functionDeclaration) {
+    payload.functionDeclarations = [functionDeclaration];
+  }
+
+  // Create the content parts array
+  const parts = [];
+
+  // Always add the text prompt
+  parts.push({ text: promptText });
+
+  // Add image if provided and feature is enabled
+  if (imageContext && isImageContextEnabled()) {
+    try {
+      // Create the image part
+      // Note: The base64Data should not include the "data:image/jpeg;base64," prefix
+      // Extract just the base64 data without the MIME prefix if it exists
+      let cleanBase64 = imageContext.base64Data;
+      if (cleanBase64.includes('base64,')) {
+        cleanBase64 = cleanBase64.split('base64,')[1];
+      }
+
+      // Add the image part to the content
+      parts.push({
+        inlineData: {
+          data: cleanBase64,
+          mimeType: imageContext.mimeType
+        }
+      });
+
+      ImageContextDebug.logInfo('Added image context to payload', {
+        mimeType: imageContext.mimeType,
+        base64Preview: `${cleanBase64.substring(0, 20)}...` // Just log the first part for brevity
+      });
+    } catch (error) {
+      ImageContextDebug.logError('Failed to add image context to payload', error);
+      // Continue with just the text prompt
+    }
+  }
+
+  // Add the parts to the contents
+  payload.contents = [{ parts }];
+
+  // Log the final payload structure for debugging
+  ImageContextDebug.logInfo('Created API payload', {
+    hasImage: parts.length > 1,
+    generationConfigIncluded: !!generationConfig,
+    functionDeclarationIncluded: !!functionDeclaration
+  });
+
+  return payload;
+}
+
+/**
+ * Extract image context from post content if available
+ * @param {Object} postContent - Post content which may include imageContext
+ * @returns {Object|null} Image context object or null if not available/valid
+ */
+function extractImageContext(postContent) {
+  // If feature is disabled, don't process images
+  if (!isImageContextEnabled()) {
+    ImageContextDebug.logInfo('Image context feature is disabled, skipping image extraction');
+    return null;
+  }
+
+  // Check if image context is directly provided
+  if (postContent.imageContext) {
+    ImageContextDebug.logInfo('Found existing image context in post content');
+    return postContent.imageContext;
+  }
+
+  // Return null if no image context available
+  ImageContextDebug.logInfo('No image context available in post content');
+  return null;
+}
+
+/**
+ * Generate a sample API payload with the given post content and image (for testing)
+ * @param {Object} postContent - Post content object
+ * @returns {Object} Sample payload that would be sent to API
+ */
+function generateSamplePayload(postContent) {
+  const imageContext = extractImageContext(postContent);
+  const prompt = `Sample prompt for post: "${postContent.text?.substring(0, 50)}..."`;
+
+  return createPayloadWithImageContext(prompt, {
+    imageContext,
+    generationConfig: { temperature: 0.7 }
+  });
+}
 
 // Constants for API settings
 const API_SETTINGS = {
@@ -39,7 +277,7 @@ const ERROR_TYPES = {
 
 /**
  * Creates a standardized API error object.
- * 
+ *
  * @param {string} type - One of the ERROR_TYPES keys
  * @param {string} message - Primary error message
  * @param {number|null} status - HTTP status code, if applicable
@@ -58,7 +296,7 @@ function createApiError(type, message, status = null, details = null) {
 
 /**
  * Makes a call to the Gemini API with retry and timeout logic.
- * 
+ *
  * @param {Object} requestBody - The payload for the API request.
  * @param {string} operationName - A descriptive name for the operation (for logging).
  * @returns {Promise<Object>} - The JSON response from the API.
@@ -66,7 +304,7 @@ function createApiError(type, message, status = null, details = null) {
  */
 async function callGeminiAPI(requestBody, operationName = 'API Call') {
   let retries = 0;
-  
+
   // Get API Key internally
   const apiKey = await getApiKey();
   if (!apiKey) {
@@ -77,7 +315,7 @@ async function callGeminiAPI(requestBody, operationName = 'API Call') {
   const endpoint = await getGenerateContentEndpoint();
 
   const fullApiUrl = `${endpoint}?key=${apiKey}`;
-  
+
   // Prepare fetch options with timeout controller
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_SETTINGS.TIMEOUT_MS);
@@ -163,7 +401,7 @@ async function callGeminiAPI(requestBody, operationName = 'API Call') {
       const responseData = await response.json();
       console.log(`EngageIQ: [${operationName}] API request successful.`);
 
-      // --- Check for Content Filtering --- 
+      // --- Check for Content Filtering ---
       // Gemini indicates blocking via `promptFeedback.blockReason`
       if (responseData.promptFeedback && responseData.promptFeedback.blockReason) {
           const reason = responseData.promptFeedback.blockReason;
@@ -171,7 +409,7 @@ async function callGeminiAPI(requestBody, operationName = 'API Call') {
           console.warn(`EngageIQ: [${operationName}] Response blocked due to content filter: ${reason}`, { safetyRatings });
           throw createApiError(
               ERROR_TYPES.CONTENT_FILTER,
-              `Request blocked due to content filtering: ${reason}. Check safety ratings for details.`, 
+              `Request blocked due to content filtering: ${reason}. Check safety ratings for details.`,
               null,
               responseData.promptFeedback // Include feedback as details
           );
@@ -191,12 +429,12 @@ async function callGeminiAPI(requestBody, operationName = 'API Call') {
          } else {
              // Throw a more general parsing/content error if no specific reason found
             throw createApiError(
-               ERROR_TYPES.PARSING, 
+               ERROR_TYPES.PARSING,
                'API response received successfully but contained no valid candidates or content.',
-               response.status, 
+               response.status,
                responseData
             );
-         } 
+         }
       }
 
       return responseData; // Success!
@@ -234,7 +472,7 @@ async function callGeminiAPI(requestBody, operationName = 'API Call') {
          retries++;
          continue; // Retry on network errors
       }
-      
+
       // If it's an unknown error or we've exhausted retries, wrap and throw
       console.error(`EngageIQ: [${operationName}] Unhandled or non-retryable error after ${retries + 1} attempts.`);
       throw createApiError(ERROR_TYPES.UNKNOWN, `An unexpected error occurred during the API call: ${error.message}`, null, error);
@@ -248,7 +486,7 @@ export { callGeminiAPI, ERROR_TYPES, createApiError };
 
 /**
  * Generates comment suggestions using the Gemini API.
- * 
+ *
  * @param {Object} postContent - Object containing the post text and metadata
  * @param {function} sendResponse - Callback function to send response back to the caller
  */
@@ -284,10 +522,11 @@ async function generateComments(postContent, sendResponse) {
     console.log('EngageIQ: Creating prompt for Gemini API');
     const prompt = `
       You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
-      
+
       Here is the LinkedIn post content to analyze:
       "${postContent.text}"
-      
+      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
+
       Please generate 6 different comment suggestions, each corresponding to one of LinkedIn's standard reaction types:
       1. Like - A general positive comment about the post content
       2. Celebrate - A comment celebrating an achievement or milestone mentioned
@@ -295,49 +534,77 @@ async function generateComments(postContent, sendResponse) {
       4. Love - A comment expressing enthusiasm or appreciation
       5. Insightful - A comment that adds depth or perspective
       6. Funny - A lighthearted or humorous comment (but still professional)
-      
+
       Each comment should be:
       - Professional and appropriate for a business network
-      - Contextually relevant to the post content
+      - Contextually relevant to the post content${postContent.imageContext ? " and image" : ""}
       - Between 1-3 sentences (not too long)
       - Natural sounding (as if written by a human)
       - Free of excessive emoji use (minimal emoji is ok)
       - Varying in length and style across the different suggestions
-      
+
       Return your suggestions using the provided function call format. Do not include any additional text.
     `;
 
-    // Create request body for Gemini API
-    const requestBody = {
-      contents: [{ parts: [{ text: prompt }] }],
-      safety_settings: [ 
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+    // Extract image context if available
+    const imageContext = extractImageContext(postContent);
+
+    // Log whether image context was found
+    if (imageContext) {
+      console.log('EngageIQ: Image context found, including in API request');
+    } else {
+      console.log('EngageIQ: No image context found, proceeding with text-only request');
+    }
+
+    // Create request body with optional image context
+    const requestBody = createPayloadWithImageContext(prompt, {
+      imageContext,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024
+      },
+      functionDeclaration: {
+        name: 'generateLinkedInComments',
+        description: 'Generate 6 different comment suggestions for a LinkedIn post',
+        parameters: {
+          type: 'object',
+          properties: {
+            comments: {
+              type: 'object',
+              properties: {
+                like: { type: 'string', description: 'Comment suggestion for "Like" reaction.' },
+                celebrate: { type: 'string', description: 'Comment suggestion for "Celebrate" reaction.' },
+                support: { type: 'string', description: 'Comment suggestion for "Support" reaction.' },
+                love: { type: 'string', description: 'Comment suggestion for "Love" reaction.' },
+                insightful: { type: 'string', description: 'Comment suggestion for "Insightful" reaction.' },
+                funny: { type: 'string', description: 'Comment suggestion for "Funny" reaction.' },
+              },
+              required: ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'],
+            },
+          },
+          required: ['comments'],
         },
-        {
-          category: 'HARM_CATEGORY_HATE_SPEECH',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-        {
-          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-        {
-          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-      ],
-    };
+      }
+    });
+
+    // Log payload structure for debugging
+    ImageContextDebug.logInfo('Comment generation payload', {
+      hasImageContext: !!imageContext,
+      contentsLength: requestBody.contents.length,
+      partsLength: requestBody.contents[0].parts.length
+    });
+
     console.log('EngageIQ: Gemini API request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody);
+    const response = await callGeminiAPI(requestBody, 'Generate Comments');
     console.log('EngageIQ: Processing Gemini API response');
 
     // Process the response from the API
     const suggestions = processGenerationResponse(response);
-    
+
     // Format suggestions for UI presentation
     const formattedSuggestions = [
       {
@@ -394,11 +661,12 @@ async function generateComments(postContent, sendResponse) {
       success: true,
       suggestions: formattedSuggestions,
       model: currentModel,
+      usedImageContext: !!imageContext // Include flag to indicate if image was used
     });
 
   } catch (error) {
     console.error('EngageIQ: Error during comment generation:', error);
-    
+
     // Send error response
     sendResponse({
       success: false,
@@ -410,7 +678,7 @@ async function generateComments(postContent, sendResponse) {
 
 /**
  * Regenerates a comment (longer or shorter) using the Gemini API.
- * 
+ *
  * @param {string} requestType - 'REGENERATE_LONGER' or 'REGENERATE_SHORTER'
  * @param {Object} payload - Contains originalText and reactionType
  * @param {function} sendResponse - Callback function to send response back to the caller
@@ -459,7 +727,7 @@ async function regenerateComment(requestType, payload, sendResponse) {
     const requestBody = { // New way - standard text generation
       contents: [{ parts: [{ text: prompt }] }],
       // No tools or tool_config needed
-       safety_settings: [ 
+       safety_settings: [
         {
           category: 'HARM_CATEGORY_HARASSMENT',
           threshold: 'BLOCK_MEDIUM_AND_ABOVE',
@@ -488,12 +756,12 @@ async function regenerateComment(requestType, payload, sendResponse) {
     let newText = '';
     if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
       newText = response.candidates[0].content.parts[0].text.trim();
-      console.log('EngageIQ: [api-service RAW RESPONSE] Text extracted:', JSON.stringify(newText)); 
+      console.log('EngageIQ: [api-service RAW RESPONSE] Text extracted:', JSON.stringify(newText));
     } else {
       console.error('EngageIQ: Failed to extract text from regeneration response:', response);
       throw new Error('Invalid response format or missing text content.');
     }
-    
+
     console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
 
     // Log the successfully processed regenerated comment
@@ -525,7 +793,7 @@ async function regenerateComment(requestType, payload, sendResponse) {
 
 /**
  * Analyzes post content to generate direction suggestions using Gemini API.
- * 
+ *
  * @param {Object} postContent - Object containing the post text and metadata
  * @param {function} sendResponse - Callback function to send response back to the caller
  */
@@ -561,60 +829,67 @@ async function analyzeDirections(postContent, sendResponse) {
     console.log('EngageIQ: Creating prompt for direction analysis');
     const prompt = `
       You are an AI assistant helping analyze a LinkedIn post to suggest different approaches for commenting.
-      
+
       Here is the LinkedIn post content to analyze:
       "${postContent.text}"
+      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
       ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
       ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
-      
+
       Please suggest 3-4 different directions or approaches for commenting on this post.
       Each direction should be distinct and appropriate for a professional networking context.
-      
+
       For each direction, provide:
       1. A concise title (2-4 words)
       2. A brief description explaining the approach (15-25 words)
       3. A single relevant emoji
-      
+      ${postContent.imageContext ? "\nIf the post includes an image, consider both the text and image content in your suggested directions." : ""}
+
       Return your suggestions using the provided function call format with a 'directions' array. Do not include any additional text.
     `;
 
-    // Create request body with lower temperature for more focused results
-    const requestBody = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
+    // Extract image context if available
+    const imageContext = extractImageContext(postContent);
+
+    // Log whether image context was found
+    if (imageContext) {
+      console.log('EngageIQ: Image context found, including in direction analysis request');
+    } else {
+      console.log('EngageIQ: No image context found, proceeding with text-only direction analysis');
+    }
+
+    // Create request body with optional image context and lower temperature for more focused results
+    const requestBody = createPayloadWithImageContext(prompt, {
+      imageContext,
       generationConfig: {
         temperature: 0.2,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 1024
       },
-      systemInstruction: {
-        parts: [{
-          text: 'You are an AI assistant that helps professionals engage effectively on LinkedIn.'
-        }]
-      },
-      functionDeclarations: [
-        {
-          name: 'suggestDirections',
-          description: 'Provide 3-4 distinct directions for commenting on a LinkedIn post',
-          parameters: DIRECTION_ANALYSIS_SCHEMA
-        }
-      ]
-    };
-    
+      functionDeclaration: {
+        name: 'suggestDirections',
+        description: 'Provide 3-4 distinct directions for commenting on a LinkedIn post',
+        parameters: DIRECTION_ANALYSIS_SCHEMA
+      }
+    });
+
+    // Log payload structure for debugging
+    ImageContextDebug.logInfo('Direction analysis payload', {
+      hasImageContext: !!imageContext,
+      contentsLength: requestBody.contents.length,
+      partsLength: requestBody.contents[0].parts.length
+    });
+
     console.log('EngageIQ: Direction analysis request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody);
+    const response = await callGeminiAPI(requestBody, 'Direction Analysis');
     console.log('EngageIQ: Processing direction analysis response');
 
     // Process the response from the API
     const directions = processDirectionAnalysisResponse(response);
-    
+
     // Log the successfully processed directions
     console.log('EngageIQ: [api-service] Processed directions:', directions);
 
@@ -622,9 +897,10 @@ async function analyzeDirections(postContent, sendResponse) {
     sendResponse({
       success: true,
       type: 'DIRECTION_ANALYSIS_SUCCESS',
-      directions: directions
+      directions: directions,
+      usedImageContext: !!imageContext // Include flag to indicate if image was used
     });
-    
+
   } catch (error) {
     console.error('EngageIQ: Error in direction analysis:', error);
     sendResponse({
@@ -683,6 +959,7 @@ async function generateDirectionComments(payload, sendResponse) {
       
       Generate 3 different comments for this LinkedIn post about ${postSummary}:
       "${postContent.text}"
+      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
       ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
       ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
       
@@ -695,46 +972,51 @@ async function generateDirectionComments(payload, sendResponse) {
       
       Each comment should be:
       - Professional and appropriate for LinkedIn
-      - Contextually relevant to the post content
+      - Contextually relevant to the post content${postContent.imageContext ? " and image" : ""}
       - Focused on the selected direction approach
       - Natural sounding (as if written by a human)
       - Free of excessive emoji use
       
       Return your suggestions using the provided function call format with a 'comments' array. Each comment object in the array must have 'type' (short, medium, detailed), 'text' (the comment itself), and 'title' (the descriptive title). Do not include any additional text.
     `;
+    
+    // Extract image context if available
+    const imageContext = extractImageContext(postContent);
 
-    // Create request body with higher temperature for more diverse comments
-    const requestBody = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
+    // Log whether image context was found
+    if (imageContext) {
+      console.log('EngageIQ: Image context found, including in direction-based comment generation request');
+    } else {
+      console.log('EngageIQ: No image context found, proceeding with text-only direction-based comment generation');
+    }
+
+    // Create request body with optional image context and higher temperature for more diverse comments
+    const requestBody = createPayloadWithImageContext(prompt, {
+      imageContext,
       generationConfig: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 1024
       },
-      systemInstruction: {
-        parts: [{
-          text: 'You are an AI assistant that helps professionals engage effectively on LinkedIn.'
-        }]
-      },
-      functionDeclarations: [
-        {
-          name: 'generateDirectionComments',
-          description: 'Generate comments for a LinkedIn post based on a selected direction',
-          parameters: DIRECTION_COMMENT_SCHEMA
-        }
-      ]
-    };
+      functionDeclaration: {
+        name: 'generateDirectionComments',
+        description: 'Generate comments for a LinkedIn post based on a selected direction',
+        parameters: DIRECTION_COMMENT_SCHEMA
+      }
+    });
+    
+    // Log payload structure for debugging
+    ImageContextDebug.logInfo('Direction-based comment generation payload', {
+      hasImageContext: !!imageContext,
+      contentsLength: requestBody.contents.length,
+      partsLength: requestBody.contents[0].parts.length
+    });
     
     console.log('EngageIQ: Direction-based comment generation request constructed and ready for fetch call');
 
     // Make the API call
-    const response = await callGeminiAPI(requestBody);
+    const response = await callGeminiAPI(requestBody, 'Direction Comments');
     console.log('EngageIQ: Processing direction-based comment generation response');
 
     // Process the response from the API
@@ -760,7 +1042,8 @@ async function generateDirectionComments(payload, sendResponse) {
       success: true,
       type: 'DIRECTION_COMMENTS_SUCCESS',
       comments: formattedComments,
-      direction: selectedDirection
+      direction: selectedDirection,
+      usedImageContext: !!imageContext // Include flag to indicate if image was used
     });
     
   } catch (error) {
@@ -775,7 +1058,7 @@ async function generateDirectionComments(payload, sendResponse) {
 
 /**
  * Processes the API response from a comment generation request.
- * 
+ *
  * @param {Object} data - The API response data
  * @returns {Object} The extracted comments object
  * @throws {Error} If the response format is invalid
@@ -786,34 +1069,34 @@ function processGenerationResponse(data) {
     console.error('EngageIQ: Invalid response format - no candidates found');
     throw new Error('Invalid response format: No candidates found');
   }
-  
+
   const candidate = data.candidates[0];
-  
+
   // Check finish reason
   if (candidate.finishReason && candidate.finishReason !== 'STOP') {
     console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
     throw new Error(`Generation stopped: ${candidate.finishReason}`);
   }
-  
+
   // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
+  if (!candidate.content || !candidate.content.parts ||
+      candidate.content.parts.length === 0 ||
       !candidate.content.parts[0].functionCall) {
     console.error('EngageIQ: Invalid response format - functionCall not found');
     throw new Error('Invalid response format: Function call data not found');
   }
-  
+
   const functionCall = candidate.content.parts[0].functionCall;
-  
+
   // Verify function name
   if (functionCall.name !== 'generateLinkedInComments') {
     console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
     throw new Error(`Unexpected function name: ${functionCall.name}`);
   }
-  
+
   // Extract and parse arguments
   let args = functionCall.args;
-  
+
   // Parse args if it's a string
   if (typeof args === 'string') {
     try {
@@ -823,24 +1106,24 @@ function processGenerationResponse(data) {
       throw new Error('Failed to parse response data');
     }
   }
-  
+
   // Validate structure
   if (!args || !args.comments) {
     console.error('EngageIQ: Missing comments object in response');
     throw new Error('Invalid response format: Missing comments object');
   }
-  
+
   const comments = args.comments;
-  
+
   // Validate all required reaction types
   const requiredTypes = ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'];
   const missingTypes = requiredTypes.filter(type => !comments[type]);
-  
+
   if (missingTypes.length > 0) {
     console.error(`EngageIQ: Missing comment types in response: ${missingTypes.join(', ')}`);
     throw new Error(`Missing comment types: ${missingTypes.join(', ')}`);
   }
-  
+
   // Log the successfully processed comments
   console.log('EngageIQ: [api-service] Processed comments:', comments);
 
@@ -849,7 +1132,7 @@ function processGenerationResponse(data) {
 
 /**
  * Processes the API response from a direction analysis request.
- * 
+ *
  * @param {Object} data - The API response data
  * @returns {Array} The extracted directions array
  * @throws {Error} If the response format is invalid
@@ -860,34 +1143,34 @@ function processDirectionAnalysisResponse(data) {
     console.error('EngageIQ: Invalid response format - no candidates found');
     throw new Error('Invalid response format: No candidates found');
   }
-  
+
   const candidate = data.candidates[0];
-  
+
   // Check finish reason
   if (candidate.finishReason && candidate.finishReason !== 'STOP') {
     console.error(`EngageIQ: Analysis stopped due to ${candidate.finishReason}`);
     throw new Error(`Analysis stopped: ${candidate.finishReason}`);
   }
-  
+
   // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
+  if (!candidate.content || !candidate.content.parts ||
+      candidate.content.parts.length === 0 ||
       !candidate.content.parts[0].functionCall) {
     console.error('EngageIQ: Invalid response format - functionCall not found');
     throw new Error('Invalid response format: Function call data not found');
   }
-  
+
   const functionCall = candidate.content.parts[0].functionCall;
-  
+
   // Verify function name
   if (functionCall.name !== 'suggestDirections') {
     console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
     throw new Error(`Unexpected function name: ${functionCall.name}`);
   }
-  
+
   // Extract and parse arguments
   let args = functionCall.args;
-  
+
   // Parse args if it's a string
   if (typeof args === 'string') {
     try {
@@ -897,19 +1180,19 @@ function processDirectionAnalysisResponse(data) {
       throw new Error('Failed to parse response data');
     }
   }
-  
+
   // Validate structure
   if (!args || !args.directions || !Array.isArray(args.directions)) {
     console.error('EngageIQ: Missing directions array in response');
     throw new Error('Invalid response format: Missing directions array');
   }
-  
+
   // Ensure each direction maintains its original language context
   const directions = args.directions.map(direction => ({
     ...direction,
     headerText: direction.headerText || `Choose a commenting approach` // Fallback
   }));
-  
+
   // Log the successfully processed directions
   console.log('EngageIQ: [api-service] Processed directions:', directions);
 
@@ -918,7 +1201,7 @@ function processDirectionAnalysisResponse(data) {
 
 /**
  * Processes the API response from a direction-based comment generation request.
- * 
+ *
  * @param {Object} data - The API response data
  * @returns {Array} The extracted comments array
  * @throws {Error} If the response format is invalid
@@ -929,34 +1212,34 @@ function processDirectionCommentsResponse(data) {
     console.error('EngageIQ: Invalid response format - no candidates found');
     throw new Error('Invalid response format: No candidates found');
   }
-  
+
   const candidate = data.candidates[0];
-  
+
   // Check finish reason
   if (candidate.finishReason && candidate.finishReason !== 'STOP') {
     console.error(`EngageIQ: Generation stopped due to ${candidate.finishReason}`);
     throw new Error(`Generation stopped: ${candidate.finishReason}`);
   }
-  
+
   // Extract function call
-  if (!candidate.content || !candidate.content.parts || 
-      candidate.content.parts.length === 0 || 
+  if (!candidate.content || !candidate.content.parts ||
+      candidate.content.parts.length === 0 ||
       !candidate.content.parts[0].functionCall) {
     console.error('EngageIQ: Invalid response format - functionCall not found');
     throw new Error('Invalid response format: Function call data not found');
   }
-  
+
   const functionCall = candidate.content.parts[0].functionCall;
-  
+
   // Verify function name
   if (functionCall.name !== 'generateDirectionComments') {
     console.error(`EngageIQ: Unexpected function name: ${functionCall.name}`);
     throw new Error(`Unexpected function name: ${functionCall.name}`);
   }
-  
+
   // Extract and parse arguments
   let args = functionCall.args;
-  
+
   // Parse args if it's a string
   if (typeof args === 'string') {
     try {
@@ -966,24 +1249,24 @@ function processDirectionCommentsResponse(data) {
       throw new Error('Failed to parse response data');
     }
   }
-  
+
   // Validate structure
   if (!args || !args.comments || !Array.isArray(args.comments)) {
     console.error('EngageIQ: Missing comments array in response');
     throw new Error('Invalid response format: Missing comments array');
   }
-  
+
   // Validate that we have all required comment types and titles
   const requiredTypes = ['short', 'medium', 'detailed'];
-  const missingTypes = requiredTypes.filter(type => 
+  const missingTypes = requiredTypes.filter(type =>
     !args.comments.some(comment => comment.type === type && comment.title)
   );
-  
+
   if (missingTypes.length > 0) {
     console.error(`EngageIQ: Missing comment types or titles in response: ${missingTypes.join(', ')}`);
     throw new Error(`Missing comment data: ${missingTypes.join(', ')}`);
   }
-  
+
   // Log the successfully processed comments
   console.log('EngageIQ: [api-service] Processed comments:', args.comments);
 
@@ -991,7 +1274,7 @@ function processDirectionCommentsResponse(data) {
 }
 
 // Export functions for use by other modules
-export { 
+export {
   generateComments,
   regenerateComment,
   analyzeDirections,

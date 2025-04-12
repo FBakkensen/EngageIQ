@@ -1,0 +1,486 @@
+<div class="feed-shared-update-v2__control-menu-container display-flex flex-column flex-grow-1">
+                
+                <h2 class="visually-hidden">
+                    Feed post number 3
+                </h2>
+                <div class="fie-impression-container">
+<!---->                  <div class="relative">
+                      
+    <div class="bzUjGuGtxOyYNNXiRQePKFieJbvdaqZZJVU
+        display-flex align-items-flex-start
+        update-components-actor--with-control-menu-and-hide-post
+        
+        ">
+<!---->
+      <div class="update-components-actor__container
+          pr4
+          display-flex flex-grow-1">
+          <a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz  update-components-actor__image relative
+              " aria-label="Dr Milan Milanović, graphic." target="_self" href="https://www.linkedin.com/in/milanmilanovic?miniProfileUrn=urn%3Ali%3Afsd_profile%3AACoAAAC60lcBKfZlzaG-ANOWfpqXrwps720RKpc" data-test-app-aware-link="">
+            <span class="js-update-components-actor__avatar">
+              
+    <div class="ivm-image-view-model    update-components-actor__avatar">
+        
+    <div class="ivm-view-attr__img-wrapper
+        
+        ">
+<!---->
+<!---->          <img width="48" src="https://media.licdn.com/dms/image/v2/C4E03AQGItl85Qu-3Mw/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1660772893683?e=1749686400&amp;v=beta&amp;t=OHPvYaOmV9HyBSE5eVM_h-l9bubtr3QQ_t7MUvMJvUU" loading="lazy" height="48" alt="" id="ember149" class="ivm-view-attr__img--centered EntityPhoto-circle-3  update-components-actor__avatar-image evi-image lazy-image ember-view">
+    </div>
+  
+          </div>
+  
+            </span>
+          </a>
+        <div class="update-components-actor__meta
+            ">
+          <a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz  update-components-actor__meta-link" aria-label="View: Dr Milan Milanović • Following Chief Roadblock Remover and Learning Enabler | Software Development Expert | Author | Leadership &amp;amp; Career Coach | Building great products, building great teams!" target="_self" href="https://www.linkedin.com/in/milanmilanovic?miniProfileUrn=urn%3Ali%3Afsd_profile%3AACoAAAC60lcBKfZlzaG-ANOWfpqXrwps720RKpc" data-test-app-aware-link="">
+            <span class="update-components-actor__title">
+              <span class="hvWTILvuZAvxcNVnbjWIWZtxFUDINLwrfghE
+                  hoverable-link-text t-14 t-bold text-body-medium-bold white-space-nowrap
+                  t-black
+                  
+                  ">
+                <span dir="ltr"><span aria-hidden="true"><!---->Dr Milan Milanović<!----></span><span class="visually-hidden"><!---->Dr Milan Milanović<!----></span></span>
+              </span>
+                <span class="update-components-actor__supplementary-actor-info update-components-actor__supplementary-actor-info--align-icon update-components-actor__single-line-truncate text-body-xsmall
+                    t-black--light
+                    ">
+                  <span aria-hidden="true"><span class="white-space-pre"> </span>• Following<!----></span><span class="visually-hidden"><span class="white-space-pre"> </span>• Following<!----></span>
+                </span>
+            </span>
+
+              <span class="update-components-actor__description text-body-xsmall
+                  t-black--light">
+                <span aria-hidden="true"><!---->Chief Roadblock Remover and Learning Enabler | Software Development Expert | Author | Leadership &amp; Career Coach | Building great products, building great teams!<!----></span><span class="visually-hidden"><!---->Chief Roadblock Remover and Learning Enabler | Software Development Expert | Author | Leadership &amp; Career Coach | Building great products, building great teams!<!----></span>
+              </span>
+
+          </a>
+              <a tabindex="0" rel="noopener noreferrer" target="_blank" href="https://newsletter.techworld-with-milan.com/" id="ember150" class="ember-view pb0">
+                <div class="update-components-actor__sub-description-button-text">
+                  View my newsletter
+                </div>
+              </a>
+            <span class="update-components-actor__sub-description text-body-xsmall
+                t-black--light
+                
+                ">
+              <span aria-hidden="true"><!---->1w •<span class="white-space-pre"> </span><span><li-icon aria-hidden="true" type="globe-americas" class="v-align-bottom" size="small"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" data-supported-dps="16x16" fill="currentColor" class="mercado-match" width="16" height="16" focusable="false">
+      <path d="M8 1a7 7 0 107 7 7 7 0 00-7-7zM3 8a5 5 0 011-3l.55.55A1.5 1.5 0 015 6.62v1.07a.75.75 0 00.22.53l.56.56a.75.75 0 00.53.22H7v.69a.75.75 0 00.22.53l.56.56a.75.75 0 01.22.53V13a5 5 0 01-5-5zm6.24 4.83l2-2.46a.75.75 0 00.09-.8l-.58-1.16A.76.76 0 0010 8H7v-.19a.51.51 0 01.28-.45l.38-.19a.74.74 0 01.68 0L9 7.5l.38-.7a1 1 0 00.12-.48v-.85a.78.78 0 01.21-.53l1.07-1.09a5 5 0 01-1.54 9z"></path>
+    </svg></li-icon></span><span class="white-space-pre"> </span><!----><!----></span><span class="visually-hidden"><!---->1 week ago<!----></span>
+            </span>
+        </div>
+      </div>
+
+<!---->
+<!---->    </div>
+  
+                        
+    <div class="feed-shared-control-menu display-flex
+        feed-shared-update-v2__control-menu absolute text-align-right
+        feed-shared-update-v2--with-hide-post
+        ">
+<!---->
+        <div id="ember152" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view">
+          <button aria-expanded="false" aria-label="Open control menu for post by Dr Milan Milanović" tabindex="0" id="ember153" class="feed-shared-control-menu__trigger artdeco-button artdeco-button--tertiary artdeco-button--muted artdeco-button--1 artdeco-button--circle artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view" type="button">
+              
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.25 8C3.25 8.69 2.69 9.25 2 9.25C1.31 9.25 0.75 8.69 0.75 8C0.75 7.31 1.31 6.75 2 6.75C2.69 6.75 3.25 7.31 3.25 8ZM14 6.75C13.31 6.75 12.75 7.31 12.75 8C12.75 8.69 13.31 9.25 14 9.25C14.69 9.25 15.25 8.69 15.25 8C15.25 7.31 14.69 6.75 14 6.75ZM8 6.75C7.31 6.75 6.75 7.31 6.75 8C6.75 8.69 7.31 9.25 8 9.25C8.69 9.25 9.25 8.69 9.25 8C9.25 7.31 8.69 6.75 8 6.75Z" fill="currentColor"></path>
+  </svg>
+
+                      
+<!----></button>
+          <div tabindex="-1" aria-hidden="true" id="ember154" class="feed-shared-control-menu__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--has-arrow artdeco-dropdown__content--arrow-right artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view" aria-label="Control Menu Options"><!----></div>
+        </div>
+
+<!---->
+<!---->
+<!---->
+<!---->
+<!---->
+<!---->        <button class="feed-shared-control-menu__hide-post-button artdeco-button artdeco-button--circle artdeco-button--tertiary artdeco-button--1 artdeco-button--muted" aria-label="Dismiss post by Dr Milan Milanović" type="button">
+          
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.78 12.72C14.07 13.01 14.07 13.49 13.78 13.78C13.63 13.93 13.44 14 13.25 14C13.06 14 12.87 13.93 12.72 13.78L8 9.06L3.28 13.78C3.13 13.93 2.94 14 2.75 14C2.56 14 2.37 13.93 2.22 13.78C1.93 13.49 1.93 13.01 2.22 12.72L6.94 8L2.22 3.28C1.93 2.99 1.93 2.51 2.22 2.22C2.51 1.93 2.99 1.93 3.28 2.22L8 6.94L12.72 2.22C13.01 1.93 13.49 1.93 13.78 2.22C14.07 2.51 14.07 2.99 13.78 3.28L9.06 8L13.78 12.72Z" fill="currentColor"></path>
+    </svg>
+
+        </button>
+          </div>
+  
+                                      </div>
+<!---->
+                  <!---->
+
+<!---->                          
+    <div class="sCVkGSpDZZqCqOcUsZzbRHnwfWyFTBZUahvg" style="" tabindex="0">
+          
+    <div class="feed-shared-inline-show-more-text
+        feed-shared-update-v2__description feed-shared-inline-show-more-text--minimal-padding
+        
+        feed-shared-inline-show-more-text--3-lines
+        feed-shared-inline-show-more-text--expanded
+        
+        
+        " tabindex="-1" style="max-height: none; display: block;">
+      
+            
+    <div class="update-components-text relative update-components-update-v2__commentary " dir="ltr">
+<!---->
+      <span class="break-words
+          tvm-parent-container">
+<!---->        <span dir="ltr"><!---->𝗛𝗼𝘄 𝗧𝗼 𝗙𝗶𝗴𝗵𝘁 𝗜𝗺𝗽𝗼𝘀𝘁𝗼𝗿 𝗦𝘆𝗻𝗱𝗿𝗼𝗺𝗲?<!----><span><br></span><span><br></span><!---->Everyone in the complex field of software engineering has been hit by impostor syndrome at least once in their career. It is especially felt with high-achievers.<span class="white-space-pre"> </span><span><br></span><span><br></span><!---->Impostor syndrome is the 𝗶𝗻𝗮𝗯𝗶𝗹𝗶𝘁𝘆 𝘁𝗼 𝗮𝗰𝗰𝗲𝗽𝘁 𝘁𝗵𝗮𝘁 𝘆𝗼𝘂𝗿 𝗱𝗮𝗶𝗹𝘆 𝗲𝗳𝗳𝗼𝗿𝘁𝘀 𝘁𝗼 𝗹𝗲𝗮𝗿𝗻 𝗮𝗻𝗱 𝗮𝗱𝘃𝗮𝗻𝗰𝗲 𝘆𝗼𝘂𝗿 𝘁𝗮𝗹𝗲𝗻𝘁𝘀 𝘀𝗵𝗼𝘂𝗹𝗱 𝗺𝗮𝗸𝗲 𝘆𝗼𝘂 𝗱𝗲𝘀𝗲𝗿𝘃𝗶𝗻𝗴 𝗼𝗳 𝗮𝘁𝘁𝗲𝗻𝘁𝗶𝗼𝗻 𝗼𝗿 𝗸𝗲𝗲𝗽𝗶𝗻𝗴 𝘆𝗼𝘂𝗿 𝗽𝗼𝘀𝗶𝘁𝗶𝗼𝗻.<span class="white-space-pre"> </span><span><br></span><span><br></span><!---->Instead, it could give you the impression that you're deceiving people into thinking you're better at your job than you are (“I’m not good enough to be a senior engineer.”)—a faker with no right to be there.<!----><span><br></span><span><br></span><!---->While it could make sense at the start of a career, it could be a burden later even though you're a senior engineer, 𝗶𝘁 𝗱𝗼𝗲𝘀𝗻'𝘁 𝗺𝗲𝗮𝗻 𝘆𝗼𝘂 𝗵𝗮𝘃𝗲 𝗮𝗻𝘀𝘄𝗲𝗿𝘀 𝘁𝗼 𝗮𝗹𝗹 𝗾𝘂𝗲𝘀𝘁𝗶𝗼𝗻𝘀.<span class="white-space-pre"> </span><span><br></span><span><br></span><!---->In software engineering, there is often a high level of pressure to perform at a high level, to be productive, and to keep up with new technologies and tools. This can lead to feelings of inadequacy and self-doubt, common impostor syndrome symptoms.<!----><span><br></span><span><br></span><!---->Additionally, impostor syndrome 𝗰𝗮𝗻 𝗹𝗲𝗮𝗱 𝘁𝗼 𝗯𝘂𝗿𝗻𝗼𝘂𝘁, 𝘀𝘁𝗿𝗲𝘀𝘀, 𝗮𝗻𝗱 𝗮𝗻𝘅𝗶𝗲𝘁𝘆, which can have serious consequences for a software engineer's physical and mental health.<span class="white-space-pre"> </span><span><br></span><span><br></span><!---->How we can improve things here:<!----><span><br></span><span><br></span><!---->𝟭. 𝗥𝗲𝗰𝗼𝗴𝗻𝗶𝘇𝗲 𝗶𝘁: The first step in dealing with impostor syndrome is recognizing that you're experiencing it. Be honest about your feelings, and don't be afraid to discuss them with someone you trust.<!----><span><br></span><span><br></span><!---->𝟮. 𝗖𝗵𝗮𝗹𝗹𝗲𝗻𝗴𝗲 𝘆𝗼𝘂𝗿 𝘁𝗵𝗼𝘂𝗴𝗵𝘁𝘀: Impostor syndrome is often driven by negative self-talk and self-doubt. Challenge those thoughts by asking yourself if they're based on fact or your perceptions. Look for evidence that supports your competence and achievements.<!----><span><br></span><span><br></span><!---->𝟯. 𝗦𝗵𝗮𝗿𝗲 𝘆𝗼𝘂𝗿 𝗲𝘅𝗽𝗲𝗿𝗶𝗲𝗻𝗰𝗲: Talking about your feelings with others who have experienced impostor syndrome can help you feel less alone. You may also find it helpful to seek a mentor or coach who can provide guidance and support.<!----><span><br></span><span><br></span><!---->𝟰. 𝗖𝗲𝗹𝗲𝗯𝗿𝗮𝘁𝗲 𝘆𝗼𝘂𝗿 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗲𝘀: Recognizing and celebrating your successes, no matter how small they may be is essential. Remember to acknowledge your achievements and credit yourself for your hard work.<!----><span><br></span><span><br></span><!---->𝟱. 𝗙𝗼𝗰𝘂𝘀 𝗼𝗻 𝗹𝗲𝗮𝗿𝗻𝗶𝗻𝗴 𝗮𝗻𝗱 𝗴𝗿𝗼𝘄𝘁𝗵: Instead of worrying about perfection, focus on learning and growing. Embrace challenges and view mistakes as opportunities to learn and improve.<!----><span><br></span><span><br></span><!---->𝟲. 𝗗𝗼𝗻'𝘁 𝗰𝗼𝗺𝗽𝗮𝗿𝗲 𝘆𝗼𝘂𝗿𝘀𝗲𝗹𝗳 𝘁𝗼 𝗼𝘁𝗵𝗲𝗿𝘀: This is the source of all unhappiness for people. Everyone has their path, and you need to follow yours.<!----><span><br></span><span><br></span><a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz " tabindex="0" href="https://www.linkedin.com/feed/hashtag/?keywords=technology&amp;highlightedUpdateUrns=urn%3Ali%3Aactivity%3A7311656915137191936" data-test-app-aware-link=""><span class="visually-hidden">hashtag</span><span><span aria-hidden="true">#</span>technology</span></a><span class="white-space-pre"> </span><!----><!----><a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz " tabindex="0" href="https://www.linkedin.com/feed/hashtag/?keywords=softwareengineering&amp;highlightedUpdateUrns=urn%3Ali%3Aactivity%3A7311656915137191936" data-test-app-aware-link=""><span class="visually-hidden">hashtag</span><span><span aria-hidden="true">#</span>softwareengineering</span></a><span class="white-space-pre"> </span><!----><!----><a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz " tabindex="0" href="https://www.linkedin.com/feed/hashtag/?keywords=careers&amp;highlightedUpdateUrns=urn%3Ali%3Aactivity%3A7311656915137191936" data-test-app-aware-link=""><span class="visually-hidden">hashtag</span><span><span aria-hidden="true">#</span>careers</span></a><span class="white-space-pre"> </span><!----><!----><a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz " tabindex="0" href="https://www.linkedin.com/feed/hashtag/?keywords=personaldevelopment&amp;highlightedUpdateUrns=urn%3Ali%3Aactivity%3A7311656915137191936" data-test-app-aware-link=""><span class="visually-hidden">hashtag</span><span><span aria-hidden="true">#</span>personaldevelopment</span></a><span class="white-space-pre"> </span><!----><!----><a class="onRHPXypfWLuNOCinrLJfqDJJJaXLBUXSKz " tabindex="0" href="https://www.linkedin.com/feed/hashtag/?keywords=productivity&amp;highlightedUpdateUrns=urn%3Ali%3Aactivity%3A7311656915137191936" data-test-app-aware-link=""><span class="visually-hidden">hashtag</span><span><span aria-hidden="true">#</span>productivity</span></a></span>
+      </span>
+    </div>
+  
+          <!----><!---->    </div>
+  
+        
+<!---->    </div>
+  
+                          
+    <div class="update-components-image
+        update-components-image--single-image
+        feed-shared-update-v2__content">
+      <div class="update-components-image__container-wrapper relative">
+        <div class="update-components-image__container
+            " style="
+          padding-top: 66.46%;">
+<!---->
+                <button class="update-components-image__image-link" type="button">
+                    <span class="visually-hidden">
+                      Activate to view larger image,
+                    </span>
+                  
+    <div class="ivm-image-view-model   ">
+        
+    <div class="ivm-view-attr__img-wrapper
+        
+        ">
+<!---->
+<!---->          <img width="600" src="https://media.licdn.com/dms/image/v2/D4D22AQGgsvEd3tVUcA/feedshare-shrink_800/B4DZXg5N7GHAAk-/0/1743234850993?e=1746662400&amp;v=beta&amp;t=FNsVJExWmw9AWQ1NEOYAdLZUMmXXQRXpzerH0xFjNsY" loading="lazy" height="398" alt="No alternative text description for this image" id="ember156" class="ivm-view-attr__img--centered ivm-view-attr__img--aspect-fill update-components-image__image evi-image lazy-image ember-view">
+    </div>
+  
+          </div>
+  
+                </button>
+<!---->              <!---->        </div>
+        <span class="visually-hidden" id="update-components-image-ember155" aria-hidden="true">
+              Activate to view larger image,
+        </span>
+
+<!---->
+<!---->      </div>
+
+<!---->
+<!---->    </div>
+  
+<!---->
+<!---->
+                      <!---->
+                      <!---->
+
+                  <!---->
+
+<!---->
+                    
+    
+    <div id="ember157" class="update-v2-social-activity
+        
+        
+        ">
+      
+          
+    <div class="social-details-social-counts social-details-social-counts--no-vertical-padding
+        social-details-social-counts__reactions--animated
+        
+        
+        
+        ">
+      <div class="display-flex flex-grow-1 full-width">
+        <div class="relative full-width">
+          <ul class="display-flex flex-wrap">
+              <li class="social-details-social-counts__item social-details-social-counts__reactions social-details-social-counts__item--height-two-x
+                  social-details-social-counts__reactions--left-aligned
+                  ">
+                <button data-reaction-details="" aria-label="199 reactions" class="t-black--light display-flex align-items-center social-details-social-counts__count-value social-details-social-counts__count-value-hover
+                    text-body-small
+                    hoverable-link-text
+                    " type="button">
+    <img class="reactions-icon social-detail-social-counts__count-icon social-detail-social-counts__count-icon--0 reactions-icon__consumption--small data-test-reactions-icon-type-LIKE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/emei2gdl9ikg7penkh9ij9llx" alt="like" data-test-reactions-icon-type="LIKE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="small">
+  
+    <img class="reactions-icon social-detail-social-counts__count-icon social-detail-social-counts__count-icon--1 reactions-icon__consumption--small reactions-icon--stacked data-test-reactions-icon-type-INTEREST data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/3bhtnif60blspoiyhoex4lfx" alt="insightful" data-test-reactions-icon-type="INTEREST" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="small">
+  
+    <img class="reactions-icon social-detail-social-counts__count-icon social-detail-social-counts__count-icon--2 reactions-icon__consumption--small reactions-icon--stacked data-test-reactions-icon-type-EMPATHY data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/esahr356vrv0vklww6hcjar1j" alt="love" data-test-reactions-icon-type="EMPATHY" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="small">
+                      <span aria-hidden="true" class="social-details-social-counts__reactions-count
+                        ">
+199                    </span>
+                </button>
+              </li>
+
+              <li data-non-reaction-details="" class="display-flex flex-grow-1 max-full-width">
+                <ul class="display-flex flex-grow-1 max-full-width">
+                    <li class="social-details-social-counts__item social-details-social-counts__comments social-details-social-counts__item--height-two-x
+                        social-details-social-counts__item--right-aligned
+                        ">
+                        <button aria-label="23 comments on {:actorName}{:actorName} post" class="t-black--light social-details-social-counts__count-value social-details-social-counts__count-value-hover
+                            text-body-small
+                            hoverable-link-text
+                            social-details-social-counts__btn
+                            " type="button">
+                          <span aria-hidden="true">
+                              23 comments
+                          </span>
+                        </button>
+                    </li>
+
+                    <li class="social-details-social-counts__item social-details-social-counts__item--height-two-x flex-shrink-1 overflow-hidden
+                        social-details-social-counts__item--right-aligned
+                        ">
+                        <button id="ember158" class="ember-view t-black--light social-details-social-counts__count-value-hover social-details-social-counts__item--truncate-text full-width
+                            text-body-small
+                            hoverable-link-text social-details-social-counts__btn
+                            " aria-label="13 reposts of {:actorName}{:actorName} post">
+                          <span aria-hidden="true">
+                            13 reposts
+                          </span>
+                        </button>
+                    </li>
+
+<!---->                </ul>
+              </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  
+
+<!---->
+<!---->
+          
+    <div class="feed-shared-social-action-bar
+        
+        feed-shared-social-action-bar--full-width
+        feed-shared-social-action-bar--has-identity-toggle
+        feed-shared-social-action-bar--has-social-counts
+        ">
+      
+              
+    <div class="feed-shared-social-action-bar__action-button">
+      <button aria-label="Open menu for switching identity when interacting with this post" id="ember160" class="artdeco-button artdeco-button--muted artdeco-button--4 artdeco-button--tertiary ember-view align-items-center social-actions-button content-admin-identity-toggle-button"><!---->
+<span class="artdeco-button__text">
+    
+        <div class="content-admin-identity-toggle-button__image-and-caret-wrapper">
+            <img src="https://media.licdn.com/dms/image/v2/D4E03AQHtvdmqGSAE1w/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1691321719040?e=1749686400&amp;v=beta&amp;t=tmZMTMjPrkRSIF2gN_iQ__g1sCXeYPiRWxDgO0hzhEE" loading="lazy" alt="Photo of Flemming Bakkensen" id="ember161" class="EntityPhoto-circle-0 evi-image lazy-image ember-view">
+          <svg role="none" aria-hidden="true" class="ml1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+        </div>
+      
+</span></button>
+
+<!---->    </div>
+  
+              
+    <span class="reactions-react-button feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+      
+    <span class="reactions-menu reactions-menu--active reactions-menu--humor-enabled reactions-menu--v2
+        
+        
+        
+        " style="">
+        
+    <button aria-label="React Like" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Like</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-LIKE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/aw9hgzu26674bp8ges58l68hz" alt="like" data-test-reactions-icon-type="LIKE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="React Celebrate" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Celebrate</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-PRAISE data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/3ucoryxergmvijtgd5iop81ci" alt="celebrate" data-test-reactions-icon-type="PRAISE" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="React Support" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Support</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-APPRECIATION data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/2bo3ynpenae7uhstqkrsj5ytl" alt="support" data-test-reactions-icon-type="APPRECIATION" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="React Love" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Love</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-EMPATHY data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/cfi6xloqadgsnlv6tqk1p343w" alt="love" data-test-reactions-icon-type="EMPATHY" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="React Insightful" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Insightful</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-INTEREST data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/8s2sxa4k2h741ngjfi5dqzbvu" alt="insightful" data-test-reactions-icon-type="INTEREST" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+        
+    <button aria-label="React Funny" class="reactions-menu__reaction-index reactions-menu__reaction
+        " tabindex="-1" type="button">
+      <span class="reactions-menu__reaction-description">Funny</span>
+      
+    <img class="reactions-icon reactions-menu__icon reactions-icon__consumption--large data-test-reactions-icon-type-ENTERTAINMENT data-test-reactions-icon-theme-dark" src="https://static.licdn.com/aero-v1/sc/h/qye2jwjc8dw20nuv6diudrsi" alt="funny" data-test-reactions-icon-type="ENTERTAINMENT" data-test-reactions-icon-theme="dark" data-test-reactions-icon-style="consumption" data-test-reactions-icon-size="large">
+  
+    </button>
+  
+    </span>
+  
+
+      <button aria-pressed="false" aria-label="React Like" id="ember162" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button react-button__trigger
+          "><!---->
+<span class="artdeco-button__text">
+    
+        <div class="flex-wrap justify-center
+            artdeco-button__text align-items-center">
+              <svg role="none" aria-hidden="true" class="artdeco-button__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="thumbs-up-outline-small">
+<!---->    
+    <use href="#thumbs-up-outline-small" width="16" height="16"></use>
+</svg>
+
+
+            <span aria-hidden="true" class="artdeco-button__text react-button__text social-action-button__text
+                ">
+              Like
+            </span>
+        </div>
+      
+</span></button>
+
+      <button aria-label="Open reactions menu" aria-expanded="false" id="ember163" class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view reactions-menu__trigger" data-finite-scroll-hotkey="l"><!---->
+<span class="artdeco-button__text">
+    
+        <svg role="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="caret-small">
+<!---->    
+    <use href="#caret-small" width="16" height="16"></use>
+</svg>
+
+      
+</span></button>
+    </span>
+  
+              <span tabindex="-1" id="ember164" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+  <div>
+    <button role="button" aria-label="Comment" id="feed-shared-social-action-bar-comment-ember159" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button comment-button flex-wrap " data-finite-scroll-hotkey="c" aria-describedby="artdeco-hoverable-artdeco-gen-48">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="comment-small">
+<!---->    
+    <use href="#comment-small" width="16" height="16"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    Comment
+</span></button>
+  </div>
+  <div id="artdeco-gen-48" class="ember-view"><div id="ember167" class="ember-view"></div></div>
+</span>
+              
+    <div id="ember168" class="artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+      <span tabindex="-1" id="ember170" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view flex-1 display-flex">
+        <button aria-expanded="false" aria-label="" id="ember171" class="artdeco-dropdown__trigger artdeco-dropdown__trigger--placement-bottom ember-view 
+            artdeco-button social-actions-button social-reshare-button flex-wrap
+            artdeco-button--muted artdeco-button--3 artdeco-button--tertiary" data-finite-scroll-hotkey="r" type="button" tabindex="0" aria-describedby="artdeco-hoverable-artdeco-gen-49">
+            <svg role="none" aria-hidden="true" class="artdeco-button__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="repost-small">
+<!---->    
+    <use href="#repost-small" width="16" height="16"></use>
+</svg>
+
+            <span class="artdeco-button__text social-action-button__text">Repost</span>
+        
+<!----></button>
+
+        <div tabindex="-1" aria-hidden="true" id="ember172" class="artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-right artdeco-dropdown__content--placement-bottom ember-view social-reshare-button__share-dropdown-content"><!----></div>
+
+        <div id="artdeco-gen-49" class="ember-view"><div id="ember174" class="ember-view"></div></div>
+      </span>
+        <div>
+  
+      
+<!---->  
+  
+</div>
+
+<!---->
+<!---->    </div>
+  
+                <div class="feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding">
+                  <span tabindex="-1" id="ember175" class="artdeco-hoverable-trigger artdeco-hoverable-trigger--content-placed-top artdeco-hoverable-trigger--is-hoverable ember-view">
+                    
+    <button aria-label="Send in a private message" id="ember176" class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view social-actions-button send-privately-button flex-wrap
+         send-privately-button" data-finite-scroll-hotkey="s" type="button" aria-describedby="artdeco-hoverable-artdeco-gen-50">        <svg role="none" aria-hidden="true" class="artdeco-button__icon " xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" data-supported-dps="16x16" data-test-icon="send-privately-small" data-rtl="true">
+<!---->    
+    <use href="#send-privately-small" width="16" height="16"></use>
+</svg>
+
+
+<span class="artdeco-button__text">
+    
+        <span class="artdeco-button__text social-action-button__text">
+          Send
+        </span>
+    
+</span></button>
+  
+                    <div id="artdeco-gen-50" class="ember-view"><div id="ember178" class="ember-view"></div></div>
+                  </span>
+                </div>
+<!----><!---->          
+    </div>
+  
+<!----><!----><!---->    
+    </div>
+  
+  
+                  <!---->                </div>
+
+                  
+    
+    <div id="ember179" class="update-v2-social-activity
+        
+        
+        ">
+      
+<!----><!---->
+<!---->
+<!---->
+          
+<!---->                    
+
+<!---->
+          <div class="feed-shared-update-v2__comments-container display-flex flex-column
+              ">
+<!----><!---->          </div>
+    
+    </div>
+  
+  
+
+<!---->
+                  
+<!---->
+<!---->
+<!---->
+<!---->  
+
+<!---->
+          
+              </div>

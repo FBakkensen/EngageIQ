@@ -11,8 +11,10 @@ import { regenerateComment as regenerateCommentService } from './services/regene
 import { analyzePostDirections, generateDirectionComments } from './services/smart-suggestions-api.js';
 import { detectLanguage } from './services/language-service.js';
 
-// Log background script initialization
+// Log background script initialization with debugging information
 console.log('EngageIQ: Background Script Initialized');
+console.log('EngageIQ: Service Worker Context Check:', typeof window === 'undefined' || typeof localStorage === 'undefined');
+console.log('EngageIQ: Background Script API available:', !!chrome?.runtime?.id);
 
 // Set up message listener for content script requests
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

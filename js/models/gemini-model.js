@@ -13,6 +13,29 @@ import { getCurrentModel } from '../utils/storage-utils.js';
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-pro';
 
+/**
+ * Image Context Part definition for Gemini API
+ * Used when including images in API requests
+ * @typedef {Object} ImagePart
+ * @property {string} inlineData.data - Base64 encoded image data (without mime prefix)
+ * @property {string} inlineData.mimeType - MIME type of the image (e.g., 'image/jpeg')
+ */
+
+/**
+ * Standard text part definition for Gemini API
+ * @typedef {Object} TextPart
+ * @property {string} text - Text content for the API request
+ */
+
+/**
+ * Gemini API payload structure definition
+ * Now supports both text and image parts
+ * @typedef {Object} GeminiPayload
+ * @property {Array<Object>} contents - Array of content objects with parts
+ * @property {Array<Object>} [safety_settings] - Optional safety settings
+ * @property {Object} [generationConfig] - Optional generation configuration
+ */
+
 // Schema for comment regeneration requests
 const REGENERATION_SCHEMA = {
   type: 'object',
