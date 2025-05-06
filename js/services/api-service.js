@@ -10,9 +10,9 @@
 import { 
   DIRECTION_ANALYSIS_SCHEMA,
   DIRECTION_COMMENT_SCHEMA,
-  getGenerateContentEndpoint 
+  getGenerateContentEndpoint
 } from '../models/gemini-model.js';
-import { getApiKey } from '../utils/storage-utils.js';
+import { getApiKey, getOpenAIApiKey, getOpenAIEndpoint } from '../utils/storage-utils.js';
 import { ImageContextDebug } from '../utils/ImageContextDebug.js';
 import { ImageConverter } from '../utils/ImageConverter.js';
 
@@ -1275,12 +1275,138 @@ function processDirectionCommentsResponse(data) {
 
 // --- Temporary stub for Step 1.3: OpenAI API client ---
 /**
- * Stub for callOpenAIAPI. Will be implemented in Step 2.1.
- * This allows the API Provider Abstraction Layer to be imported and tested.
- * @throws {Error} Always throws 'Not implemented'.
+ * Makes a call to the OpenAI API with retry and timeout logic.
+ *
+ * @param {Object} requestBody - The payload for the API request (OpenAI format).
+ * @param {string} operationName - A descriptive name for the operation (for logging).
+ * @returns {Promise<Object>} - The JSON response from the API.
+ * @throws {ApiError} - Throws an ApiError if the request fails after retries or times out.
  */
-export async function callOpenAIAPI() {
-  throw new Error('callOpenAIAPI is not implemented (Step 2.1)');
+export async function callOpenAIAPI(requestBody, operationName = 'OpenAI API Call') {
+  let retries = 0;
+
+  // Get OpenAI API Key and Endpoint from storage
+  const apiKey = await getOpenAIApiKey();
+  if (!apiKey) {
+    console.error(`EngageIQ: [${operationName}] OpenAI API Key not found.`);
+    throw createApiError(ERROR_TYPES.MISSING_API_KEY, 'OpenAI API Key not found. Please configure it in the extension options.', 401);
+  }
+  const endpoint = await getOpenAIEndpoint();
+  const fullApiUrl = `${endpoint}/chat/completions`;
+
+  // Prepare fetch options with timeout controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_SETTINGS.TIMEOUT_MS);
+
+  while (retries <= API_SETTINGS.MAX_RETRIES) {
+    try {
+      if (retries > 0) {
+        const delay = API_SETTINGS.RETRY_DELAY_MS * retries;
+        console.log(`EngageIQ: [${operationName}] Retry attempt ${retries} after ${delay}ms delay.`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      console.debug(`EngageIQ: [${operationName}] Sending OpenAI payload (attempt ${retries + 1}):`, JSON.stringify(requestBody).substring(0, 300) + '...');
+
+      const response = await fetch(fullApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      // --- Handle HTTP errors ---
+      if (!response.ok) {
+        let errorType = ERROR_TYPES.UNKNOWN;
+        let errorMessage = `OpenAI API call failed with status ${response.status}`;
+        let errorDetails = null;
+        try {
+          const errorText = await response.text();
+          console.warn(`EngageIQ: [${operationName}] OpenAI Error Response Text:`, errorText);
+          try {
+            errorDetails = JSON.parse(errorText);
+            if (errorDetails.error && errorDetails.error.message) {
+              errorMessage = `OpenAI API Error: ${errorDetails.error.message}`;
+            }
+          } catch (parseError) {
+            errorDetails = errorText;
+            errorMessage = `OpenAI API call failed with status ${response.status}. Unable to parse error details.`;
+          }
+        } catch (textError) {
+          console.error(`EngageIQ: [${operationName}] Could not read OpenAI error response body.`, textError);
+          errorMessage = `OpenAI API call failed with status ${response.status}. Could not read error details.`;
+        }
+
+        // Map status codes to specific error types
+        switch (response.status) {
+          case 400:
+            errorType = ERROR_TYPES.BAD_REQUEST;
+            break;
+          case 401:
+          case 403:
+            errorType = ERROR_TYPES.AUTH;
+            errorMessage = 'OpenAI Authentication Error: Invalid or expired API key.';
+            break;
+          case 404:
+            errorType = ERROR_TYPES.NOT_FOUND;
+            errorMessage = 'OpenAI API Endpoint/Model Not Found.';
+            break;
+          case 429:
+            errorType = ERROR_TYPES.RATE_LIMIT;
+            errorMessage = 'OpenAI Rate Limit Exceeded: Too many requests.';
+            break;
+          case 500:
+          case 501:
+          case 502:
+          case 503:
+          case 504:
+            errorType = ERROR_TYPES.SERVER;
+            errorMessage = 'OpenAI API Server Error: Service unavailable.';
+            break;
+        }
+
+        throw createApiError(errorType, errorMessage, response.status, errorDetails);
+      }
+
+      // --- Handle Successful Response ---
+      const responseData = await response.json();
+      console.log(`EngageIQ: [${operationName}] OpenAI API request successful.`);
+      return responseData;
+    } catch (error) {
+      console.error(`EngageIQ: [${operationName}] Error during OpenAI API request (attempt ${retries + 1}):`, error);
+
+      // --- Handle specific error types for retry logic ---
+      if (error.name === 'AbortError') {
+        console.warn(`EngageIQ: [${operationName}] OpenAI request timed out.`);
+        const timeoutError = createApiError(ERROR_TYPES.TIMEOUT, 'OpenAI request timed out', null, { timeoutMs: API_SETTINGS.TIMEOUT_MS });
+        if (retries >= API_SETTINGS.MAX_RETRIES) throw timeoutError;
+        retries++;
+        continue;
+      }
+      if (error.isApiError) {
+        if ((error.errorType === ERROR_TYPES.RATE_LIMIT || error.errorType === ERROR_TYPES.SERVER) && retries < API_SETTINGS.MAX_RETRIES) {
+          console.warn(`EngageIQ: [${operationName}] Retrying after OpenAI API error: ${error.errorType}`);
+          retries++;
+          continue;
+        }
+        throw error;
+      }
+      if (error instanceof TypeError) {
+        console.warn(`EngageIQ: [${operationName}] Encountered potential OpenAI network error: ${error.message}`);
+        const networkError = createApiError(ERROR_TYPES.NETWORK, `OpenAI network error: ${error.message}`, null, error);
+        if (retries >= API_SETTINGS.MAX_RETRIES) throw networkError;
+        retries++;
+        continue;
+      }
+      console.error(`EngageIQ: [${operationName}] Unhandled or non-retryable OpenAI error after ${retries + 1} attempts.`);
+      throw createApiError(ERROR_TYPES.UNKNOWN, `An unexpected error occurred during the OpenAI API call: ${error.message}`, null, error);
+    }
+  }
+  throw createApiError(ERROR_TYPES.UNKNOWN, 'Max retries reached for OpenAI API without success or specific error.', null, null);
 }
 
 // Export functions for use by other modules
