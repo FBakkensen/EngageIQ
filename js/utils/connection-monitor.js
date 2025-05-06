@@ -5,18 +5,24 @@
 class ConnectionMonitor {
     constructor({ serverUrl, interval = 5000, retryInterval = 3000 } = {}) {
         if (!serverUrl) throw new Error('serverUrl is required');
+        // Use /v1/models for LM Studio compatibility
+        if (serverUrl.endsWith('/v1') || serverUrl.endsWith('/v1/')) {
+            this.pingUrl = serverUrl.replace(/\/v1\/?$/, '/v1/models');
+        } else {
+            this.pingUrl = serverUrl + '/v1/models';
+        }
         this.serverUrl = serverUrl;
         this.interval = interval;
         this.retryInterval = retryInterval;
         this._timer = null;
         this._connected = null; // null = unknown, true = connected, false = disconnected
-        this._listeners = { connected: [], disconnected: [], reconnected: [] };
+        this._listeners = { connected: [], disconnected: [] };
     }
 
     // Lightweight ping to check if server is reachable
     async checkConnection() {
         try {
-            const response = await fetch(this.serverUrl, { method: 'HEAD', cache: 'no-store' });
+            const response = await fetch(this.pingUrl, { method: 'GET', cache: 'no-store' });
             return response.ok;
         } catch (e) {
             return false;
@@ -70,7 +76,7 @@ class ConnectionMonitor {
             else this._emit('disconnected');
         } else if (wasConnected !== isConnected) {
             this._connected = isConnected;
-            if (isConnected) this._emit('reconnected');
+            if (isConnected) this._emit('connected');
             else this._emit('disconnected');
         }
         this._timer = setTimeout(() => this._monitor(), isConnected ? this.interval : this.retryInterval);

@@ -15,14 +15,20 @@ import { DEFAULT_GEMINI_MODEL } from '../models/gemini-model.js'; // Corrected r
 
 // Import provider and model utilities
 import { getApiProvider, getCurrentModelByProvider, getOpenAIEndpoint } from '../utils/storage-utils.js';
+// Import connection monitor utility
+import ConnectionMonitor from '../utils/connection-monitor.js';
 
 // Reference to DOM element (to be initialized when module is used)
 let modelIndicatorElement;
+let connectionMonitor = null;
+let currentEndpoint = null;
+let connectionStatus = null;
 
 /**
  * Initializes the model indicator component
  * - Stores the DOM element reference
  * - Sets up a listener for storage changes to keep the UI updated
+ * - Initializes connection monitoring for local endpoints
  * 
  * @param {Object} config - Configuration object
  * @param {HTMLElement} config.modelIndicatorElement - The DOM element for the indicator
@@ -41,8 +47,48 @@ export function initModelIndicator({ modelIndicatorElement: element }) {
     if (areaName === 'sync' && (changes.geminiModel || changes.openaiModel || changes.apiProvider || changes.openaiEndpoint)) {
       // Use async update to get both provider & model
       displayCurrentModel();
+      // Also re-initialize connection monitor if endpoint changes
+      if (changes.openaiEndpoint) {
+        maybeInitConnectionMonitor();
+      }
     }
   });
+
+  // Initial connection monitor setup
+  maybeInitConnectionMonitor();
+}
+
+// Helper to initialize or stop connection monitoring based on endpoint
+async function maybeInitConnectionMonitor() {
+  const provider = await getApiProvider();
+  let endpoint = null;
+  if (provider === 'openai') {
+    endpoint = await getOpenAIEndpoint();
+  }
+  if (connectionMonitor) {
+    // Stop previous monitor if endpoint changed or not local
+    connectionMonitor.stop();
+    connectionMonitor = null;
+    currentEndpoint = null;
+  }
+  if (provider === 'openai' && endpoint && (endpoint.includes('localhost') || endpoint.includes('127.0.0.1'))) {
+    currentEndpoint = endpoint;
+    connectionMonitor = new ConnectionMonitor({ serverUrl: endpoint, interval: 5000, retryInterval: 3000 });
+    connectionMonitor.on('connected', () => setConnectionStatus('connected'));
+    connectionMonitor.on('disconnected', () => setConnectionStatus('disconnected'));
+    connectionMonitor.on('reconnected', () => setConnectionStatus('reconnecting'));
+    connectionMonitor.start();
+    // Set initial status as unknown until first event
+    setConnectionStatus('checking');
+  } else {
+    setConnectionStatus(null); // Not local, no monitor
+  }
+}
+
+function setConnectionStatus(status) {
+  connectionStatus = status;
+  // Update UI if already displaying a local endpoint
+  displayCurrentModel();
 }
 
 /**
@@ -95,12 +141,32 @@ function updateModelIndicatorFull(provider, modelName, isLocal = false) {
   }
 
   let localBadge = '';
+  let statusBadge = '';
+  let helpText = '';
+
   if (isLocal) {
     localBadge = ' <span class="badge bg-warning text-dark ms-1">Local</span>';
+    // Add connection status indicator
+    if (connectionStatus === 'connected') {
+      statusBadge = ' <span class="badge bg-success ms-1" title="Connected to local server">Connected</span>';
+      helpText = '';
+    } else if (connectionStatus === 'disconnected') {
+      statusBadge = ' <span class="badge bg-danger ms-1" title="Cannot reach local server. Check LM Studio is running and endpoint is correct.">Disconnected</span>';
+      helpText = '<span class="form-text text-danger">Cannot reach local LM Studio server. <a href="#" tabindex="-1" class="text-reset text-decoration-underline" data-bs-toggle="tooltip" title="Check that LM Studio is running and the endpoint is correct. See troubleshooting for more info.">Help</a></span>';
+    } else if (connectionStatus === 'reconnecting') {
+      statusBadge = ' <span class="badge bg-warning text-dark ms-1" title="Reconnecting to local server...">Reconnecting</span>';
+      helpText = '<span class="form-text text-warning">Attempting to reconnect to LM Studio server...</span>';
+    } else if (connectionStatus === 'checking') {
+      statusBadge = ' <span class="badge bg-secondary ms-1" title="Checking local server status...">Checking</span>';
+      helpText = '<span class="form-text text-muted">Checking connection to LM Studio...</span>';
+    }
   }
 
-  // Bootstrap 5: Use <span> for color, <span class="badge"> for local
-  modelIndicatorElement.innerHTML = `<span class="${colorClass}">${providerDisplay}: ${modelDisplay}</span>${localBadge}`;
+  // Bootstrap 5: Use <span> for color, <span class="badge"> for local and status
+  modelIndicatorElement.innerHTML = `<span class="${colorClass}">${providerDisplay}: ${modelDisplay}</span>${localBadge}${statusBadge}`;
+  if (helpText) {
+    modelIndicatorElement.innerHTML += `<br>${helpText}`;
+  }
   modelIndicatorElement.style.display = 'inline-block';
 }
 
@@ -114,9 +180,9 @@ export async function displayCurrentModel() {
     const modelName = await getCurrentModelByProvider();
     let isLocal = false;
     if (provider === 'openai') {
-      // Check endpoint for localhost
+      // Check endpoint for localhost or 127.0.0.1
       const endpoint = await getOpenAIEndpoint();
-      if (endpoint && endpoint.includes('localhost')) {
+      if (endpoint && (endpoint.includes('localhost') || endpoint.includes('127.0.0.1'))) {
         isLocal = true;
       }
     }

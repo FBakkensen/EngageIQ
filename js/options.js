@@ -19,6 +19,7 @@ import {
   setPreferredOpenAIModel
 } from './utils/storage-utils.js';
 import { discoverLocalModels } from './models/openai-model.js';
+import { initModelIndicator } from './ui/model-indicator.js';
 
 document.addEventListener('DOMContentLoaded', function () {
   // Get DOM references for all interactive elements
@@ -34,6 +35,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const openaiEndpointInput = document.getElementById('openaiEndpoint');
   const openaiModelSelect = document.getElementById('openaiModel');
   const providerRadios = document.getElementsByName('apiProvider');
+
+  // Model indicator DOM element
+  const modelIndicatorElement = document.getElementById('modelIndicator');
+  // Initialize model indicator (connection status, provider, model)
+  if (modelIndicatorElement) {
+    initModelIndicator({ modelIndicatorElement });
+  }
 
   // Helper: Show/hide provider-specific sections
   function updateProviderUI(selectedProvider) {
