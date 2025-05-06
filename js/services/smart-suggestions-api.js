@@ -12,12 +12,13 @@
 import {
   getModelTemperature,
 } from '../models/gemini-model.js';
-import { getCurrentModel } from '../utils/storage-utils.js';
+import { getCurrentModelByProvider } from '../utils/storage-utils.js';
 import {
   callGeminiAPI,
   ERROR_TYPES as API_ERROR_TYPES, // Alias to avoid name collision if needed later
   createApiError as createBaseApiError // Alias for clarity
 } from './api-service.js';
+import { callApiProvider } from './api-provider.js';
 
 // Log module load confirmation
 console.log('EngageIQ: Smart Suggestions API Service Module Loaded');
@@ -45,7 +46,7 @@ export async function analyzePostDirections(postContent, languageCode) {
   
   try {
     // Prepare request data
-    const model = await getCurrentModel();
+    const model = await getCurrentModelByProvider();
     const temperature = getModelTemperature(model);
     
     if (!postContent || !postContent.text) {
@@ -82,7 +83,12 @@ export async function analyzePostDirections(postContent, languageCode) {
     };
     
     // Make the API request with retry logic
-    const response = await callGeminiAPI(payload, 'Analyze Post Directions');
+    const request = {
+      operation: 'analyzePostDirections',
+      payload,
+      model,
+    };
+    const response = await callApiProvider(request, { operation: 'Analyze Post Directions' });
     
     // --- New Logic: Parse plain text response ---
     let rawTextResponse;
@@ -93,6 +99,9 @@ export async function analyzePostDirections(postContent, languageCode) {
         throw new Error('Missing text content in API response for directions.');
       }
       rawTextResponse = response.candidates[0].content.parts[0].text.trim();
+      
+      // Remove <think>...</think> blocks if present
+      rawTextResponse = rawTextResponse.replace(/<think>[\s\S]*?<\/think>\s*/g, '');
       
       // Split into individual suggestion blocks
       const suggestionBlocks = rawTextResponse.split('---').map(block => block.trim()).filter(Boolean);
@@ -160,7 +169,7 @@ export async function generateDirectionComments(direction, postContent, language
   
   try {
     // Prepare request data
-    const model = await getCurrentModel();
+    const model = await getCurrentModelByProvider();
     const temperature = getModelTemperature(model);
     
     if (!direction || !direction.title) {
@@ -205,7 +214,12 @@ export async function generateDirectionComments(direction, postContent, language
     };
     
     // Make the API request with retry logic
-    const response = await callGeminiAPI(payload, `Generate Direction Comments (${direction.title})`);
+    const request = {
+      operation: 'generateDirectionComments',
+      payload,
+      model,
+    };
+    const response = await callApiProvider(request, { operation: 'Generate Direction Comments' });
     
     // --- New Logic: Parse raw text response ---
     let rawTextResponse;
@@ -217,8 +231,23 @@ export async function generateDirectionComments(direction, postContent, language
       }
       rawTextResponse = response.candidates[0].content.parts[0].text.trim();
       
-      // Clean potential markdown code fences
-      let cleanedText = rawTextResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+      // Remove <think>...</think> blocks if present
+      rawTextResponse = rawTextResponse.replace(/<think>[\s\S]*?<\/think>\s*/g, '');
+      
+      // IMPROVED: Extract JSON content from markdown code blocks if present
+      let cleanedText = rawTextResponse;
+      
+      // Check if the response contains a code block
+      const codeBlockMatch = rawTextResponse.match(/```(?:json)?([\s\S]*?)```/);
+      if (codeBlockMatch && codeBlockMatch[1]) {
+        // Use the content inside the code block
+        cleanedText = codeBlockMatch[1].trim();
+      } else {
+        // Otherwise try to remove code fences if they exist
+        cleanedText = cleanedText.replace(/```json\s*/g, '');
+        cleanedText = cleanedText.replace(/```\s*/g, '');
+        cleanedText = cleanedText.trim();
+      }
       
       // Attempt to parse the raw text as JSON
       commentsArray = JSON.parse(cleanedText);
@@ -227,7 +256,6 @@ export async function generateDirectionComments(direction, postContent, language
       if (!Array.isArray(commentsArray)) {
          throw new Error('Parsed response is not an array.');
       }
-
     } catch (parseError) {
        console.error('EngageIQ: Failed to parse JSON from text response:', parseError);
        console.error('EngageIQ: Raw text received:', rawTextResponse); // Log the text that failed parsing
@@ -239,8 +267,11 @@ export async function generateDirectionComments(direction, postContent, language
     }
     // --- End New Logic ---
     
-    // Format and validate the comment suggestions using the parsed array
-    const suggestions = formatSuggestions(commentsArray);
+    // Trim leading whitespace from each suggestion's text
+    const suggestions = formatSuggestions(commentsArray).map(s => ({
+      ...s,
+      text: typeof s.text === 'string' ? s.text.trimStart() : s.text
+    }));
     
     // Get current model info (using existing declarations from earlier in the function)
     const modelMatch = model.match(/models\/([^:]+):/);

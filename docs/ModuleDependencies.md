@@ -14,9 +14,11 @@ graph TD
     
     %% Models
     geminiModel[models/gemini-model.js]:::model
+    openaiModel[models/openai-model.js]:::model
     
     %% Services
     apiService[services/api-service.js]:::service
+    apiProvider[services/api-provider.js]:::service
     commentGen[services/comment-generation.js]:::service
     messageService[services/message-service.js]:::service
     popupMessageService[services/popup-message-service.js]:::service
@@ -34,10 +36,13 @@ graph TD
     
     %% Utils
     storageUtils[utils/storage-utils.js]:::util
+    connectionMonitor[utils/connection-monitor.js]:::util
     
     %% Background dependencies
     background --> geminiModel
+    background --> openaiModel
     background --> apiService
+    background --> apiProvider
     background --> commentGen
     background --> regenService
     background --> storageUtils
@@ -48,6 +53,7 @@ graph TD
     content --> iframeManager
     content --> postExtractor
     content --> messageService
+    content --> connectionMonitor
     
     %% Popup dependencies
     popup --> suggestionRenderer
@@ -60,11 +66,14 @@ graph TD
     %% Options dependencies
     options --> storageUtils
     options --> geminiModel
+    options --> openaiModel
     
     %% Service interdependencies
     apiService --> geminiModel
-    commentGen --> apiService
-    regenService --> apiService
+    apiService --> openaiModel
+    apiProvider --> apiService
+    commentGen --> apiProvider
+    regenService --> apiProvider
     regenService --> commentGen
     popupMessageService --> messageService
     
@@ -95,6 +104,17 @@ graph TD
 - Main files act as orchestrators, importing and coordinating modules
 - Dependencies flow primarily from main files to specialized modules
 - Some inter-module dependencies exist where specialized functionality is required
+
+## Multi-Model Support Architecture
+
+- The extension now supports both Google's Gemini and OpenAI models
+- The `api-provider.js` service acts as a facade that routes requests to the appropriate model implementation
+- Model-specific implementations are contained in their respective model files:
+  - `gemini-model.js`: Handles all Gemini API interactions
+  - `openai-model.js`: Handles all OpenAI API interactions including local LLM support via LM Studio
+- The `storage-utils.js` module has been extended to store and retrieve the selected model provider
+- The `model-indicator.js` UI component displays the currently active model
+- The `connection-monitor.js` utility monitors API connectivity status
 
 ## Best Practices for Module Development
 
