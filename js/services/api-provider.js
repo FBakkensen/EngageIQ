@@ -88,6 +88,94 @@ export function mapProviderError(error, provider) {
 }
 
 /**
+ * Adapts a comment generation request to OpenAI's chat completion format.
+ * @param {object} request - Internal comment generation request
+ * @param {object} [schema] - Optional structured output schema
+ * @returns {object} OpenAI chat completion request
+ */
+export function adaptCommentGenerationRequest(request, schema) {
+  if (!request || !request.prompt) {
+    throw new Error('Invalid comment generation request: missing prompt');
+  }
+  const messages = [
+    { role: 'system', content: request.systemPrompt || 'You are a helpful assistant.' },
+    { role: 'user', content: request.prompt }
+  ];
+  const openaiRequest = {
+    model: request.model || 'gpt-3.5-turbo',
+    messages,
+    ...(schema ? { functions: [schema] } : {})
+  };
+  return openaiRequest;
+}
+
+/**
+ * Adapts a regeneration request to OpenAI's chat completion format.
+ * @param {object} request - Internal regeneration request
+ * @param {object} [schema] - Optional structured output schema
+ * @returns {object} OpenAI chat completion request
+ */
+export function adaptRegenerationRequest(request, schema) {
+  if (!request || !request.previousMessage) {
+    throw new Error('Invalid regeneration request: missing previousMessage');
+  }
+  const messages = [
+    { role: 'system', content: request.systemPrompt || 'You are a helpful assistant.' },
+    { role: 'user', content: request.previousMessage }
+  ];
+  const openaiRequest = {
+    model: request.model || 'gpt-3.5-turbo',
+    messages,
+    ...(schema ? { functions: [schema] } : {})
+  };
+  return openaiRequest;
+}
+
+/**
+ * Adapts a direction analysis request to OpenAI's chat completion format.
+ * @param {object} request - Internal direction analysis request
+ * @param {object} [schema] - Optional structured output schema
+ * @returns {object} OpenAI chat completion request
+ */
+export function adaptDirectionAnalysisRequest(request, schema) {
+  if (!request || !request.prompt) {
+    throw new Error('Invalid direction analysis request: missing prompt');
+  }
+  const messages = [
+    { role: 'system', content: request.systemPrompt || 'You are a helpful assistant.' },
+    { role: 'user', content: request.prompt }
+  ];
+  const openaiRequest = {
+    model: request.model || 'gpt-3.5-turbo',
+    messages,
+    ...(schema ? { functions: [schema] } : {})
+  };
+  return openaiRequest;
+}
+
+/**
+ * Adapts a direction-based comment generation request to OpenAI's chat completion format.
+ * @param {object} request - Internal direction-based comment generation request
+ * @param {object} [schema] - Optional structured output schema
+ * @returns {object} OpenAI chat completion request
+ */
+export function adaptDirectionCommentsRequest(request, schema) {
+  if (!request || !request.directionPrompt) {
+    throw new Error('Invalid direction comments request: missing directionPrompt');
+  }
+  const messages = [
+    { role: 'system', content: request.systemPrompt || 'You are a helpful assistant.' },
+    { role: 'user', content: request.directionPrompt }
+  ];
+  const openaiRequest = {
+    model: request.model || 'gpt-3.5-turbo',
+    messages,
+    ...(schema ? { functions: [schema] } : {})
+  };
+  return openaiRequest;
+}
+
+/**
  * High-level function to route a generic request to the correct provider.
  * @param {object} request - Generic request object.
  * @param {object} [options] - Additional options.
