@@ -267,8 +267,11 @@ export async function generateDirectionComments(direction, postContent, language
     }
     // --- End New Logic ---
     
-    // Format and validate the comment suggestions using the parsed array
-    const suggestions = formatSuggestions(commentsArray);
+    // Trim leading whitespace from each suggestion's text
+    const suggestions = formatSuggestions(commentsArray).map(s => ({
+      ...s,
+      text: typeof s.text === 'string' ? s.text.trimStart() : s.text
+    }));
     
     // Get current model info (using existing declarations from earlier in the function)
     const modelMatch = model.match(/models\/([^:]+):/);
