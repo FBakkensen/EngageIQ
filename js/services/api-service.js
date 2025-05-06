@@ -15,6 +15,7 @@ import {
 import { getApiKey, getOpenAIApiKey, getOpenAIEndpoint } from '../utils/storage-utils.js';
 import { ImageContextDebug } from '../utils/ImageContextDebug.js';
 import { ImageConverter } from '../utils/ImageConverter.js';
+import { callApiProvider } from './api-provider.js';
 
 // Add verification log for API service module initialization
 console.log('EngageIQ API Service: Module initialized, checking environment...');
@@ -504,170 +505,22 @@ async function generateComments(postContent, sendResponse) {
   }
 
   try {
-    // Get API key from storage
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      console.error('EngageIQ: No API key found in storage');
-      sendResponse({
-        success: false,
-        error: 'API Key Missing',
-        details: 'Please set your API key in the extension options',
-      });
-      return;
-    }
-
-    console.log('EngageIQ: API key found in storage');
-
-    // Create prompt for Gemini API
-    console.log('EngageIQ: Creating prompt for Gemini API');
-    const prompt = `
-      You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
-
-      Here is the LinkedIn post content to analyze:
-      "${postContent.text}"
-      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
-
-      Please generate 6 different comment suggestions, each corresponding to one of LinkedIn's standard reaction types:
-      1. Like - A general positive comment about the post content
-      2. Celebrate - A comment celebrating an achievement or milestone mentioned
-      3. Support - A comment showing support or encouragement
-      4. Love - A comment expressing enthusiasm or appreciation
-      5. Insightful - A comment that adds depth or perspective
-      6. Funny - A lighthearted or humorous comment (but still professional)
-
-      Each comment should be:
-      - Professional and appropriate for a business network
-      - Contextually relevant to the post content${postContent.imageContext ? " and image" : ""}
-      - Between 1-3 sentences (not too long)
-      - Natural sounding (as if written by a human)
-      - Free of excessive emoji use (minimal emoji is ok)
-      - Varying in length and style across the different suggestions
-
-      Return your suggestions using the provided function call format. Do not include any additional text.
-    `;
-
-    // Extract image context if available
+    // Prepare generic request for provider abstraction
     const imageContext = extractImageContext(postContent);
-
-    // Log whether image context was found
-    if (imageContext) {
-      console.log('EngageIQ: Image context found, including in API request');
-    } else {
-      console.log('EngageIQ: No image context found, proceeding with text-only request');
-    }
-
-    // Create request body with optional image context
-    const requestBody = createPayloadWithImageContext(prompt, {
+    const request = {
+      operation: 'generateComments',
+      postContent,
       imageContext,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024
-      },
-      functionDeclaration: {
-        name: 'generateLinkedInComments',
-        description: 'Generate 6 different comment suggestions for a LinkedIn post',
-        parameters: {
-          type: 'object',
-          properties: {
-            comments: {
-              type: 'object',
-              properties: {
-                like: { type: 'string', description: 'Comment suggestion for "Like" reaction.' },
-                celebrate: { type: 'string', description: 'Comment suggestion for "Celebrate" reaction.' },
-                support: { type: 'string', description: 'Comment suggestion for "Support" reaction.' },
-                love: { type: 'string', description: 'Comment suggestion for "Love" reaction.' },
-                insightful: { type: 'string', description: 'Comment suggestion for "Insightful" reaction.' },
-                funny: { type: 'string', description: 'Comment suggestion for "Funny" reaction.' },
-              },
-              required: ['like', 'celebrate', 'support', 'love', 'insightful', 'funny'],
-            },
-          },
-          required: ['comments'],
-        },
-      }
-    });
-
-    // Log payload structure for debugging
-    ImageContextDebug.logInfo('Comment generation payload', {
-      hasImage: parts.length > 1,
-      generationConfigIncluded: !!generationConfig,
-      functionDeclarationIncluded: !!functionDeclaration
-    });
-
-    console.log('EngageIQ: Gemini API request constructed and ready for fetch call');
-
-    // Make the API call
-    const response = await callGeminiAPI(requestBody, 'Generate Comments');
-    console.log('EngageIQ: Processing Gemini API response');
-
-    // Process the response from the API
-    const suggestions = processGenerationResponse(response);
-
-    // Format suggestions for UI presentation
-    const formattedSuggestions = [
-      {
-        id: 'like',
-        text: suggestions.like,
-        tone: 'positive',
-        emoji: '👍',
-      },
-      {
-        id: 'celebrate',
-        text: suggestions.celebrate,
-        tone: 'congratulatory',
-        emoji: '🎉',
-      },
-      {
-        id: 'support',
-        text: suggestions.support,
-        tone: 'supportive',
-        emoji: '🙌',
-      },
-      {
-        id: 'love',
-        text: suggestions.love,
-        tone: 'enthusiastic',
-        emoji: '❤️',
-      },
-      {
-        id: 'insightful',
-        text: suggestions.insightful,
-        tone: 'thoughtful',
-        emoji: '💡',
-      },
-      {
-        id: 'funny',
-        text: suggestions.funny,
-        tone: 'humorous',
-        emoji: '😄',
-      },
-    ];
-
-    // Log the successfully processed suggestions
-    console.log('EngageIQ: [api-service] Processed suggestions:', suggestions);
-
-    // Log the final formatted suggestions before sending the response
-    console.log('EngageIQ: [api-service] Final formattedSuggestions before sendResponse:', formattedSuggestions);
-
-    // Get current model to return with response
-    const endpoint = await getGenerateContentEndpoint();
-    const modelMatch = endpoint.match(/models\/([^:]+):/); // Extract model name from endpoint
-    const currentModel = modelMatch ? modelMatch[1] : 'unknown';
-
-    // Send success response
+    };
+    // Use provider abstraction
+    const response = await callApiProvider(request, { operation: 'generateComments' });
+    // Assume normalized response shape
     sendResponse({
-      success: true,
-      suggestions: formattedSuggestions,
-      model: currentModel,
-      usedImageContext: !!imageContext // Include flag to indicate if image was used
+      ...response,
+      usedImageContext: !!imageContext,
     });
-
   } catch (error) {
     console.error('EngageIQ: Error during comment generation:', error);
-
-    // Send error response
     sendResponse({
       success: false,
       error: 'GENERATION_ERROR',
@@ -687,23 +540,6 @@ async function regenerateComment(requestType, payload, sendResponse) {
   console.log(`EngageIQ: Processing ${requestType} request`);
 
   try {
-    // Get API key from storage
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      console.error('EngageIQ: No API key found in storage for regeneration request');
-      sendResponse({
-        success: false,
-        type: 'REGENERATION_ERROR',
-        error: 'API_KEY_MISSING',
-        details: 'API key is missing. Please set it in the extension options.',
-        payload: { reactionType: payload?.reactionType },
-      });
-      return;
-    }
-
-    console.log('EngageIQ: API key retrieved successfully for regeneration.');
-
-    // Validate payload
     if (!payload || !payload.originalText || !payload.reactionType) {
       console.error('EngageIQ: Invalid payload for regeneration request:', payload);
       sendResponse({
@@ -715,68 +551,15 @@ async function regenerateComment(requestType, payload, sendResponse) {
       });
       return;
     }
-
-    const { originalText, reactionType } = payload;
-
-    // Construct regeneration prompt
-    const lengthInstruction = requestType === 'REGENERATE_LONGER' ? 'longer' : 'shorter';
-    const prompt = `\n      You are an AI assistant helping refine a comment for a LinkedIn post.\n      The original comment provided is for the '${reactionType}' reaction.\n      Original comment: "${originalText}"\n\n      Please regenerate this comment to make it ${lengthInstruction} (roughly 1 sentence ${lengthInstruction} than the original).\n      Maintain the original tone, language, and professional style suitable for LinkedIn.\n      Use paragraph breaks (double line breaks: \n\n) where appropriate to improve readability.\n      Focus solely on adjusting the length based on the original comment's content and intent.\n      Output *only* the regenerated comment text, nothing else.\n    `;
-    console.log('EngageIQ: Constructed regeneration prompt.');
-
-    // Create request body for regeneration - WITHOUT function calling
-    const requestBody = { // New way - standard text generation
-      contents: [{ parts: [{ text: prompt }] }],
-      // No tools or tool_config needed
-       safety_settings: [
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-        {
-          category: 'HARM_CATEGORY_HATE_SPEECH',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-        {
-          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-        {
-          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-          threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
-      ],
+    // Prepare generic request for provider abstraction
+    const request = {
+      operation: 'regenerateComment',
+      requestType,
+      ...payload,
     };
-    console.log('EngageIQ: Created standard regeneration request body.');
-
-    // Make the API call
-    const response = await callGeminiAPI(requestBody);
-    console.log('EngageIQ: Processing regeneration API response');
-
-    // Process the regeneration response directly - WITHOUT function call parsing
-    let newText = '';
-    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      newText = response.candidates[0].content.parts[0].text.trim();
-      console.log('EngageIQ: [api-service RAW RESPONSE] Text extracted:', JSON.stringify(newText));
-    } else {
-      console.error('EngageIQ: Failed to extract text from regeneration response:', response);
-      throw new Error('Invalid response format or missing text content.');
-    }
-
-    console.log(`EngageIQ: Successfully regenerated comment for ${reactionType}`);
-
-    // Log the successfully processed regenerated comment
-    console.log('EngageIQ: [api-service] Processed regenerated comment:', newText);
-
-    // Send success response
-    sendResponse({
-      success: true,
-      type: 'REGENERATION_SUCCESS',
-      payload: {
-        newText: newText,
-        reactionType: reactionType,
-      },
-    });
-
+    // Use provider abstraction
+    const response = await callApiProvider(request, { operation: 'regenerateComment' });
+    sendResponse({ ...response });
   } catch (error) {
     console.error('EngageIQ: Error during regeneration API call or processing:', error);
     sendResponse({
@@ -811,96 +594,16 @@ async function analyzeDirections(postContent, sendResponse) {
   }
 
   try {
-    // Get API key from storage
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      console.error('EngageIQ: No API key found in storage');
-      sendResponse({
-        success: false,
-        error: 'API Key Missing',
-        details: 'Please set your API key in the extension options',
-      });
-      return;
-    }
-
-    console.log('EngageIQ: API key found in storage');
-
-    // Create prompt for direction analysis
-    console.log('EngageIQ: Creating prompt for direction analysis');
-    const prompt = `
-      You are an AI assistant helping analyze a LinkedIn post to suggest different approaches for commenting.
-
-      Here is the LinkedIn post content to analyze:
-      "${postContent.text}"
-      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
-      ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
-      ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
-
-      Please suggest 3-4 different directions or approaches for commenting on this post.
-      Each direction should be distinct and appropriate for a professional networking context.
-
-      For each direction, provide:
-      1. A concise title (2-4 words)
-      2. A brief description explaining the approach (15-25 words)
-      3. A single relevant emoji
-      ${postContent.imageContext ? "\nIf the post includes an image, consider both the text and image content in your suggested directions." : ""}
-
-      Return your suggestions using the provided function call format with a 'directions' array. Do not include any additional text.
-    `;
-
-    // Extract image context if available
+    // Prepare generic request for provider abstraction
     const imageContext = extractImageContext(postContent);
-
-    // Log whether image context was found
-    if (imageContext) {
-      console.log('EngageIQ: Image context found, including in direction analysis request');
-    } else {
-      console.log('EngageIQ: No image context found, proceeding with text-only direction analysis');
-    }
-
-    // Create request body with optional image context and lower temperature for more focused results
-    const requestBody = createPayloadWithImageContext(prompt, {
+    const request = {
+      operation: 'analyzeDirections',
+      postContent,
       imageContext,
-      generationConfig: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024
-      },
-      functionDeclaration: {
-        name: 'suggestDirections',
-        description: 'Provide 3-4 distinct directions for commenting on a LinkedIn post',
-        parameters: DIRECTION_ANALYSIS_SCHEMA
-      }
-    });
-
-    // Log payload structure for debugging
-    ImageContextDebug.logInfo('Direction analysis payload', {
-      hasImageContext: !!imageContext,
-      contentsLength: requestBody.contents.length,
-      partsLength: requestBody.contents[0].parts.length
-    });
-
-    console.log('EngageIQ: Direction analysis request constructed and ready for fetch call');
-
-    // Make the API call
-    const response = await callGeminiAPI(requestBody, 'Direction Analysis');
-    console.log('EngageIQ: Processing direction analysis response');
-
-    // Process the response from the API
-    const directions = processDirectionAnalysisResponse(response);
-
-    // Log the successfully processed directions
-    console.log('EngageIQ: [api-service] Processed directions:', directions);
-
-    // Send the response
-    sendResponse({
-      success: true,
-      type: 'DIRECTION_ANALYSIS_SUCCESS',
-      directions: directions,
-      usedImageContext: !!imageContext // Include flag to indicate if image was used
-    });
-
+    };
+    // Use provider abstraction
+    const response = await callApiProvider(request, { operation: 'analyzeDirections' });
+    sendResponse({ ...response, usedImageContext: !!imageContext });
   } catch (error) {
     console.error('EngageIQ: Error in direction analysis:', error);
     sendResponse({
@@ -933,119 +636,17 @@ async function generateDirectionComments(payload, sendResponse) {
   const { postContent, selectedDirection } = payload;
 
   try {
-    // Get API key from storage
-    const apiKey = await getApiKey();
-    if (!apiKey) {
-      console.error('EngageIQ: No API key found in storage');
-      sendResponse({
-        success: false,
-        error: 'API Key Missing',
-        details: 'Please set your API key in the extension options',
-      });
-      return;
-    }
-
-    console.log('EngageIQ: API key found in storage');
-
-    // Create a brief summary of the post for context
-    const postSummary = postContent.text.length > 100 
-      ? postContent.text.substring(0, 100) + '...'
-      : postContent.text;
-
-    // Create prompt for direction-based comment generation
-    console.log('EngageIQ: Creating prompt for direction-based comment generation');
-    const prompt = `
-      You are an AI assistant helping generate high-quality, contextually relevant comment suggestions for a LinkedIn post.
-      
-      Generate 3 different comments for this LinkedIn post about ${postSummary}:
-      "${postContent.text}"
-      ${postContent.imageContext ? "This post also includes an image which you can see." : ""}
-      ${postContent.author ? `\nPost author: ${postContent.author}` : ''}
-      ${postContent.engagementStats ? `\nPost engagement: ${postContent.engagementStats}` : ''}
-      
-      The comments should focus on the selected direction: "${selectedDirection.title} - ${selectedDirection.description}"
-      
-      Create three distinct comments with different lengths and perspectives:
-      1. Short (1 sentence) - Give this a descriptive title (e.g., 'Quick Reply')
-      2. Medium (2-3 sentences) - Give this a descriptive title (e.g., 'Balanced View')
-      3. Detailed (4-5 sentences) - Give this a descriptive title (e.g., 'In-depth Comment')
-      
-      Each comment should be:
-      - Professional and appropriate for LinkedIn
-      - Contextually relevant to the post content${postContent.imageContext ? " and image" : ""}
-      - Focused on the selected direction approach
-      - Natural sounding (as if written by a human)
-      - Free of excessive emoji use
-      
-      Return your suggestions using the provided function call format with a 'comments' array. Each comment object in the array must have 'type' (short, medium, detailed), 'text' (the comment itself), and 'title' (the descriptive title). Do not include any additional text.
-    `;
-    
-    // Extract image context if available
+    // Prepare generic request for provider abstraction
     const imageContext = extractImageContext(postContent);
-
-    // Log whether image context was found
-    if (imageContext) {
-      console.log('EngageIQ: Image context found, including in direction-based comment generation request');
-    } else {
-      console.log('EngageIQ: No image context found, proceeding with text-only direction-based comment generation');
-    }
-
-    // Create request body with optional image context and higher temperature for more diverse comments
-    const requestBody = createPayloadWithImageContext(prompt, {
+    const request = {
+      operation: 'generateDirectionComments',
+      postContent,
+      selectedDirection,
       imageContext,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024
-      },
-      functionDeclaration: {
-        name: 'generateDirectionComments',
-        description: 'Generate comments for a LinkedIn post based on a selected direction',
-        parameters: DIRECTION_COMMENT_SCHEMA
-      }
-    });
-    
-    // Log payload structure for debugging
-    ImageContextDebug.logInfo('Direction-based comment generation payload', {
-      hasImageContext: !!imageContext,
-      contentsLength: requestBody.contents.length,
-      partsLength: requestBody.contents[0].parts.length
-    });
-    
-    console.log('EngageIQ: Direction-based comment generation request constructed and ready for fetch call');
-
-    // Make the API call
-    const response = await callGeminiAPI(requestBody, 'Direction Comments');
-    console.log('EngageIQ: Processing direction-based comment generation response');
-
-    // Process the response from the API
-    const comments = processDirectionCommentsResponse(response);
-    
-    // Log the successfully processed comments
-    console.log('EngageIQ: [api-service] Processed comments:', comments);
-
-    // Format the comments for UI presentation
-    const formattedComments = comments.map(comment => ({
-      id: comment.type,
-      text: comment.text,
-      type: comment.type,
-      direction: selectedDirection.title,
-      title: comment.title
-    }));
-    
-    // Log the final formatted comments before sending the response
-    console.log('EngageIQ: [api-service] Final formattedComments before sendResponse:', formattedComments);
-
-    // Send the response
-    sendResponse({
-      success: true,
-      type: 'DIRECTION_COMMENTS_SUCCESS',
-      comments: formattedComments,
-      direction: selectedDirection,
-      usedImageContext: !!imageContext // Include flag to indicate if image was used
-    });
-    
+    };
+    // Use provider abstraction
+    const response = await callApiProvider(request, { operation: 'generateDirectionComments' });
+    sendResponse({ ...response, usedImageContext: !!imageContext });
   } catch (error) {
     console.error('EngageIQ: Error in direction-based comment generation:', error);
     sendResponse({
