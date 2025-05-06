@@ -23,6 +23,21 @@
       <p>Configure your settings here.</p>
 
       <form id="settingsForm">
+        <!-- API Provider Selection -->
+        <div class="mb-4">
+          <h4>API Provider</h4>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="apiProvider" id="providerGemini" value="gemini" checked>
+            <label class="form-check-label" for="providerGemini">Gemini</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="apiProvider" id="providerOpenAI" value="openai">
+            <label class="form-check-label" for="providerOpenAI">OpenAI</label>
+          </div>
+          <div class="form-text">Choose which AI provider to use for EngageIQ's language features.</div>
+        </div>
+
+        <!-- Gemini Configuration -->
         <div class="mb-3">
           <label for="apiKey" class="form-label">Gemini API Key</label>
           <input
@@ -58,6 +73,34 @@
           <div id="modelHelp" class="form-text">
             Select the Gemini model to use for generating comments. Different
             models offer varying balances of speed, quality, and rate limits.
+          </div>
+        </div>
+
+        <!-- OpenAI Configuration Section -->
+        <div class="mb-4" id="openaiConfigSection">
+          <h4>OpenAI Options</h4>
+          <p class="text-muted">Configure your OpenAI integration below. These settings are only required if you select OpenAI as your API provider.</p>
+
+          <div class="mb-3">
+            <label for="openaiApiKey" class="form-label">OpenAI API Key</label>
+            <input type="password" class="form-control" id="openaiApiKey" placeholder="Enter your OpenAI API key">
+            <div class="form-text">Your OpenAI API key will be stored locally and used only for API requests.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="openaiEndpoint" class="form-label">OpenAI Endpoint URL</label>
+            <input type="url" class="form-control" id="openaiEndpoint" placeholder="https://api.openai.com/v1/chat/completions" value="https://api.openai.com/v1/chat/completions">
+            <div class="form-text">Specify the OpenAI endpoint. The default should work for most users.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="openaiModel" class="form-label">OpenAI Model</label>
+            <select class="form-select" id="openaiModel" aria-describedby="openaiModelHelp">
+              <option value="gpt-3.5-turbo" selected>gpt-3.5-turbo (fast, cost-effective)</option>
+              <option value="gpt-4">gpt-4 (higher quality, slower, more expensive)</option>
+              <option value="gpt-4o">gpt-4o (latest, multimodal, high quality)</option>
+            </select>
+            <div id="openaiModelHelp" class="form-text">Select the OpenAI model to use for generating content.</div>
           </div>
         </div>
 
