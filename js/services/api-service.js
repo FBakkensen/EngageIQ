@@ -591,9 +591,9 @@ async function generateComments(postContent, sendResponse) {
 
     // Log payload structure for debugging
     ImageContextDebug.logInfo('Comment generation payload', {
-      hasImageContext: !!imageContext,
-      contentsLength: requestBody.contents.length,
-      partsLength: requestBody.contents[0].parts.length
+      hasImage: parts.length > 1,
+      generationConfigIncluded: !!generationConfig,
+      functionDeclarationIncluded: !!functionDeclaration
     });
 
     console.log('EngageIQ: Gemini API request constructed and ready for fetch call');
@@ -1271,6 +1271,16 @@ function processDirectionCommentsResponse(data) {
   console.log('EngageIQ: [api-service] Processed comments:', args.comments);
 
   return args.comments;
+}
+
+// --- Temporary stub for Step 1.3: OpenAI API client ---
+/**
+ * Stub for callOpenAIAPI. Will be implemented in Step 2.1.
+ * This allows the API Provider Abstraction Layer to be imported and tested.
+ * @throws {Error} Always throws 'Not implemented'.
+ */
+export async function callOpenAIAPI() {
+  throw new Error('callOpenAIAPI is not implemented (Step 2.1)');
 }
 
 // Export functions for use by other modules
