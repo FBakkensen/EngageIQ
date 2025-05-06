@@ -50,7 +50,7 @@ Ensure it follows the same structure as gemini-model.js but with appropriate mod
 
 ### Step 1.2: Add Storage Utilities for OpenAI Configuration
 
-- **Status:** [ ] Complete
+- **Status:** [x] Complete
 - **Dependencies:** None
 - **Files:** Modify `js/utils/storage-utils.js`
 
