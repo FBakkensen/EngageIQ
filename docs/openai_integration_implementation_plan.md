@@ -418,7 +418,7 @@ Ensure this only runs when the user has selected a local endpoint configuration.
 
 ### Step 4.2: Add Local Connection Status Monitoring
 
-- **Status:** [ ] Complete
+- **Status:** [x] Complete
 - **Dependencies:** Step 2.1
 - **Files:** Create `js/utils/connection-monitor.js`
 
