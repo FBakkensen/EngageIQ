@@ -346,7 +346,7 @@ Ensure all settings are properly saved to Chrome storage using the functions fro
 
 ### Step 3.3: Update Model Indicator Component
 
-- **Status:** [ ] Complete
+- **Status:** [x] Complete
 - **Dependencies:** Step 1.2
 - **Files:** Modify `js/ui/model-indicator.js`
 
