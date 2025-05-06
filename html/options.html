@@ -95,11 +95,15 @@
 
           <div class="mb-3">
             <label for="openaiModel" class="form-label">OpenAI Model</label>
-            <select class="form-select" id="openaiModel" aria-describedby="openaiModelHelp">
-              <option value="gpt-3.5-turbo" selected>gpt-3.5-turbo (fast, cost-effective)</option>
-              <option value="gpt-4">gpt-4 (higher quality, slower, more expensive)</option>
-              <option value="gpt-4o">gpt-4o (latest, multimodal, high quality)</option>
-            </select>
+            <div class="d-flex align-items-center gap-2">
+              <select class="form-select" id="openaiModel" aria-describedby="openaiModelHelp">
+                <option value="gpt-3.5-turbo" selected>gpt-3.5-turbo (fast, cost-effective)</option>
+                <option value="gpt-4">gpt-4 (higher quality, slower, more expensive)</option>
+                <option value="gpt-4o">gpt-4o (latest, multimodal, high quality)</option>
+              </select>
+              <div id="openaiModelSpinner" class="spinner-border spinner-border-sm text-primary" role="status" style="display:none" aria-label="Loading models..."></div>
+            </div>
+            <div id="openaiModelError" class="text-danger mt-1" style="display:none"></div>
             <div id="openaiModelHelp" class="form-text">Select the OpenAI model to use for generating content.</div>
           </div>
         </div>

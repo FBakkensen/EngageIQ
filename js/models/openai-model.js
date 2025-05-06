@@ -197,6 +197,55 @@ function getModelSpecs(modelName) {
   };
 }
 
+/**
+ * Discover available models from LM Studio's /v1/models endpoint.
+ * Caches results to avoid unnecessary API calls.
+ * Only runs when the user has selected a local endpoint configuration.
+ *
+ * @param {string} [endpoint] - The LM Studio API endpoint (default: 'http://localhost:1234/v1/models')
+ * @returns {Promise<Array<Object>>} Array of model objects or throws error
+ */
+let _lmStudioModelCache = null;
+let _lmStudioModelCacheTime = 0;
+const LM_STUDIO_MODELS_CACHE_TTL = 60 * 1000; // 1 minute
+
+async function discoverLocalModels(endpoint = 'http://localhost:1234/v1/models') {
+  const now = Date.now();
+  if (_lmStudioModelCache && (now - _lmStudioModelCacheTime < LM_STUDIO_MODELS_CACHE_TTL)) {
+    return _lmStudioModelCache;
+  }
+  try {
+    const response = await fetch(endpoint, { method: 'GET' });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const models = transformLMStudioModels(data);
+    _lmStudioModelCache = models;
+    _lmStudioModelCacheTime = now;
+    return models;
+  } catch (error) {
+    console.error('EngageIQ: Error discovering LM Studio models:', error);
+    throw new Error('Unable to connect to LM Studio. Please ensure it is running and accessible.');
+  }
+}
+
+/**
+ * Transform LM Studio /v1/models response to EngageIQ model format.
+ *
+ * @param {Object} response - The raw response from LM Studio
+ * @returns {Array<Object>} Array of model objects: { id, description }
+ */
+function transformLMStudioModels(response) {
+  if (!response || !Array.isArray(response.data)) {
+    return [];
+  }
+  return response.data.map(model => ({
+    id: model.id,
+    description: model.description || model.id
+  }));
+}
+
 // Export all constants and functions
 export {
   OPENAI_API_BASE_URL,
@@ -207,5 +256,7 @@ export {
   getGenerateContentEndpoint,
   getValidModels,
   isValidModel,
-  getModelSpecs
+  getModelSpecs,
+  discoverLocalModels,
+  transformLMStudioModels
 };

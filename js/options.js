@@ -18,6 +18,7 @@ import {
   getCurrentOpenAIModel,
   setPreferredOpenAIModel
 } from './utils/storage-utils.js';
+import { discoverLocalModels } from './models/openai-model.js';
 
 document.addEventListener('DOMContentLoaded', function () {
   // Get DOM references for all interactive elements
@@ -40,12 +41,88 @@ document.addEventListener('DOMContentLoaded', function () {
       openaiConfigSection.style.display = '';
       apiKeyInput.closest('.mb-3').style.display = 'none';
       geminiModelSelect.closest('.mb-3').style.display = 'none';
+      handleOpenAIModelDiscovery();
     } else {
       openaiConfigSection.style.display = 'none';
       apiKeyInput.closest('.mb-3').style.display = '';
       geminiModelSelect.closest('.mb-3').style.display = '';
     }
   }
+
+  // --- LM Studio Model Discovery Logic ---
+  const openaiModelSpinner = document.getElementById('openaiModelSpinner');
+  const openaiModelError = document.getElementById('openaiModelError');
+
+  function isLocalEndpoint(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    } catch {
+      return false;
+    }
+  }
+
+  function getLMStudioModelsUrl(endpoint) {
+    // Remove any trailing /v1 or /v1/
+    let url = endpoint.trim().replace(/\/?v1\/?$/, '');
+    return url + '/v1/models';
+  }
+
+  async function handleOpenAIModelDiscovery() {
+    openaiModelError.textContent = '';
+    openaiModelError.style.display = 'none';
+    openaiModelSpinner.style.display = 'inline-block';
+    openaiModelSelect.disabled = true;
+    const endpoint = openaiEndpointInput.value.trim();
+    if (isLocalEndpoint(endpoint)) {
+      try {
+        const models = await discoverLocalModels(getLMStudioModelsUrl(endpoint));
+        openaiModelSelect.innerHTML = '';
+        if (models.length === 0) {
+          openaiModelError.textContent = 'No models found on LM Studio.';
+          openaiModelError.style.display = 'block';
+        }
+        models.forEach(model => {
+          const opt = document.createElement('option');
+          opt.value = model.id;
+          opt.textContent = model.description;
+          openaiModelSelect.appendChild(opt);
+        });
+      } catch (err) {
+        openaiModelError.textContent = 'Could not load models from LM Studio. Please ensure LM Studio is running.';
+        openaiModelError.style.display = 'block';
+      }
+    } else {
+      // Use default OpenAI models
+      openaiModelSelect.innerHTML = '';
+      [
+        { id: 'gpt-3.5-turbo', description: 'gpt-3.5-turbo (fast, cost-effective)' },
+        { id: 'gpt-4', description: 'gpt-4 (higher quality, slower, more expensive)' },
+        { id: 'gpt-4o', description: 'gpt-4o (latest, multimodal, high quality)' }
+      ].forEach(model => {
+        const opt = document.createElement('option');
+        opt.value = model.id;
+        opt.textContent = model.description;
+        openaiModelSelect.appendChild(opt);
+      });
+    }
+    openaiModelSpinner.style.display = 'none';
+    openaiModelSelect.disabled = false;
+  }
+
+  // Re-discover models when endpoint changes
+  openaiEndpointInput.addEventListener('change', () => {
+    if (document.getElementById('providerOpenAI').checked) {
+      handleOpenAIModelDiscovery();
+    }
+  });
+
+  // Also on provider radio change
+  providerRadios.forEach(radio => {
+    radio.addEventListener('change', e => {
+      updateProviderUI(e.target.value);
+    });
+  });
 
   // On load: Populate all settings
   Promise.all([
@@ -78,13 +155,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Set debug
     imageContextDebugCheckbox.checked = !!imageContextDebug;
-  });
 
-  // Provider radio change: toggle UI
-  providerRadios.forEach(radio => {
-    radio.addEventListener('change', e => {
-      updateProviderUI(e.target.value);
-    });
+    // If OpenAI is selected and endpoint is local, populate local models immediately
+    if (provider === 'openai' && isLocalEndpoint(openaiEndpointInput.value.trim())) {
+      handleOpenAIModelDiscovery();
+    }
   });
 
   // Validate OpenAI endpoint (simple URL check)
