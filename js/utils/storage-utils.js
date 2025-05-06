@@ -247,13 +247,20 @@ async function clearAllStorage() {
  * @returns {Promise<string>} 'gemini' or 'openai'
  */
 async function getApiProvider() {
+  // Log the execution context for debugging
+  let context = 'unknown';
+  if (typeof window !== 'undefined') context = 'window';
+  if (typeof self !== 'undefined') context = 'service worker';
+  console.log('EngageIQ: [getApiProvider] called in context:', context);
   return new Promise((resolve) => {
     chrome.storage.sync.get(['apiProvider'], (result) => {
+      console.log('EngageIQ: [getApiProvider] chrome.storage.sync.get result:', result);
       if (chrome.runtime.lastError) {
         console.error('EngageIQ: Error retrieving apiProvider from storage:', chrome.runtime.lastError);
         resolve('gemini');
         return;
       }
+      console.log('EngageIQ: [getApiProvider] resolved value:', result.apiProvider || 'gemini');
       resolve(result.apiProvider || 'gemini');
     });
   });
@@ -393,6 +400,25 @@ async function setPreferredOpenAIModel(modelName) {
   });
 }
 
+/**
+ * Gets the currently selected model based on provider
+ * If provider is openai, gets OpenAI model, else gets Gemini model
+ * @returns {Promise<string>} The selected model name
+ */
+async function getCurrentModelByProvider() {
+  const provider = await getApiProvider();
+  console.log(`EngageIQ: [getCurrentModelByProvider] provider: ${provider}`);
+  if (provider === 'openai') {
+    const openaiModel = await getCurrentOpenAIModel();
+    console.log(`EngageIQ: [getCurrentModelByProvider] returning OpenAI model: ${openaiModel}`);
+    return openaiModel;
+  } else {
+    const geminiModel = await getCurrentModel();
+    console.log(`EngageIQ: [getCurrentModelByProvider] returning Gemini model: ${geminiModel}`);
+    return geminiModel;
+  }
+}
+
 // Export all functions to be used by other modules
 export {
   DEFAULT_GEMINI_MODEL,
@@ -412,5 +438,6 @@ export {
   getOpenAIEndpoint,
   setOpenAIEndpoint,
   getCurrentOpenAIModel,
-  setPreferredOpenAIModel
+  setPreferredOpenAIModel,
+  getCurrentModelByProvider
 };

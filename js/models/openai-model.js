@@ -25,6 +25,7 @@ export const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo';
 
 // Schema for comment regeneration requests
 const REGENERATION_SCHEMA = {
+  name: "regenerate_comment",
   type: 'object',
   properties: {
     regeneratedComment: {
@@ -37,6 +38,7 @@ const REGENERATION_SCHEMA = {
 
 // Unified schema for providing a single comment (used for both generation and regeneration)
 const UNIFIED_COMMENT_SCHEMA = {
+  name: "generate_comment",
   type: 'object',
   properties: {
     commentText: {
@@ -49,6 +51,7 @@ const UNIFIED_COMMENT_SCHEMA = {
 
 // Schema for Smart Suggestions direction analysis
 const DIRECTION_ANALYSIS_SCHEMA = {
+  name: "generate_directions",
   type: 'object',
   properties: {
     directions: {
@@ -80,6 +83,7 @@ const DIRECTION_ANALYSIS_SCHEMA = {
 
 // Schema for Smart Suggestions direction-based comment generation
 const DIRECTION_COMMENT_SCHEMA = {
+  name: "generate_direction_comments",
   type: 'object',
   properties: {
     comments: {

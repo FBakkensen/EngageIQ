@@ -6,6 +6,14 @@
  * including request construction, error handling, and response processing.
  */
 
+// --- DEBUG: Force provider check at top of API service ---
+import { getApiProvider } from '../utils/storage-utils.js';
+import { getCurrentModelByProvider } from '../utils/storage-utils.js';
+(async () => {
+  const provider = await getApiProvider();
+  console.log('EngageIQ: [api-service.js] Forced provider check, value:', provider);
+})();
+
 // Import models and storage utilities
 import { 
   DIRECTION_ANALYSIS_SCHEMA,
@@ -493,7 +501,9 @@ export { callGeminiAPI, ERROR_TYPES, createApiError };
  */
 async function generateComments(postContent, sendResponse) {
   console.log('EngageIQ: Processing generate comments request');
-
+  const model = await getCurrentModelByProvider();
+  const provider = await getApiProvider();
+  console.log(`EngageIQ: Using model: ${model} for provider: ${provider}`);
   if (!postContent || !postContent.text) {
     console.error('EngageIQ: No post content provided in generate comments request');
     sendResponse({
@@ -538,7 +548,9 @@ async function generateComments(postContent, sendResponse) {
  */
 async function regenerateComment(requestType, payload, sendResponse) {
   console.log(`EngageIQ: Processing ${requestType} request`);
-
+  const model = await getCurrentModelByProvider();
+  const provider = await getApiProvider();
+  console.log(`EngageIQ: Using model: ${model} for provider: ${provider}`);
   try {
     if (!payload || !payload.originalText || !payload.reactionType) {
       console.error('EngageIQ: Invalid payload for regeneration request:', payload);
@@ -582,7 +594,9 @@ async function regenerateComment(requestType, payload, sendResponse) {
  */
 async function analyzeDirections(postContent, sendResponse) {
   console.log('EngageIQ: Processing direction analysis request');
-
+  const model = await getCurrentModelByProvider();
+  const provider = await getApiProvider();
+  console.log(`EngageIQ: Using model: ${model} for provider: ${provider}`);
   if (!postContent || !postContent.text) {
     console.error('EngageIQ: No post content provided in direction analysis request');
     sendResponse({
@@ -622,7 +636,9 @@ async function analyzeDirections(postContent, sendResponse) {
  */
 async function generateDirectionComments(payload, sendResponse) {
   console.log('EngageIQ: Processing direction-based comment generation request');
-
+  const model = await getCurrentModelByProvider();
+  const provider = await getApiProvider();
+  console.log(`EngageIQ: Using model: ${model} for provider: ${provider}`);
   if (!payload || !payload.postContent || !payload.postContent.text || !payload.selectedDirection) {
     console.error('EngageIQ: Missing data in direction-based comment generation request');
     sendResponse({
