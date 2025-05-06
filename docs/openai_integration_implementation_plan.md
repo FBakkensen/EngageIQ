@@ -311,7 +311,7 @@ Keep the existing Gemini configuration section, and use similar Bootstrap stylin
 
 ### Step 3.2: Update Options Page JavaScript
 
-- **Status:** [ ] Complete
+- **Status:** [x] Complete
 - **Dependencies:** Step 1.2, Step 3.1
 - **Files:** Modify `js/options.js`
 
