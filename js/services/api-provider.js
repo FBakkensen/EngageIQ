@@ -76,7 +76,8 @@ export function transformRequest(request, provider) {
           });
         case 'regenerateComment':
           return adaptRegenerationRequest({
-            previousMessage: request.payload.contents[0].parts[0].text,
+            originalText: request.originalText,
+            requestType: request.requestType,
             model: request.model,
             systemPrompt: 'You are a helpful assistant that regenerates LinkedIn comments.',
             schema: REGENERATION_SCHEMA
@@ -144,6 +145,22 @@ export function normalizeResponse(response, provider, options = {}) {
               }
             }]
           };
+        case 'regenerateComment':
+          // For 'regenerateComment' with OpenAI, we now expect direct text output
+          console.log("EngageIQ: [normalizeResponse] Normalizing OpenAI response for regenerateComment (expecting direct text):", response);
+          if (response?.choices?.[0]?.message?.content) {
+            const regeneratedText = response.choices[0].message.content.trim();
+            console.log("EngageIQ: [normalizeResponse] Extracted regenerated text from OpenAI direct content:", regeneratedText);
+            return regeneratedText;
+          }
+          console.warn("EngageIQ: [normalizeResponse] Could not extract regenerated text from OpenAI response's direct content for regenerateComment.");
+          // Use createApiError for consistent error handling
+          throw createApiError({
+            provider: PROVIDERS.OPENAI,
+            message: 'Could not extract regenerated text from OpenAI response for regenerateComment.',
+            code: 'PARSE_ERROR',
+            details: response // Include the full response for debugging
+          });
         default:
           // For other operations, just return the content in the expected location
           return {
@@ -221,34 +238,33 @@ export function adaptCommentGenerationRequest(request, schema) {
  * @param {object} [schema] - Optional structured output schema
  * @returns {object} OpenAI chat completion request
  */
-export function adaptRegenerationRequest(request, schema) {
-  if (!request || !request.previousMessage) {
-    throw new Error('Invalid regeneration request: missing previousMessage');
+export function adaptRegenerationRequest(request, schema) { 
+  console.log('EngageIQ: [adaptRegenerationRequest] Adapting regeneration request for OpenAI. Input:', request);
+  const { originalText, requestType, model, systemPrompt, schema: regenerationSchemaFromArgs } = request;
+
+  let lengthModifier = '';
+  if (requestType === 'REGENERATE_LONGER') {
+    lengthModifier = 'longer';
+  } else if (requestType === 'REGENERATE_SHORTER') {
+    lengthModifier = 'shorter';
+  } else {
+    console.warn(`EngageIQ: [adaptRegenerationRequest] Unexpected requestType: ${requestType}, defaulting to 'different'.`);
+    lengthModifier = 'different'; 
   }
-  const messages = [
-    { role: 'system', content: request.systemPrompt || 'You are a helpful assistant.' },
-    { role: 'user', content: request.previousMessage }
-  ];
-  
-  // Create the request with the appropriate format for structured output
-  const openaiRequest = {
-    model: request.model || 'gpt-3.5-turbo',
-    messages
+
+  let userPrompt = `The previous comment was: "${originalText}". `;
+  userPrompt += `Please regenerate this comment to be ${lengthModifier}. IMPORTANT: Respond ONLY with the regenerated comment text and nothing else. Do not use any conversational filler or markdown.`;
+
+  // Use the schema passed in the request object; REGENERATION_SCHEMA is a fallback if not directly provided.
+  const currentSchema = regenerationSchemaFromArgs || REGENERATION_SCHEMA;
+
+  return {
+    model: model || 'gpt-3.5-turbo', 
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ]
   };
-  
-  // Add tools if schema is provided
-  if (schema) {
-    openaiRequest.tools = [{
-      type: 'function',
-      function: schema
-    }];
-    openaiRequest.tool_choice = {
-      type: 'function',
-      function: { name: schema.name }
-    };
-  }
-  
-  return openaiRequest;
 }
 
 /**
