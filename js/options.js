@@ -71,48 +71,82 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function getLMStudioModelsUrl(endpoint) {
-    // Remove any trailing /v1 or /v1/
-    let url = endpoint.trim().replace(/\/?v1\/?$/, '');
-    return url + '/v1/models';
+    // Always trim to just the base /v1, then append /models
+    let url = endpoint.trim();
+    // Find index of /v1 in the URL
+    const v1Index = url.indexOf('/v1');
+    if (v1Index !== -1) {
+      url = url.substring(0, v1Index + 3); // include '/v1'
+    }
+    // Remove trailing slash, if present
+    url = url.replace(/\/$/, '');
+    return url + '/models';
   }
 
   async function handleOpenAIModelDiscovery() {
+    // Explicit UI Reset at the very beginning
     openaiModelError.textContent = '';
     openaiModelError.style.display = 'none';
+    openaiModelSelect.innerHTML = ''; // Clear previous options / "Failed to load" from select itself
     openaiModelSpinner.style.display = 'inline-block';
     openaiModelSelect.disabled = true;
+
     const endpoint = openaiEndpointInput.value.trim();
-    if (isLocalEndpoint(endpoint)) {
-      try {
-        const models = await discoverLocalModels(getLMStudioModelsUrl(endpoint));
-        openaiModelSelect.innerHTML = '';
-        if (models.length === 0) {
-          openaiModelError.textContent = 'No models found on LM Studio.';
-          openaiModelError.style.display = 'block';
-        }
+    const apiKey = openaiApiKeyInput.value.trim(); // Get API Key from input
+
+    console.log('[EngageIQ] Endpoint input value:', endpoint);
+    console.log('[EngageIQ] API Key being used: ', apiKey ? '******' : 'Not provided'); // Log if API key is present
+
+    if (!endpoint) {
+      openaiModelError.textContent = 'Please enter an OpenAI Endpoint URL.';
+      openaiModelError.style.display = 'block';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'No endpoint configured';
+      openaiModelSelect.appendChild(defaultOption);
+      openaiModelSpinner.style.display = 'none';
+      openaiModelSelect.disabled = false; // Re-enable so user can see the placeholder
+      return;
+    }
+
+    // Specific check for OpenAI's public API without a key
+    if (endpoint.includes('api.openai.com') && !apiKey) {
+      openaiModelError.textContent = 'API Key is required for official OpenAI endpoints.';
+      openaiModelError.style.display = 'block';
+      console.warn('[EngageIQ] OpenAI endpoint specified but no API key provided. Model discovery aborted for this endpoint.');
+      openaiModelSpinner.style.display = 'none';
+      openaiModelSelect.disabled = false; // Re-enable so user can see the placeholder
+      return;
+    }
+
+    const modelsUrl = getLMStudioModelsUrl(endpoint);
+    console.log('[EngageIQ] Models URL being fetched:', modelsUrl);
+
+    // Always try to discover models from the endpoint
+    try {
+      const models = await discoverLocalModels(modelsUrl, apiKey); // Pass API key
+      openaiModelSelect.innerHTML = '';
+      if (models.length === 0) {
+        openaiModelError.textContent = 'No models found at the specified endpoint.';
+        openaiModelError.style.display = 'block';
+      } else {
         models.forEach(model => {
           const opt = document.createElement('option');
           opt.value = model.id;
-          opt.textContent = model.description;
+          opt.textContent = model.description || model.id;
           openaiModelSelect.appendChild(opt);
         });
-      } catch (err) {
-        openaiModelError.textContent = 'Could not load models from LM Studio. Please ensure LM Studio is running.';
-        openaiModelError.style.display = 'block';
+        // Try to reselect the previously saved model
+        const previouslySelectedModel = await getCurrentOpenAIModel();
+        if (previouslySelectedModel) {
+          openaiModelSelect.value = previouslySelectedModel;
+        }
       }
-    } else {
-      // Use default OpenAI models
-      openaiModelSelect.innerHTML = '';
-      [
-        { id: 'gpt-3.5-turbo', description: 'gpt-3.5-turbo (fast, cost-effective)' },
-        { id: 'gpt-4', description: 'gpt-4 (higher quality, slower, more expensive)' },
-        { id: 'gpt-4o', description: 'gpt-4o (latest, multimodal, high quality)' }
-      ].forEach(model => {
-        const opt = document.createElement('option');
-        opt.value = model.id;
-        opt.textContent = model.description;
-        openaiModelSelect.appendChild(opt);
-      });
+    } catch (err) {
+      // Show a generic error and the actual error message
+      openaiModelError.textContent = `Could not load models from ${getLMStudioModelsUrl(endpoint)}. Error: ${err.message}`;
+      openaiModelError.style.display = 'block';
+      openaiModelSelect.innerHTML = '<option value="">Failed to load models</option>';
     }
     openaiModelSpinner.style.display = 'none';
     openaiModelSelect.disabled = false;
@@ -158,16 +192,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Set OpenAI fields
     openaiApiKeyInput.value = openaiApiKey || '';
-    openaiEndpointInput.value = openaiEndpoint || 'https://api.openai.com/v1/chat/completions';
+    openaiEndpointInput.value = openaiEndpoint || ''; // Default to empty string
     openaiModelSelect.value = openaiModel || openaiModelSelect.value;
 
     // Set debug
     imageContextDebugCheckbox.checked = !!imageContextDebug;
 
-    // If OpenAI is selected and endpoint is local, populate local models immediately
-    if (provider === 'openai' && isLocalEndpoint(openaiEndpointInput.value.trim())) {
-      handleOpenAIModelDiscovery();
+    // If OpenAI is selected, populate models from the endpoint
+    if (provider === 'openai') {
+      if (openaiEndpoint && openaiEndpoint.trim() !== '') {
+        // A specific endpoint is configured, try to load models from it
+        handleOpenAIModelDiscovery();
+      } else {
+        // OpenAI provider selected, but no specific endpoint configured yet.
+        // Show the prompt to enter a URL directly, without an initial API call.
+        openaiModelError.textContent = 'Please enter an OpenAI Endpoint URL.';
+        openaiModelError.style.display = 'block';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'No endpoint configured';
+        openaiModelSelect.innerHTML = ''; // Clear previous options
+        openaiModelSelect.appendChild(defaultOption);
+        openaiModelSpinner.style.display = 'none';
+        openaiModelSelect.disabled = false;
+      }
     }
+  }).catch(error => {
+    console.error('EngageIQ: Error loading settings:', error);
+    // Display a generic error to the user if settings load fails
   });
 
   // Validate OpenAI endpoint (simple URL check)

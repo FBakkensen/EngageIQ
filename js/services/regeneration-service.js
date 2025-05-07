@@ -59,16 +59,30 @@ async function regenerateComment(originalText, reactionType, makeLonger, languag
   }
 
   try {
-    // Call the specialized function from comment-generation.js, passing the language code
-    const regeneratedText = await regenerateCommentWithLength(originalText, reactionType, makeLonger, languageCode);
+    const model = await getCurrentModelByProvider(); // Get current model
+    const requestType = makeLonger ? 'REGENERATE_LONGER' : 'REGENERATE_SHORTER';
+
+    const apiRequest = {
+        operation: 'regenerateComment', // Matches operation in api-service & api-provider
+        requestType: requestType,
+        originalText: originalText,
+        reactionType: reactionType,
+        model: model,
+        // TODO: Propagate languageCode through apiRequest if OpenAI path is updated to use it
+        // languageCode: languageCode, 
+    };
+
+    // Call the provider-agnostic API handler
+    // The result should be the normalized string from callApiProvider
+    const regeneratedText = await callApiProvider(apiRequest, { operation: 'regenerateComment' });
 
     // Check if the regeneration actually produced text
-    if (!regeneratedText || regeneratedText.trim() === '') {
-      console.warn(`EngageIQ: [${operationName}] Regeneration returned null or empty text.`);
+    if (!regeneratedText || (typeof regeneratedText === 'string' && regeneratedText.trim() === '')) {
+      console.warn(`EngageIQ: [${operationName}] Regeneration returned null or empty text from callApiProvider.`);
       throw new Error('Failed to regenerate comment: The AI did not provide a new comment.');
     }
 
-    console.log(`EngageIQ: [${operationName}] Regeneration successful.`);
+    console.log(`EngageIQ: [${operationName}] Regeneration successful via callApiProvider.`);
     return regeneratedText; // Directly return the string result
   } catch (error) {
     // Log the error here as well for context
@@ -143,9 +157,8 @@ function analyzeTextDifference(originalText, regeneratedText) {
 }
 
 // Import required dependencies
-import { 
-  regenerateCommentWithLength, // Import the specific function
-} from './comment-generation.js';
+import { callApiProvider } from './api-provider.js';
+import { getCurrentModelByProvider } from '../utils/storage-utils.js';
 
 // Export functions for use by other modules
 export {

@@ -6,6 +6,7 @@
  */
 
 import { callGeminiAPI } from './api-service.js';
+import { getCurrentApiProvider, PROVIDERS } from './api-provider.js';
 
 // Standard safety settings (consistent with other services)
 const standardSafetySettings = [
@@ -36,6 +37,13 @@ const DEFAULT_LANGUAGE_CODE = 'en';
  * @returns {Promise<string>} The detected language code (e.g., "en", "da"). Defaults to "en".
  */
 export async function detectLanguage(postText) {
+  // Step 0: Check current provider
+  const currentProvider = await getCurrentApiProvider();
+  if (currentProvider !== PROVIDERS.GEMINI) {
+    console.warn(`EngageIQ: [Language Service] Language detection via API is currently configured for Gemini only. Current provider is '${currentProvider}'. Defaulting to '${DEFAULT_LANGUAGE_CODE}'.`);
+    return DEFAULT_LANGUAGE_CODE;
+  }
+
   // Step 2.3: Input Validation
   if (!postText || typeof postText !== 'string' || postText.trim().length === 0) {
     console.warn('EngageIQ: [Language Service] Invalid or empty input provided for language detection. Defaulting to ', DEFAULT_LANGUAGE_CODE);

@@ -42,10 +42,9 @@ const ERROR_TYPES = {
  * @returns {Promise<Object>} - Object containing an array of direction suggestions
  */
 export async function analyzePostDirections(postContent, languageCode) {
-  console.log('EngageIQ: Analyzing post for direction suggestions');
+  console.log('EngageIQ: Analyzing post for direction suggestions using structured JSON output.');
   
   try {
-    // Prepare request data
     const model = await getCurrentModelByProvider();
     const temperature = getModelTemperature(model);
     
@@ -57,102 +56,136 @@ export async function analyzePostDirections(postContent, languageCode) {
       );
     }
     
-    // Validate or default language code
     const targetLanguageCode = languageCode && typeof languageCode === 'string' && languageCode.length === 2 ? languageCode : 'en';
-    console.log(`EngageIQ: [api-service] Generating directions in language: ${targetLanguageCode}`);
+    console.log(`EngageIQ: [api-service] Generating directions in language: ${targetLanguageCode} using JSON mode.`);
 
-    // Process post text to extract meaningful content
     const processedText = cleanPostContent(postContent.text);
+
+    const directionSchema = {
+      name: "commenting_approaches",
+      strict: true,
+      schema: {
+        type: "object",
+        properties: {
+          approaches: {
+            type: "array",
+            description: "An array of 3-5 distinct commenting approaches.",
+            items: {
+              type: "object",
+              properties: {
+                title: {
+                  type: "string",
+                  description: `A short, catchy TITLE (2-5 words) for the commenting approach. MUST be in ${targetLanguageCode.toUpperCase()}.`
+                },
+                description: {
+                  type: "string",
+                  description: `A brief DESCRIPTION (15-25 words) of the commenting approach, in ${targetLanguageCode}.`
+                },
+                emoji: {
+                  type: "string",
+                  description: "A single relevant EMOJI."
+                }
+              },
+              required: ["title", "description", "emoji"]
+            }
+          }
+        },
+        required: ["approaches"]
+      }
+    };
     
-    // Build the API request payload
     const payload = {
       contents: [
         {
           parts: [
             {
-              text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Post content: "${processedText}"\n\n**CRITICAL: Generate the response ENTIRELY in the language with ISO code: ${targetLanguageCode}.**\n\nFor each approach, provide:\n1.  A short, catchy TITLE (2-5 words). **THIS TITLE MUST BE IN ${targetLanguageCode.toUpperCase()}.**\n2.  A brief DESCRIPTION (15-25 words) in ${targetLanguageCode}.\n3.  A single relevant EMOJI.\n\nFormat each suggestion like this, using "---" as a separator between suggestions:\nTITLE: [**Title MUST be in ${targetLanguageCode}**]\nDESCRIPTION: [Description in ${targetLanguageCode}]\nEMOJI: [Emoji]\n---\nTITLE: [**Title MUST be in ${targetLanguageCode}**]\nDESCRIPTION: [Description in ${targetLanguageCode}]\nEMOJI: [Emoji]\n---\n(Include 3-5 suggestions total)\n\n**REMINDER: ALL text, especially the TITLES, MUST be in the language: ${targetLanguageCode}.**`
+              text: `Analyze this LinkedIn post and suggest 3-5 different commenting approaches. Post content: "${processedText}"
+
+**CRITICAL: Generate your response by populating the fields of the JSON schema provided in the 'response_format' parameter.**
+
+Instructions for JSON content:
+- The 'approaches' array should contain 3 to 5 unique commenting strategy objects.
+- For each object in the 'approaches' array:
+  - 'title': Must be a 2-5 word catchy phrase in ${targetLanguageCode.toUpperCase()}.
+  - 'description': Must be a 15-25 word explanation in ${targetLanguageCode}.
+  - 'emoji': Must be a single relevant emoji character.
+
+**REMINDER: ALL text content within the JSON, especially TITLES, MUST be in the language: ${targetLanguageCode}.**`
             }
           ]
         }
       ],
       generationConfig: {
         temperature: temperature,
-        maxOutputTokens: 1024, // Adjust as needed for text response
+        maxOutputTokens: 2048, // Increased for potentially verbose JSON structure
+        // The response_format will be added by callApiProvider if it's the OpenAI provider
       },
-      // Removed toolConfig and tools for plain text generation
+    };
+
+    // Add response_format directly here for OpenRouter compatibility, 
+    // it might be handled differently if it were a direct OpenAI call vs OpenRouter.
+    const requestPayloadForOpenRouter = {
+      ...payload,
+      response_format: {
+        type: 'json_schema',
+        json_schema: directionSchema
+      }
     };
     
-    // Make the API request with retry logic
     const request = {
       operation: 'analyzePostDirections',
-      payload,
+      payload: requestPayloadForOpenRouter, // Use the modified payload
       model,
     };
-    const response = await callApiProvider(request, { operation: 'Analyze Post Directions' });
+
+    console.log("EngageIQ: [analyzePostDirections] Sending payload with JSON schema:", JSON.stringify(request.payload).substring(0, 500) + '...');
+
+    const response = await callApiProvider(request, { operation: 'Analyze Post Directions JSON' });
     
-    // --- New Logic: Parse plain text response ---
-    let rawTextResponse;
     let parsedDirections = [];
-    try {
-      if (!response?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('EngageIQ: Missing text content in API response for directions.', response);
-        throw new Error('Missing text content in API response for directions.');
+    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const jsonString = response.candidates[0].content.parts[0].text;
+      console.log("EngageIQ: [analyzePostDirections] Received JSON string from API:", jsonString);
+      
+      // Attempt to strip markdown fences if present
+      let cleanedJsonString = jsonString.trim();
+      if (cleanedJsonString.startsWith('```json') && cleanedJsonString.endsWith('```')) {
+        cleanedJsonString = cleanedJsonString.substring(7, cleanedJsonString.length - 3).trim();
+        console.log("EngageIQ: [analyzePostDirections] Stripped markdown fences. Cleaned JSON string:", cleanedJsonString);
+      } else if (cleanedJsonString.startsWith('```') && cleanedJsonString.endsWith('```')) {
+        // Fallback for just ``` without 'json' specifier
+        cleanedJsonString = cleanedJsonString.substring(3, cleanedJsonString.length - 3).trim();
+        console.log("EngageIQ: [analyzePostDirections] Stripped generic markdown fences. Cleaned JSON string:", cleanedJsonString);
       }
-      rawTextResponse = response.candidates[0].content.parts[0].text.trim();
-      
-      // Remove <think>...</think> blocks if present
-      rawTextResponse = rawTextResponse.replace(/<think>[\s\S]*?<\/think>\s*/g, '');
-      
-      // Split into individual suggestion blocks
-      const suggestionBlocks = rawTextResponse.split('---').map(block => block.trim()).filter(Boolean);
 
-      for (const block of suggestionBlocks) {
-        const titleMatch = block.match(/^TITLE:\s*(.*)/im);
-        const descriptionMatch = block.match(/^DESCRIPTION:\s*(.*)/im);
-        const emojiMatch = block.match(/^EMOJI:\s*(.*)/im);
-
-        if (titleMatch && descriptionMatch && emojiMatch) {
-          parsedDirections.push({
-            title: titleMatch[1].trim(),
-            description: descriptionMatch[1].trim(),
-            emoji: emojiMatch[1].trim(),
-          });
+      try {
+        const parsedJson = JSON.parse(cleanedJsonString);
+        if (parsedJson && parsedJson.approaches && Array.isArray(parsedJson.approaches)) {
+          parsedDirections = parsedJson.approaches;
         } else {
-          console.warn('EngageIQ: Could not parse block:', block); // Log malformed blocks
+          console.warn("EngageIQ: [analyzePostDirections] Parsed JSON does not have the expected 'approaches' array structure.", parsedJson);
+          throw createBaseApiError(ERROR_TYPES.PARSING, 'Failed to parse directions: JSON structure incorrect.', 'The model did not return the expected JSON format.');
         }
+      } catch (e) {
+        console.error("EngageIQ: [analyzePostDirections] Error parsing JSON string from API:", e, "Raw string:", jsonString);
+        throw createBaseApiError(ERROR_TYPES.PARSING, `Failed to parse directions: ${e.message}`, 'The model response was not valid JSON.');
       }
-
-      if (parsedDirections.length === 0) {
-         throw new Error('Could not parse any valid directions from the text response.');
-      }
-
-    } catch (parseError) {
-       console.error('EngageIQ: Failed to parse plain text response for directions:', parseError);
-       console.error('EngageIQ: Raw text received:', rawTextResponse); // Log the text that failed parsing
-       throw createBaseApiError(
-         ERROR_TYPES.PARSING,
-         `Failed to parse direction suggestions from text response. Details: ${parseError.message}`,
-         'Try again or use a different post'
-       );
+    } else {
+      console.warn('EngageIQ: [analyzePostDirections] No valid text response found in API candidates for JSON parsing.');
+      throw createBaseApiError(ERROR_TYPES.PARSING, 'Failed to parse directions: No text content in response.', 'The model did not return any text to parse.');
     }
-    // --- End New Logic ---
-    
-    // Format the parsed directions using the existing formatter
-    const directions = formatDirections(parsedDirections); 
-    
-    console.log(`EngageIQ: Successfully generated ${directions.length} direction suggestions`);
-    
+
+    const formattedDirections = formatDirections(parsedDirections); // formatDirections might need slight adjustment if it expects a different input now
+
+    console.log(`EngageIQ: Successfully generated ${formattedDirections.length} direction suggestions using JSON mode.`);
     return {
       success: true,
-      directions: directions,
-      modelInfo: {
-        name: model,
-        temperature: temperature
-      }
+      directions: formattedDirections,
+      error: null
     };
-    
+
   } catch (error) {
-    console.error('EngageIQ: Error analyzing post directions:', error);
+    console.error('EngageIQ: Error in analyzePostDirections (JSON mode):', error);
     return handleApiError(error, 'direction analysis');
   }
 }
@@ -314,7 +347,7 @@ function handleApiError(error, operation) {
   
   // If it's a structured API error from our service or the centralized one
   if (error.isApiError) {
-    errorResponse.error = error.message;
+    errorResponse.error = error.message || `An error occurred during ${operation}. Details: ${error.details ? JSON.stringify(error.details) : 'Not available'}`;
     errorResponse.errorType = error.errorType || API_ERROR_TYPES.UNKNOWN; // Use the type from the error
     errorResponse.details = error.details || {}; // Include details if available
     errorResponse.actionHint = error.actionHint || 'Check console logs for more details';
