@@ -43,6 +43,8 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
             type: 'SHOW_ERROR',
             error: 'Communication Error',
             details: 'Failed to communicate with the background script.',
+            actionHint: 'Please try reloading the extension or browser.',
+            errorType: 'communication_error'
           });
           return reject(new Error(chrome.runtime.lastError.message));
         }
@@ -69,13 +71,14 @@ export function handleDirectionAnalysis(postContent, sendMessageToIframe) {
           console.log('EngageIQ: Sent SHOW_DIRECTIONS to iframe');
           resolve(response);
         } else {
-          // Send error to iframe
+          // If the background script reported an error, pass its details to the iframe
+          console.error('EngageIQ: Background script reported error during direction analysis:', response);
           sendMessageToIframe({
             type: 'SHOW_ERROR',
-            error: response?.error || 'Failed to analyze post content',
-            details: response?.details || 'Unknown error from background script',
-            actionHint: response?.actionHint || 'Please try again',
-            errorType: response?.errorType || 'unknown_error'
+            error: response.error || 'Failed to analyze directions.', // Main error message
+            details: response.details || 'No specific details provided by background script.', // Technical details
+            actionHint: response.actionHint || 'Please try again or check model/API key.', // Action hint if available
+            errorType: response.errorType || 'unknown_background_error' // Specific error type
           });
           console.log('EngageIQ: Sent SHOW_ERROR to iframe due to background script failure');
           // Reject with an error object if possible, otherwise a generic message

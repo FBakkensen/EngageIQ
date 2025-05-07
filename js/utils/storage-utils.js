@@ -298,10 +298,10 @@ async function getOpenAIApiKey() {
     chrome.storage.sync.get(['openaiApiKey'], (result) => {
       if (chrome.runtime.lastError) {
         console.error('EngageIQ: Error retrieving OpenAI API key:', chrome.runtime.lastError);
-        resolve(null);
+        resolve(''); // Resolve with empty string on error, as API keys are strings
         return;
       }
-      resolve(result.openaiApiKey || null);
+      resolve(result.openaiApiKey || ''); // Resolve with the stored value or empty string
     });
   });
 }
@@ -327,18 +327,17 @@ async function setOpenAIApiKey(apiKey) {
 
 /**
  * Gets the OpenAI endpoint URL from storage
- * Defaults to 'https://api.openai.com/v1' if not set
- * @returns {Promise<string>} The OpenAI endpoint URL
+ * @returns {Promise<string|null>} The OpenAI endpoint URL or null if not set
  */
 async function getOpenAIEndpoint() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(['openaiEndpoint'], (result) => {
+    chrome.storage.sync.get(['openaiEndpointUrl'], (result) => { 
       if (chrome.runtime.lastError) {
-        console.error('EngageIQ: Error retrieving OpenAI endpoint:', chrome.runtime.lastError);
-        resolve('https://api.openai.com/v1');
+        console.error('EngageIQ: Error retrieving OpenAI endpoint URL:', chrome.runtime.lastError);
+        resolve(null); 
         return;
       }
-      resolve(result.openaiEndpoint || 'https://api.openai.com/v1');
+      resolve(result.openaiEndpointUrl || null); 
     });
   });
 }
@@ -350,7 +349,7 @@ async function getOpenAIEndpoint() {
  */
 async function setOpenAIEndpoint(endpoint) {
   return new Promise((resolve) => {
-    chrome.storage.sync.set({ openaiEndpoint: endpoint }, () => {
+    chrome.storage.sync.set({ openaiEndpointUrl: endpoint }, () => {
       if (chrome.runtime.lastError) {
         console.error('EngageIQ: Error storing OpenAI endpoint:', chrome.runtime.lastError);
         resolve(false);
@@ -364,18 +363,17 @@ async function setOpenAIEndpoint(endpoint) {
 
 /**
  * Gets the preferred OpenAI model from storage
- * Defaults to 'gpt-3.5-turbo' if not set
- * @returns {Promise<string>} The OpenAI model name
+ * @returns {Promise<string|null>} The OpenAI model name or null if not set
  */
 async function getCurrentOpenAIModel() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['openaiModel'], (result) => {
       if (chrome.runtime.lastError) {
         console.error('EngageIQ: Error retrieving OpenAI model:', chrome.runtime.lastError);
-        resolve('gpt-3.5-turbo');
+        resolve(''); 
         return;
       }
-      resolve(result.openaiModel || 'gpt-3.5-turbo');
+      resolve(result.openaiModel || ''); 
     });
   });
 }

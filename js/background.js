@@ -141,8 +141,15 @@ async function handleAnalyzeDirections(message, sendResponse) {
     // Call the API service to analyze directions
     const apiResponse = await analyzePostDirections(message.postContent, languageCode);
 
-    // Send the response back to the content script
-    if (apiResponse.success) {
+    if (apiResponse && !apiResponse.success) {
+      console.warn('EngageIQ: smartSuggestionsApi.analyzePostDirections reported an error:', apiResponse);
+      sendResponse({
+        success: false,
+        error: apiResponse.error, // User-facing message from handleApiError
+        details: apiResponse.details, // Technical details
+        errorType: apiResponse.type // Error type from ERROR_TYPES
+      });
+    } else if (apiResponse && apiResponse.success) {
       sendResponse({
         success: true,
         directions: apiResponse.directions,
@@ -150,23 +157,21 @@ async function handleAnalyzeDirections(message, sendResponse) {
         languageCode: languageCode, // Include language code here
       });
     } else {
+      console.error('EngageIQ: Unexpected empty or invalid result from analyzePostDirections.');
       sendResponse({
         success: false,
-        error: apiResponse.error || 'Failed to analyze directions',
-        details: apiResponse.details,
-        actionHint: apiResponse.actionHint,
-        errorType: apiResponse.errorType
+        error: 'Failed to analyze directions due to an unexpected API result.',
+        details: 'The API module returned an invalid response.',
+        errorType: 'internal_error'
       });
     }
-    
   } catch (error) {
-    console.error('EngageIQ: Error analyzing directions:', error);
+    console.error('EngageIQ: Critical unhandled error during analyzePostDirections call:', error);
     sendResponse({
       success: false,
-      error: 'Failed to analyze post for directions',
-      details: error.message,
-      actionHint: error.actionHint || 'Please try again',
-      errorType: error.type || 'unknown_error'
+      error: 'A critical background error occurred while analyzing directions.',
+      details: error.message || 'No further details available.',
+      errorType: 'unknown_error'
     });
   }
 }

@@ -903,13 +903,19 @@ export async function callOpenAIAPI(requestBody, operationName = 'OpenAI API Cal
   let retries = 0;
 
   // Get OpenAI API Key and Endpoint from storage
+  const openAIEndpoint = await getOpenAIEndpoint();
   const apiKey = await getOpenAIApiKey();
+
   if (!apiKey) {
     console.error(`EngageIQ: [${operationName}] OpenAI API Key not found.`);
     throw createApiError(ERROR_TYPES.MISSING_API_KEY, 'OpenAI API Key not found. Please configure it in the extension options.', 401);
   }
-  const endpoint = await getOpenAIEndpoint();
-  const fullApiUrl = `${endpoint}/chat/completions`;
+
+  // Ensure the base endpoint does not have a trailing slash
+  const cleanOpenAIEndpoint = openAIEndpoint.replace(/\/+$/, '');
+
+  const fullUrl = `${cleanOpenAIEndpoint}/chat/completions`;
+  console.log(`EngageIQ: [${operationName}] OpenAI API Full URL:`, fullUrl); // Added log for verification
 
   // Prepare fetch options with timeout controller
   const controller = new AbortController();
@@ -924,7 +930,7 @@ export async function callOpenAIAPI(requestBody, operationName = 'OpenAI API Cal
       }
       console.debug(`EngageIQ: [${operationName}] Sending OpenAI payload (attempt ${retries + 1}):`, JSON.stringify(requestBody).substring(0, 300) + '...');
 
-      const response = await fetch(fullApiUrl, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

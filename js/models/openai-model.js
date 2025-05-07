@@ -7,7 +7,7 @@
  */
 
 // Import storage utility to get model preferences
-import { getCurrentOpenAIModel } from '../utils/storage-utils.js';
+import { getCurrentOpenAIModel, getOpenAIApiKey } from '../utils/storage-utils.js';
 
 // API Configuration Constants
 const OPENAI_API_BASE_URL = 'https://api.openai.com/v1';
@@ -202,35 +202,68 @@ function getModelSpecs(modelName) {
 }
 
 /**
- * Discover available models from LM Studio's /v1/models endpoint.
+ * Discover available models from a given /v1/models endpoint.
  * Caches results to avoid unnecessary API calls.
- * Only runs when the user has selected a local endpoint configuration.
  *
- * @param {string} [endpoint] - The LM Studio API endpoint (default: 'http://localhost:1234/v1/models')
+ * @param {string} endpoint - The API endpoint (e.g., 'http://localhost:1234/v1/models' or 'https://api.openai.com/v1/models')
+ * @param {string} [apiKey] - The API key to use for authorization (if required by the endpoint).
  * @returns {Promise<Array<Object>>} Array of model objects or throws error
  */
-let _lmStudioModelCache = null;
-let _lmStudioModelCacheTime = 0;
-const LM_STUDIO_MODELS_CACHE_TTL = 60 * 1000; // 1 minute
+let _modelCache = {}; // Renamed from _lmStudioModelCache for generic use
+let _modelCacheTime = {}; // Store timestamps per cacheKey
+const MODELS_CACHE_TTL = 60 * 1000; // Renamed from LM_STUDIO_MODELS_CACHE_TTL
 
-async function discoverLocalModels(endpoint = 'http://localhost:1234/v1/models') {
+async function discoverLocalModels(endpoint, apiKey = '') { // Added apiKey parameter
+  console.log(`[EngageIQ/openai-model.js] discoverLocalModels called with endpoint: ${endpoint} and apiKey: ${apiKey ? '******' : 'none'}`);
+  const cacheKey = `${endpoint}_${apiKey || 'no_key'}`;
   const now = Date.now();
-  if (_lmStudioModelCache && (now - _lmStudioModelCacheTime < LM_STUDIO_MODELS_CACHE_TTL)) {
-    return _lmStudioModelCache;
+
+  if (_modelCache[cacheKey] && _modelCacheTime[cacheKey] && (now - _modelCacheTime[cacheKey] < MODELS_CACHE_TTL)) {
+    console.log(`[EngageIQ/openai-model.js] Returning cached models for ${cacheKey}`);
+    return _modelCache[cacheKey];
   }
+
   try {
-    const response = await fetch(endpoint, { method: 'GET' });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
     }
+
+    const response = await fetch(endpoint, { method: 'GET', headers: headers });
+
+    if (!response.ok) {
+      let errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorText = errorJson.error?.message || errorJson.message || errorText;
+      } catch (e) {
+        // Not JSON, or no specific message field
+      }
+      // Construct a more informative error message including the status code
+      const errorMessage = `Failed to fetch models from ${endpoint}: ${response.status} ${response.statusText}. Server: ${errorText}`;
+      console.error(`[EngageIQ/openai-model.js] Error: ${errorMessage}`);
+      throw new Error(errorMessage);
+    }
+
     const data = await response.json();
+    // The transformLMStudioModels function might need to be generalized if different endpoints return different structures.
+    // For now, we assume a compatible structure or that transformLMStudioModels can handle it.
     const models = transformLMStudioModels(data);
-    _lmStudioModelCache = models;
-    _lmStudioModelCacheTime = now;
+
+    _modelCache[cacheKey] = models;
+    _modelCacheTime[cacheKey] = now;
+    console.log(`[EngageIQ/openai-model.js] Fetched and cached models for ${cacheKey}`);
     return models;
   } catch (error) {
-    console.error('EngageIQ: Error discovering LM Studio models:', error);
-    throw new Error('Unable to connect to LM Studio. Please ensure it is running and accessible.');
+    // Log the error with more context if it's not already the detailed one we threw
+    if (!error.message.startsWith('Failed to fetch models from')) {
+        console.error(`[EngageIQ/openai-model.js] Error discovering models from ${endpoint}:`, error);
+    }
+    // Re-throw the error to be handled by the caller
+    // If it's our custom error, it's already informative. If it's a network error, wrap it.
+    throw new Error(error.message.startsWith('Failed to fetch models from') ? error.message : `Unable to connect or fetch models from ${endpoint}. Original error: ${error.message}`);
   }
 }
 
@@ -241,13 +274,29 @@ async function discoverLocalModels(endpoint = 'http://localhost:1234/v1/models')
  * @returns {Array<Object>} Array of model objects: { id, description }
  */
 function transformLMStudioModels(response) {
+  console.log('[EngageIQ/openai-model.js] transformLMStudioModels received raw response:', JSON.stringify(response, null, 2));
   if (!response || !Array.isArray(response.data)) {
+    console.warn('[EngageIQ/openai-model.js] transformLMStudioModels: Raw response is not in expected format (missing data array). Returning empty array.');
     return [];
   }
-  return response.data.map(model => ({
+
+  // Filter models to only include those that support 'structured_outputs'
+  const supportedModels = response.data.filter(model => 
+    model.supported_parameters && 
+    Array.isArray(model.supported_parameters) && 
+    model.supported_parameters.includes('structured_outputs')
+  );
+
+  console.log('[EngageIQ/openai-model.js] transformLMStudioModels: Filtered models supporting structured_outputs:', JSON.stringify(supportedModels, null, 2));
+
+  const transformed = supportedModels.map(model => ({
     id: model.id,
-    description: model.description || model.id
+    // Use model.name for display. If name is not present, fallback to model.id.
+    description: model.name || model.id 
   }));
+
+  console.log('[EngageIQ/openai-model.js] transformLMStudioModels transformed models for dropdown:', JSON.stringify(transformed, null, 2));
+  return transformed;
 }
 
 // Export all constants and functions
